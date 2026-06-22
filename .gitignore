@@ -8,6 +8,10 @@ scratch/
 Thumbs.db
 .vscode/
 .idea/
+__pycache__/
+.pytest_cache/
+.venv/
+*.egg-info/
 
 # 環境変数
 .env
