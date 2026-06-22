@@ -1,0 +1,74 @@
+name: Deploy to Google Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+# Workload Identity Federation を使用するための権限設定
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  GCP_PROJECT_ID: "cats-breeding-sim-31749"
+  GCP_REGION: "asia-northeast1"
+  GCP_REPOSITORY: "cats-simulator-repo"
+  GCP_SERVICE_NAME: "cats-breeding-simulator"
+  WORKLOAD_IDENTITY_PROVIDER: "projects/121657084520/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider"
+  SERVICE_ACCOUNT_EMAIL: "github-actions-deployer@cats-breeding-sim-31749.iam.gserviceaccount.com"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. コードのチェックアウト
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Workload Identity Federation を使用した GCP 認証
+      - name: Authenticate to GCP
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: "access_token"
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT_EMAIL }}
+
+      # 3. gcloud CLI のセットアップ
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      # 4. Artifact Registry に対する Docker 認証の設定
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+
+      # 5. Docker イメージのビルドとタグ付け
+      - name: Build Docker Image
+        run: |
+          docker build \
+            -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_REPOSITORY }}/${{ env.GCP_SERVICE_NAME }}:${{ github.sha }} \
+            -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_REPOSITORY }}/${{ env.GCP_SERVICE_NAME }}:latest \
+            .
+
+      # 6. イメージを Artifact Registry にプッシュ
+      - name: Push Docker Image
+        run: |
+          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_REPOSITORY }}/${{ env.GCP_SERVICE_NAME }}:${{ github.sha }}
+          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_REPOSITORY }}/${{ env.GCP_SERVICE_NAME }}:latest
+
+      # 7. Cloud Run へのデプロイ
+      - name: Deploy to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.GCP_SERVICE_NAME }}
+          region: ${{ env.GCP_REGION }}
+          image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_REPOSITORY }}/${{ env.GCP_SERVICE_NAME }}:${{ github.sha }}
+          flags: "--platform managed --allow-unauthenticated"
+
+      # 8. デプロイされたURLの出力
+      - name: Show Cloud Run URL
+        run: |
+          echo "Cloud Run Service URL: ${{ steps.deploy.outputs.url }}"
