@@ -207,10 +207,8 @@ class CoatColorCalculator:
         if self._has_dominant(kitten.loci["Sp"], "Sp"):
             return "Spotted Tabby"
         mackerel = kitten.loci["Mc"]
-        if "Mc" in mackerel and "mc" in mackerel:
-            return "Mackerel Tabby"
         if self._has_dominant(mackerel, "Mc"):
-            return "Tabby"
+            return "Mackerel Tabby"
         return "Classic Tabby"
 
     def _orange_state(self, kitten: KittenGenotype) -> str:
