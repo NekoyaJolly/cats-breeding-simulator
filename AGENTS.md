@@ -1,11 +1,3 @@
-<!--
-このファイルは agents-md-template の正本テンプレです。新しいプロジェクトで使う際は:
-  1. このコメント全体を削除
-  2. `<PROJECT_NAME>` `<DOMAIN>` 等のプレースホルダーを埋める
-  3. 「ドメイン原則」セクションをプロジェクト固有のルールに書き換える
-  4. 「開発運用情報」セクションをプロジェクトのコマンドや構造に書き換える
-  5. 必要に応じて §1-§6 の各小節を微調整する (例: 4. 言語規約の <PRIMARY_LANGUAGE>)
--->
 
 > ## 最優先 5 原則 (全エージェント / 全ディレクトリ共通)
 > 1. **勝手に決めない**: 設計判断はユーザーに必ず確認する
@@ -20,7 +12,7 @@
 
 # AGENTS.md - 全エージェント共通ルール (正本)
 
-> **位置づけ**: 本ファイルが `<PROJECT_NAME>` プロジェクトにおける全エージェント (Claude Code / Cursor / Gemini 等) 共通ルールの**単一の正本**である。
+> **位置づけ**: 本ファイルが `cats-breeding-simulator` プロジェクトにおける全エージェント (Claude Code / Cursor / Gemini 等) 共通ルールの**単一の正本**である。
 > **対象**: 全ディレクトリ・全作業者
 > **シム**: `/CLAUDE.md` `/.cursorrules` `/GEMINI.md` は本ファイルを参照する誘導用シム
 
@@ -134,15 +126,15 @@ src/schemas/
 
 ## 4. 言語規約
 
-**すべての成果物は `<PRIMARY_LANGUAGE>` で記述する**。
+**すべての成果物は `日本語` で記述する**。
 
 ✅ 許可
-- ソースコード内コメント: `<PRIMARY_LANGUAGE>`
-- ドキュメント: `<PRIMARY_LANGUAGE>`
-- コミットメッセージ: `<PRIMARY_LANGUAGE>` OK
+- ソースコード内コメント: `日本語`
+- ドキュメント: `日本語`
+- コミットメッセージ: `日本語` OK
 
 ❌ 禁止
-- `<PRIMARY_LANGUAGE>` 以外のみのコメント
+- `日本語` 以外のみのコメント
 - 説明コメント無しでのロジック実装
 
 **例外 (英語可)**
@@ -160,7 +152,7 @@ src/schemas/
 
 #### 構成 (常にこの 3 つだけ)
 
-1. **設計正本** (1 件、不変): 例 `docs/architecture/<project>-architecture.md` (or HTML)
+1. **設計正本** (1 件、不変): 例 `docs/architecture/cats-breeding-simulator-architecture.md` (or HTML)
 2. **現在進行中フェーズの指示書** (0〜1 件): 例 `docs/design/phase_N_specification.md`
 3. **直近完了フェーズのサマリー** (1 件、ローリング): 例 `docs/design/CURRENT_PHASE_SUMMARY.md` — 次フェーズエージェントが起動時に読む唯一の引き継ぎ
 
