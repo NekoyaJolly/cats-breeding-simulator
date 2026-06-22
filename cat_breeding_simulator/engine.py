@@ -224,10 +224,20 @@ class CoatColorCalculator:
     def _to_results(self, aggregate: ProbabilityMap) -> list[KittenResult]:
         total = sum(aggregate.values())
         sorted_results = sorted(aggregate.items(), key=lambda item: (-item[1], item[0][0], item[0][1]))
-        return [
+        results = [
             KittenResult(sex=sex, color=color, probability_pct=round(probability / total * 100, 4))
             for (sex, color), probability in sorted_results
         ]
+
+        diff = round(100.0 - sum(entry.probability_pct for entry in results), 4)
+        if results and diff:
+            top = results[0]
+            results[0] = KittenResult(
+                sex=top.sex,
+                color=top.color,
+                probability_pct=round(top.probability_pct + diff, 4),
+            )
+        return results
 
     @staticmethod
     def _matches_exact(actual: tuple[str, str], required: tuple[str, str]) -> bool:
