@@ -82,7 +82,7 @@ class CoatColorCalculator:
         return filtered
 
     def _build_gametes(self, genotype: ParentGenotype) -> dict[tuple[tuple[str, str], ...], float]:
-        gametes: dict[tuple[tuple[str, str], ...], float] = {(("sex", ""),): 1.0}
+        gametes: dict[tuple[tuple[str, str], ...], float] = {(): 1.0}
         for locus in AUTOSOMAL_LOCI:
             next_gametes: dict[tuple[tuple[str, str], ...], float] = defaultdict(float)
             allele_probabilities = self._allele_probabilities(genotype.loci[locus])
