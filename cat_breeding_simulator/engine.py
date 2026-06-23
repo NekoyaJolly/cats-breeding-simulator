@@ -55,6 +55,9 @@ class CoatColorCalculator:
                     for dam_gamete, dam_probability in dam_gametes.items():
                         kitten = self._combine_gametes(sire_gamete, dam_gamete)
                         phenotype = self._classify_phenotype(kitten)
+                        phenotype = self._post_process_color_name(
+                            phenotype, sire_color, dam_color, breed
+                        )
                         aggregate[(kitten.sex, phenotype)] += sire_probability * dam_probability * pair_weight
 
         return self._to_results(aggregate)
@@ -287,3 +290,99 @@ class CoatColorCalculator:
             if known_breed.casefold() == normalized.casefold():
                 return known_breed
         return breed
+
+    def _post_process_color_name(
+        self, name: str, sire_color: str, dam_color: str, breed: str | None
+    ) -> str:
+        name = self._clean_phenotype_name(name)
+        name = self._apply_breed_color_names(name, breed)
+        name = self._simplify_patterns(name, sire_color, dam_color, breed)
+        return name
+
+    def _clean_phenotype_name(self, name: str) -> str:
+        is_silver = "Silver Tabby" in name
+        if is_silver:
+            if name.startswith("Black Pt "):
+                name = name.replace("Black Pt ", "Silver Pt ").replace(" Silver Tabby", " Tabby")
+            elif name.startswith("Black "):
+                name = name.replace("Black ", "Silver ").replace(" Silver Tabby", " Tabby")
+            elif name.startswith("Blue Pt "):
+                name = name.replace("Blue Pt ", "Blue Silver Pt ").replace(" Silver Tabby", " Tabby")
+            elif name.startswith("Blue "):
+                name = name.replace("Blue ", "Blue Silver ").replace(" Silver Tabby", " Tabby")
+            elif name.startswith("Red "):
+                name = name.replace("Red ", "Cameo ").replace(" Silver Tabby", " Tabby")
+            elif name.startswith("Cream "):
+                name = name.replace("Cream ", "Cream Cameo ").replace(" Silver Tabby", " Tabby")
+            elif name.startswith("Chocolate "):
+                name = name.replace("Chocolate ", "Chocolate Silver ").replace(" Silver Tabby", " Tabby")
+            elif name.startswith("Lilac "):
+                name = name.replace("Lilac ", "Lilac Silver ").replace(" Silver Tabby", " Tabby")
+            elif name.startswith("Cinnamon "):
+                name = name.replace("Cinnamon ", "Cinnamon Silver ").replace(" Silver Tabby", " Tabby")
+            elif name.startswith("Fawn "):
+                name = name.replace("Fawn ", "Fawn Silver ").replace(" Silver Tabby", " Tabby")
+        else:
+            if "Tabby" in name:
+                if name.startswith("Black Pt "):
+                    name = name.replace("Black Pt ", "Brown Pt ")
+                elif name.startswith("Black "):
+                    name = name.replace("Black ", "Brown ")
+        return name
+
+    def _simplify_patterns(self, name: str, sire_color: str, dam_color: str, breed: str | None) -> str:
+        def _has_pattern(c_name: str, pat: str) -> bool:
+            name_lower = c_name.lower()
+            if pat == "mackerel":
+                return "mackerel" in name_lower or "mc" in name_lower.split()
+            if pat == "classic":
+                return "classic" in name_lower
+            if pat == "ticked":
+                return "ticked" in name_lower or "tc" in name_lower.split()
+            if pat == "spotted":
+                return "spotted" in name_lower or "sp" in name_lower.split()
+            return False
+
+        has_mackerel = _has_pattern(sire_color, "mackerel") or _has_pattern(dam_color, "mackerel")
+        has_classic = _has_pattern(sire_color, "classic") or _has_pattern(dam_color, "classic")
+        has_ticked = _has_pattern(sire_color, "ticked") or _has_pattern(dam_color, "ticked")
+        has_spotted = _has_pattern(sire_color, "spotted") or _has_pattern(dam_color, "spotted")
+
+        is_ticked_breed = False
+        if breed:
+            breed_lower = breed.lower()
+            if "abyssinian" in breed_lower or "somali" in breed_lower:
+                is_ticked_breed = True
+
+        if not has_mackerel:
+            name = name.replace("Mackerel ", "").replace("Mc ", "").replace(" Mackerel", "").replace(" Mc", "")
+        if not has_classic:
+            name = name.replace("Classic ", "").replace(" Classic", "")
+        if not has_ticked and not is_ticked_breed:
+            name = name.replace("Ticked ", "").replace("Tc ", "").replace(" Ticked", "").replace(" Tc", "")
+        if not has_spotted:
+            name = name.replace("Spotted ", "").replace("Sp ", "").replace(" Spotted", "").replace(" Sp", "")
+
+        name = " ".join(name.split())
+        name = name.replace(" -White", "-White").replace(" - White", "-White")
+        return name
+
+    def _apply_breed_color_names(self, name: str, breed: str | None) -> str:
+        if not breed:
+            return name
+        breed_lower = breed.lower()
+        if "abyssinian" in breed_lower or "somali" in breed_lower:
+            if "Silver Ticked Tabby" in name:
+                name = name.replace(" Ticked Tabby", "")
+            else:
+                if "Brown Ticked Tabby" in name or "Black Ticked Tabby" in name:
+                    name = name.replace("Brown Ticked Tabby", "Ruddy").replace("Black Ticked Tabby", "Ruddy")
+                elif "Blue Ticked Tabby" in name:
+                    name = name.replace("Blue Ticked Tabby", "Blue")
+                elif "Cinnamon Ticked Tabby" in name:
+                    name = name.replace("Cinnamon Ticked Tabby", "Cinnamon")
+                elif "Fawn Ticked Tabby" in name:
+                    name = name.replace("Fawn Ticked Tabby", "Fawn")
+                elif "Red Ticked Tabby" in name:
+                    name = name.replace("Red Ticked Tabby", "Red")
+        return name
