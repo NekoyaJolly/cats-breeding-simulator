@@ -53,7 +53,27 @@ def _variants(
     return genotypes
 
 
-def _generate_carrier_genotypes(phenotype: str, sex: str, base_loci: dict[str, tuple[str, str]]) -> list[ParentGenotype]:
+def _build_normal_parent_genotypes(phenotype: str, sex: str, base_loci: dict[str, tuple[str, str]]) -> list[ParentGenotype]:
+    """通常モード用の親遺伝子型候補を構築する。
+
+    「優性表現型のヘテロ未確定ルール (Dominant Expressed Unknown Rule)」に従う。
+    優性形質が表現されている座は、表現型だけからホモ接合と断定できないため
+    X/- = {X/X, X/x} の両方を計算対象に含める。
+
+    - カテゴリA (表現型確定・優性ヘテロ不確定 / 通常モードでも展開する):
+        D 濃色 -> D/-, A タビー -> A/-, I シルバー -> I/-, S 白斑あり -> S/-,
+        Mc マッカレル -> Mc/-, Ta ティックド -> Ta/-, Wb ワイドバンド -> Wb/-
+    - カテゴリB (表現型確定・劣性固定 / 固定する):
+        d/d, a/a, cs/cs, cb/cb, cb/cs, i/i, s/s など。CSVの劣性ホモはそのまま固定。
+    - カテゴリC (表現型から要求されない潜在キャリア / 通常モードでは展開しない):
+        B/b チョコ, B/bl シナモン, C/cs ポイント, C/cb セピア。
+        明示キャリア情報または血統・産子履歴がある場合のみ explicit_carrier で扱う。
+
+    シミュレーター正本 V9 / データ正本 V9 の同ルールに準拠。
+    """
+
+    import itertools
+
     defaults = {
         "B": ("B", "B"),
         "D": ("D", "D"),
@@ -70,36 +90,38 @@ def _generate_carrier_genotypes(phenotype: str, sex: str, base_loci: dict[str, t
     full_loci = dict(defaults)
     full_loci.update(base_loci)
 
-    genotypes = []
-    # Base genotype
-    genotypes.append(ParentGenotype(phenotype=phenotype, sex=sex, loci=dict(full_loci)))
-    
-    # Carrier list
-    carriers = []
-    if full_loci.get("B") == ("B", "B"):
-        carriers.append({"B": ("B", "b")})
-        carriers.append({"B": ("B", "bl")})
-    if full_loci.get("D") == ("D", "D"):
-        carriers.append({"D": ("D", "d")})
-    if full_loci.get("A") == ("A", "A"):
-        carriers.append({"A": ("A", "a")})
-    if full_loci.get("C") == ("C", "C"):
-        carriers.append({"C": ("C", "cs")})
-        carriers.append({"C": ("C", "cb")})
-    if full_loci.get("Mc") == ("Mc", "Mc"):
-        carriers.append({"Mc": ("Mc", "mc")})
-    if full_loci.get("Ta") == ("Ta", "Ta"):
-        carriers.append({"Ta": ("Ta", "ta")})
-    if full_loci.get("I") == ("I", "I"):
-        carriers.append({"I": ("I", "i")})
-    if full_loci.get("Wb") == ("Wb", "Wb"):
-        carriers.append({"Wb": ("Wb", "wb")})
-        
-    for carrier in carriers:
-        mod_loci = dict(full_loci)
-        mod_loci.update(carrier)
-        genotypes.append(ParentGenotype(phenotype=phenotype, sex=sex, loci=mod_loci))
-        
+    # カテゴリA: 優性ホモで記載されている座に、ヘテロ (優性/劣性) の可能性を加える。
+    #
+    # S (白斑) は除外する。白斑は不完全優性で S/S(Van) と S/s(バイカラー/-White) は
+    # 表現型で区別でき、入力の白斑レベルから接合性が確定する (= ヘテロ不可視ではない)。
+    # さらに S/S の Van 色を S/s へ展開すると逆引きMAPが汚染され、S/s の子が Van 名へ
+    # 誤マッチするため、S は CSV 記載値のまま固定する。
+    dominant_expandable: dict[str, tuple[str, str]] = {
+        "D": ("D", "d"),
+        "A": ("A", "a"),
+        "I": ("I", "i"),
+        "Mc": ("Mc", "mc"),
+        "Ta": ("Ta", "ta"),
+        "Wb": ("Wb", "wb"),
+    }
+
+    loci_options: dict[str, list[tuple[str, str]]] = {}
+    for locus, val in full_loci.items():
+        options = [val]
+        hetero = dominant_expandable.get(locus)
+        # 優性形質が「優性ホモ」で表現されている場合のみ X/- としてヘテロを追加する。
+        # 劣性ホモ (カテゴリB) や B/C (カテゴリC) はここで展開しない。
+        if hetero is not None and val == (hetero[0], hetero[0]):
+            options.append(hetero)
+        loci_options[locus] = options
+
+    keys = list(loci_options.keys())
+    values_list = [loci_options[key] for key in keys]
+
+    genotypes: list[ParentGenotype] = []
+    for combination in itertools.product(*values_list):
+        loci = dict(zip(keys, combination))
+        genotypes.append(ParentGenotype(phenotype=phenotype, sex=sex, loci=loci))
     return genotypes
 
 
@@ -175,6 +197,7 @@ def _load_phenotype_genotypes() -> dict[str, dict[str, list[ParentGenotype]]]:
     if not filepath:
         return results
 
+    results = {}
     try:
         with open(filepath, mode="r", encoding="utf-8-sig") as f:
             reader = csv.DictReader(f)
@@ -219,12 +242,12 @@ def _load_phenotype_genotypes() -> dict[str, dict[str, list[ParentGenotype]]]:
                 else:
                     male_o_allele = "O" if "O" in o_alleles else "o"
                     male_loci["O"] = (male_o_allele, "Y")
-                    male_variants = _generate_carrier_genotypes(color, "male", male_loci)
+                    male_variants = _build_normal_parent_genotypes(color, "male", male_loci)
                     
                 # Build Female Genotypes
                 female_loci = dict(base_loci)
                 female_loci["O"] = o_alleles
-                female_variants = _generate_carrier_genotypes(color, "female", female_loci)
+                female_variants = _build_normal_parent_genotypes(color, "female", female_loci)
                 
                 if color not in results:
                     results[color] = {"male": [], "female": []}

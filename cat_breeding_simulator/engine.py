@@ -11,6 +11,109 @@ from cat_breeding_simulator.master_data import AUTOSOMAL_LOCI, BREED_FILTERS, PH
 ProbabilityMap = dict[tuple[str, str], float]
 
 
+def _genotype_key(loci: dict[str, tuple[str, str]]) -> tuple:
+    """遺伝子型をアレル単位でそのまま表すキー (デバッグ・未分類サンプル記録用)。"""
+
+    parts = []
+    for locus in sorted(loci.keys()):
+        a1, a2 = loci[locus]
+        parts.append((locus, tuple(sorted([a1, a2]))))
+    return tuple(parts)
+
+
+def _expressed_genotype_key(loci: dict[str, tuple[str, str]], sex: str) -> tuple:
+    """遺伝子型を「実際に発現する表現型」レベルへ還元したキーを返す。
+
+    完全一致辞書だけに頼ると、D/d のようなヘテロ接合の子猫が D/D の正規遺伝子型に
+    一致せず分類不能になる (そして無言で捨てられ再正規化される)。優性・劣性を解決した
+    発現状態でキー化することで、親 (CSV正規遺伝子型) と子猫 (ヘテロ接合を含む) を
+    同じ土俵で突き合わせる。
+
+    パターン座 (Mc / Ta / Sp) は CSV 上の符号付けが不安定なためキーから除外し、
+    パターン名は親カラー名ベースの後処理 (_simplify_patterns) に委ねる。
+    """
+
+    o_alleles = loci["O"]
+    if sex.lower() == "male":
+        orange = "orange" if "O" in o_alleles else "non_orange"
+    else:
+        if "O" in o_alleles and "o" in o_alleles:
+            orange = "tortie"
+        elif "O" in o_alleles:
+            orange = "orange"
+        else:
+            orange = "non_orange"
+
+    # B locus 優性順: B > b > bl
+    b_alleles = loci["B"]
+    if "B" in b_alleles:
+        base = "black"
+    elif "b" in b_alleles:
+        base = "chocolate"
+    else:
+        base = "cinnamon"
+
+    dilute = "dilute" if loci["D"][0] == "d" and loci["D"][1] == "d" else "dense"
+    agouti = "agouti" if "A" in loci["A"] else "solid"
+
+    # C locus: C (フルカラー) が優性。点紋系は C が無いときのみ発現
+    c_alleles = loci["C"]
+    if "C" in c_alleles:
+        c_state = "full"
+    elif "cb" in c_alleles and "cs" in c_alleles:
+        c_state = "mink"
+    elif "cs" in c_alleles:
+        c_state = "point"
+    elif "cb" in c_alleles:
+        c_state = "sepia"
+    else:
+        c_state = "full"
+
+    dominant_white = "white" if "W" in loci["W"] else "colored"
+
+    s_alleles = loci["S"]
+    if s_alleles[0] == "S" and s_alleles[1] == "S":
+        spotting = "high_white"
+    elif "S" in s_alleles:
+        spotting = "white"
+    else:
+        spotting = "none"
+
+    silver = "silver" if "I" in loci["I"] else "non_silver"
+    wideband = "wide" if "Wb" in loci["Wb"] else "narrow"
+
+    return (
+        orange,
+        base,
+        dilute,
+        agouti,
+        c_state,
+        dominant_white,
+        spotting,
+        silver,
+        wideband,
+    )
+
+
+GENOTYPE_TO_COLOR_MAP: dict[tuple[str, tuple], list[str]] = {}
+
+
+def _build_genotype_to_color_map() -> None:
+    GENOTYPE_TO_COLOR_MAP.clear()
+    for color, sex_dict in PHENOTYPE_GENOTYPES.items():
+        for sex in ("male", "female"):
+            for genotype in sex_dict[sex]:
+                key = _expressed_genotype_key(genotype.loci, sex)
+                map_key = (sex, key)
+                if map_key not in GENOTYPE_TO_COLOR_MAP:
+                    GENOTYPE_TO_COLOR_MAP[map_key] = []
+                if color not in GENOTYPE_TO_COLOR_MAP[map_key]:
+                    GENOTYPE_TO_COLOR_MAP[map_key].append(color)
+
+
+_build_genotype_to_color_map()
+
+
 @dataclass(frozen=True, slots=True)
 class KittenResult:
     """API返却用の集計結果。"""
@@ -18,6 +121,21 @@ class KittenResult:
     sex: str
     color: str
     probability_pct: float
+
+
+@dataclass(frozen=True, slots=True)
+class CalculationReport:
+    """通常計算の結果 + 内部診断値。
+
+    既存APIレスポンス (results のみ) を壊さないため、未分類率などの診断値は
+    本データクラス経由でのみ参照する (HTTPレスポンスには含めない)。
+    """
+
+    results: list[KittenResult]
+    matched_probability: float
+    unmatched_probability: float
+    unmatched_genotype_count: int
+    unmatched_samples: list[dict[str, object]]
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,6 +154,20 @@ class CoatColorCalculator:
     """Split -> Cross -> Evaluate -> Aggregate を実装する計算器。"""
 
     def calculate(self, sire_color: str, dam_color: str, breed: str | None = None) -> list[KittenResult]:
+        """既存API互換: 表示用結果リストのみを返す。"""
+
+        return self.calculate_report(sire_color, dam_color, breed).results
+
+    def calculate_report(
+        self, sire_color: str, dam_color: str, breed: str | None = None
+    ) -> CalculationReport:
+        """結果に加えて未分類率などの内部診断値を返す。
+
+        分類不能 (どの正規カラーにも還元できない) 子猫を黙って捨てて 100% に
+        再正規化することはしない。未分類は unmatched_probability として保持し、
+        テスト・デバッグで検出できるようにする。
+        """
+
         sire_genotypes = self._resolve_parent_genotypes(sire_color, "male", breed)
         dam_genotypes = self._resolve_parent_genotypes(dam_color, "female", breed)
 
@@ -45,6 +177,10 @@ class CoatColorCalculator:
             raise BreedingCalculationError("No valid dam genotypes remain after filtering.")
 
         aggregate: ProbabilityMap = defaultdict(float)
+        matched_probability = 0.0
+        unmatched_probability = 0.0
+        unmatched_keys: set[tuple[str, tuple]] = set()
+        unmatched_samples: list[dict[str, object]] = []
         pair_weight = 1.0 / (len(sire_genotypes) * len(dam_genotypes))
 
         for sire_genotype in sire_genotypes:
@@ -54,13 +190,38 @@ class CoatColorCalculator:
                 for sire_gamete, sire_probability in sire_gametes.items():
                     for dam_gamete, dam_probability in dam_gametes.items():
                         kitten = self._combine_gametes(sire_gamete, dam_gamete)
+                        weight = sire_probability * dam_probability * pair_weight
                         phenotype = self._classify_phenotype(kitten, sire_color, dam_color)
+                        if phenotype is None:
+                            # 分類不能を捨てて再正規化せず、未分類率として加算する
+                            unmatched_probability += weight
+                            expressed = _expressed_genotype_key(kitten.loci, kitten.sex)
+                            sample_key = (kitten.sex, expressed)
+                            if sample_key not in unmatched_keys:
+                                unmatched_keys.add(sample_key)
+                                if len(unmatched_samples) < 20:
+                                    unmatched_samples.append(
+                                        {
+                                            "sex": kitten.sex,
+                                            "expressed_key": expressed,
+                                            "genotype": _genotype_key(kitten.loci),
+                                        }
+                                    )
+                            continue
                         phenotype = self._post_process_color_name(
                             phenotype, sire_color, dam_color, breed
                         )
-                        aggregate[(kitten.sex, phenotype)] += sire_probability * dam_probability * pair_weight
+                        matched_probability += weight
+                        aggregate[(kitten.sex, phenotype)] += weight
 
-        return self._to_results(aggregate)
+        results = self._to_results(aggregate, unmatched_probability)
+        return CalculationReport(
+            results=results,
+            matched_probability=round(matched_probability, 6),
+            unmatched_probability=round(unmatched_probability, 6),
+            unmatched_genotype_count=len(unmatched_keys),
+            unmatched_samples=unmatched_samples,
+        )
 
     def _resolve_parent_genotypes(self, phenotype: str, sex: str, breed: str | None) -> list[ParentGenotype]:
         if breed:
@@ -142,49 +303,78 @@ class CoatColorCalculator:
             kitten_loci[locus] = (sire_map[locus], dam_map[locus])
         return KittenGenotype(sex=sex, loci=kitten_loci)
 
-    def _classify_phenotype(self, kitten: KittenGenotype, sire_color: str = "", dam_color: str = "") -> str:
+    def _classify_phenotype(self, kitten: KittenGenotype, sire_color: str = "", dam_color: str = "") -> str | None:
         if sire_color and dam_color:
             matched = self._find_matching_color(kitten, sire_color, dam_color)
             if matched:
                 return matched
+        # CSV逆引きに名前が無い遺伝子型は標準表現型から構築する (V9 §6.1 step1)。
+        # 構築できないもの (点紋/チョコ等の想定外) のみ None = 未分類として検出する。
+        return self._construct_fallback_name(kitten)
 
-        if self._has_dominant(kitten.loci["W"], "W"):
+    def _construct_fallback_name(self, kitten: KittenGenotype) -> str | None:
+        """CSV逆引きに無い遺伝子型を、標準表現型から構築して命名する (V9 §6.1)。
+
+        通常モードでは B(チョコ系) と C(点紋系) を展開しないため、ここで扱うのは
+        黒系(B/B)・フルカラー(C/C) の組み合わせに限られる。優性白以外で base/C/Wb が
+        想定外 (点紋・チョコ・ワイドバンド等) の場合は None を返し、未分類として検出させる。
+        """
+
+        key = _expressed_genotype_key(kitten.loci, kitten.sex)
+        orange, base, dilute, agouti, c_state, dom_white, spotting, silver, wideband = key
+
+        if dom_white == "white":
             return "White"
+        # 通常モードの構築対象外 (点紋/チョコ/シナモン/ワイドバンド) は未分類に回す
+        if base != "black" or c_state != "full" or wideband != "narrow":
+            return None
 
-        if self._is_homozygous(kitten.loci["C"], "c"):
-            return "Albino"
+        is_dilute = dilute == "dilute"
+        is_agouti = agouti == "agouti"
+        is_silver = silver == "silver"
 
-        orange_state = self._orange_state(kitten)
-        restriction = self._point_restriction(kitten.loci["C"])
-        white_spotting = kitten.loci["S"]
-        dilute = self._is_homozygous(kitten.loci["D"], "d")
-        patterned = self._has_dominant(kitten.loci["A"], "A") or orange_state in {"orange", "tortoiseshell"}
-        pattern = self._tabby_pattern(kitten) if patterned and orange_state != "tortoiseshell" else ""
-
-        if orange_state == "tortoiseshell":
-            if self._has_dominant(white_spotting, "S"):
-                if dilute:
-                    return "Dilute Calico"
-                return "Calico"
-            phenotype = "Dilute Tortoiseshell" if dilute else "Tortoiseshell"
-            if restriction:
-                phenotype = f"{phenotype} {restriction}"
-            return phenotype
-
-        if orange_state == "orange":
-            base_color = "Cream" if dilute else "Red"
+        if orange == "tortie":
+            if is_agouti:
+                if is_silver:
+                    stem = "Blue Silver" if is_dilute else "Silver"
+                else:
+                    stem = "Blue" if is_dilute else "Brown"
+                name = f"{stem} Patched Tabby"
+            else:
+                if is_silver:
+                    name = "Blue Cream Smoke" if is_dilute else "Tortie Smoke"
+                else:
+                    name = "Blue Cream" if is_dilute else "Tortoiseshell"
         else:
-            base_color = self._black_series_color(kitten.loci["B"], dilute)
+            is_orange = orange == "orange"
+            if is_agouti:
+                if is_orange:
+                    if is_silver:
+                        stem = "Cream Cameo" if is_dilute else "Cameo"
+                    else:
+                        stem = "Cream" if is_dilute else "Red"
+                else:
+                    if is_silver:
+                        stem = "Blue Silver" if is_dilute else "Silver"
+                    else:
+                        stem = "Blue" if is_dilute else "Brown"
+                name = f"{stem} Tabby"
+            else:
+                if is_orange:
+                    if is_silver:
+                        name = "Cream Smoke" if is_dilute else "Cameo"
+                    else:
+                        name = "Cream" if is_dilute else "Red"
+                else:
+                    if is_silver:
+                        name = "Blue Smoke" if is_dilute else "Black Smoke"
+                    else:
+                        name = "Blue" if is_dilute else "Black"
 
-        phenotype = base_color
-        if pattern:
-            phenotype = f"{phenotype} {pattern}"
-        if restriction:
-            phenotype = f"{phenotype} {restriction}"
-
-        phenotype = self._apply_modifiers(phenotype, kitten, patterned=bool(pattern))
-        phenotype = self._apply_white_spotting(phenotype, white_spotting)
-        return phenotype
+        if spotting in ("white", "high_white"):
+            # 通常モードでは Van を出さず -White に正規化 (データ正本 §5.2)
+            name = f"{name}-White"
+        return name
 
     def _apply_modifiers(self, phenotype: str, kitten: KittenGenotype, *, patterned: bool) -> str:
         if self._has_dominant(kitten.loci["I"], "I"):
@@ -200,10 +390,8 @@ class CoatColorCalculator:
         if not self._has_dominant(white_spotting, "S"):
             return phenotype
         if self._is_homozygous(white_spotting, "S"):
-            return f"{phenotype} Van"
-        if "Tabby" in phenotype or "Point" in phenotype:
-            return f"{phenotype}-White"
-        return f"{phenotype} Bi-Color"
+            return f"{phenotype}-White Van"
+        return f"{phenotype}-White"
 
     def _black_series_color(self, alleles: tuple[str, str], dilute: bool) -> str:
         if "B" in alleles:
@@ -215,11 +403,11 @@ class CoatColorCalculator:
     def _point_restriction(self, alleles: tuple[str, str]) -> str:
         normalized = frozenset(alleles)
         if normalized == frozenset({"cs"}):
-            return "Siamese Point"
+            return "Point"
         if normalized == frozenset({"cb"}):
-            return "Burmese Sepia"
+            return "Sepia"
         if normalized == frozenset({"cb", "cs"}):
-            return "Tonkinese Mink"
+            return "Mink"
         return ""
 
     def _tabby_pattern(self, kitten: KittenGenotype) -> str:
@@ -242,22 +430,34 @@ class CoatColorCalculator:
             return "tortoiseshell"
         return "non_orange"
 
-    def _to_results(self, aggregate: ProbabilityMap) -> list[KittenResult]:
-        total = sum(aggregate.values())
+    def _to_results(
+        self, aggregate: ProbabilityMap, unmatched_probability: float = 0.0
+    ) -> list[KittenResult]:
+        # 全交配の重み合計は 1.0。matched 分を「再正規化せず」そのまま百分率化する。
+        # こうすることで未分類があれば表示合計が 100% 未満になり、欠損を隠さない。
         sorted_results = sorted(aggregate.items(), key=lambda item: (-item[1], item[0][0], item[0][1]))
-        results = [
-            KittenResult(sex=sex, color=color, probability_pct=round(probability / total * 100, 4))
-            for (sex, color), probability in sorted_results
-        ]
+        results: list[KittenResult] = []
+        for (sex, color), probability in sorted_results:
+            pct = round(probability * 100, 4)
+            # 丸めて 0.0% になる項目は通常出力に出さない (要件: 0.0% 禁止)
+            if pct <= 0:
+                continue
+            results.append(KittenResult(sex=sex, color=color, probability_pct=pct))
 
-        diff = round(100.0 - sum(entry.probability_pct for entry in results), 4)
-        if results and diff:
-            top = results[0]
-            results[0] = KittenResult(
-                sex=top.sex,
-                color=top.color,
-                probability_pct=round(top.probability_pct + diff, 4),
-            )
+        if not results:
+            return results
+
+        # 未分類が実質ゼロのときだけ、丸め誤差・閾値未満の切り捨て分を最上位へ寄せて
+        # 合計を 100.0 に整える。未分類が残る場合は 100 に戻さず欠損を残す。
+        if unmatched_probability < 0.00005:
+            diff = round(100.0 - sum(entry.probability_pct for entry in results), 4)
+            if diff:
+                top = results[0]
+                results[0] = KittenResult(
+                    sex=top.sex,
+                    color=top.color,
+                    probability_pct=round(top.probability_pct + diff, 4),
+                )
         return results
 
     @staticmethod
@@ -318,7 +518,12 @@ class CoatColorCalculator:
         return name
 
     def _clean_phenotype_name(self, name: str) -> str:
-        is_silver = "Silver Tabby" in name
+        # すでにCSVに存在する正式なカラー名である場合は、誤置換を防ぐためそのまま返す
+        valid_colors = {d["CoatColor"] for d in COLOR_DEFINITIONS}
+        if name in valid_colors:
+            return name
+
+        is_silver = "Silver" in name and "Tabby" in name
         if is_silver:
             if name.startswith("Black Pt "):
                 name = name.replace("Black Pt ", "Silver Pt ").replace(" Silver Tabby", " Tabby")
@@ -383,6 +588,11 @@ class CoatColorCalculator:
 
         name = " ".join(name.split())
         name = name.replace(" -White", "-White").replace(" - White", "-White")
+        # Tabby-White が Tabby-W の置換で Tabby-Whitehite に化けるのを防ぐ避難処理
+        name = name.replace("Tabby-White", "__TABBY_WHITE__")
+        name = name.replace("Tabby-W", "Tabby-White")
+        name = name.replace("__TABBY_WHITE__", "Tabby-White")
+        name = name.replace("T-W", "Tabby-White").replace("-W Van", "-White Van")
         return name
 
     def _apply_breed_color_names(self, name: str, breed: str | None) -> str:
@@ -405,85 +615,67 @@ class CoatColorCalculator:
                     name = name.replace("Red Ticked Tabby", "Red")
         return name
 
+    # 通常のXYオスには出してはいけない、本来メス限定のカラー名マーカー。
+    # CSV側の符号ミス (例: Blue Cream を O/O で登録) に対する安全弁も兼ねる。
+    _FEMALE_ONLY_MARKERS: tuple[str, ...] = (
+        "tortie",
+        "tortoiseshell",
+        "calico",
+        "patched",
+        "blue cream",
+        "lilac cream",
+        "choco cream",
+    )
+
+    @classmethod
+    def _is_female_only_color(cls, name: str) -> bool:
+        lowered = name.lower()
+        return any(marker in lowered for marker in cls._FEMALE_ONLY_MARKERS)
+
     def _find_matching_color(
         self, kitten: KittenGenotype, sire_color: str, dam_color: str
     ) -> str | None:
-        sex = kitten.sex
-        candidates = []
-        for color, sex_dict in PHENOTYPE_GENOTYPES.items():
-            genotypes = sex_dict.get(sex.lower(), [])
-            if not genotypes:
-                continue
-            base_genotype = genotypes[0]
-
-            match_all = True
-            for locus in AUTOSOMAL_LOCI + ("O",):
-                condition_alleles = base_genotype.loci.get(locus)
-                kitten_alleles = kitten.loci.get(locus)
-                if not condition_alleles or not kitten_alleles:
-                    match_all = False
-                    break
-                
-                condition_str = "/".join(condition_alleles)
-                if not self._matches_locus_condition(kitten_alleles, condition_str, locus, sex):
-                    match_all = False
-                    break
-
-            if match_all:
-                candidates.append(color)
-
+        key = _expressed_genotype_key(kitten.loci, kitten.sex)
+        candidates = list(GENOTYPE_TO_COLOR_MAP.get((kitten.sex.lower(), key), []))
         if not candidates:
             return None
+
+        # 通常のXYオスにトーティ・キャリコ・クリーム混合系を出さない (要件3)
+        if kitten.sex.lower() == "male":
+            candidates = [c for c in candidates if not self._is_female_only_color(c)]
+            if not candidates:
+                return None
 
         # 親に "Bronze" が指定されていなければ、"Bronze" を除外する
         if "Bronze" in candidates:
             if "bronze" not in sire_color.lower() and "bronze" not in dam_color.lower():
                 candidates.remove("Bronze")
 
+        if not candidates:
+            return None
+
         if len(candidates) == 1:
             return candidates[0]
 
-        def _has_pattern(c_name: str, pat: str) -> bool:
-            name_lower = c_name.lower()
-            if pat == "mackerel":
-                return "mackerel" in name_lower or "mc" in name_lower.split()
-            if pat == "classic":
-                return "classic" in name_lower
-            if pat == "ticked":
-                return "ticked" in name_lower or "tc" in name_lower.split()
-            if pat == "spotted":
-                return "spotted" in name_lower or "sp" in name_lower.split()
-            return False
+        # 同一遺伝子型に対する複数表現型名の競合解決
+        priority_map = {
+            "Dilute Calico": 10,
+            "Calico": 10,
+            "Blue Tortie-White": 5,
+            "Tortoiseshell-White": 5,
+        }
 
-        has_mackerel = _has_pattern(sire_color, "mackerel") or _has_pattern(dam_color, "mackerel")
-        has_classic = _has_pattern(sire_color, "classic") or _has_pattern(dam_color, "classic")
-        has_ticked = _has_pattern(sire_color, "ticked") or _has_pattern(dam_color, "ticked")
-        has_spotted = _has_pattern(sire_color, "spotted") or _has_pattern(dam_color, "spotted")
+        sire_words = set(sire_color.lower().split())
+        dam_words = set(dam_color.lower().split())
+        parent_words = sire_words.union(dam_words)
 
-        pattern_candidates = []
-        for cand in candidates:
-            cand_lower = cand.lower()
-            if has_mackerel and ("mackerel" in cand_lower or " mc " in f" {cand_lower} "):
-                pattern_candidates.append(cand)
-            elif has_classic and "classic" in cand_lower:
-                pattern_candidates.append(cand)
-            elif has_ticked and ("ticked" in cand_lower or " tc " in f" {cand_lower} "):
-                pattern_candidates.append(cand)
-            elif has_spotted and ("spotted" in cand_lower or " sp " in f" {cand_lower} "):
-                pattern_candidates.append(cand)
+        def score(color_name: str) -> int:
+            base_score = priority_map.get(color_name, 0)
+            color_words = color_name.lower().split()
+            match_count = sum(1 for w in color_words if w in parent_words)
+            return base_score + match_count * 20
 
-        if pattern_candidates:
-            return pattern_candidates[0]
-
-        non_pattern_candidates = []
-        for cand in candidates:
-            cand_lower = cand.lower()
-            if not any(pat in cand_lower for pat in ["mackerel", "classic", "ticked", "spotted"]):
-                non_pattern_candidates.append(cand)
-
-        if non_pattern_candidates:
-            return non_pattern_candidates[0]
-
+        candidates.sort(key=score, reverse=True)
         return candidates[0]
 
     @staticmethod
@@ -503,9 +695,9 @@ class CoatColorCalculator:
         if locus == "O":
             if sex.lower() == "male":
                 non_y_k = k1 if k2 == "Y" else k2
-                if c1 == "O" and c2 == "O":
+                if "O" in cond_alleles:
                     return non_y_k == "O"
-                if c1 == "o" and c2 == "o":
+                if "o" in cond_alleles:
                     return non_y_k == "o"
                 return False
             else:
