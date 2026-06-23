@@ -11,7 +11,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # マスタデータファイルとPythonスクリプトをコンテナ内にコピー
-COPY docs/architecture/cat_color_genetic_map.csv docs/architecture/猫種データUTF8Ver.csv ./
+COPY docs/architecture/cat_color_genetic_map.csv docs/architecture/cat_breed_genetic_map.csv ./
 COPY main.py ./
 COPY cat_breeding_simulator/ ./cat_breeding_simulator/
 

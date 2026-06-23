@@ -248,7 +248,7 @@ def _load_breed_filters() -> dict[str, dict[str, tuple[str, str]]]:
     import csv
     import os
 
-    filename = "猫種データUTF8Ver.csv"
+    filename = "cat_breed_genetic_map.csv"
     filepath = None
 
     # Search paths
