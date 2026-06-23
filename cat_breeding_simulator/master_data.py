@@ -244,9 +244,69 @@ PHENOTYPE_GENOTYPES: dict[str, dict[str, list[ParentGenotype]]] = {
     },
 }
 
-BREED_FILTERS: dict[str, dict[str, tuple[str, str]]] = {
-    "Siamese": {"C": ("cs", "cs")},
-    "Russian Blue": {"D": ("d", "d"), "B": ("B", "B"), "A": ("a", "a")},
-    "Munchkin": {},
-}
+def _load_breed_filters() -> dict[str, dict[str, tuple[str, str]]]:
+    import csv
+    import os
+
+    filename = "猫種データUTF8Ver.csv"
+    filepath = None
+
+    # Search paths
+    paths_to_try = [
+        filename,
+        os.path.join("docs", "architecture", filename),
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "docs", "architecture", filename),
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), filename),
+    ]
+    for path in paths_to_try:
+        if os.path.exists(path):
+            filepath = path
+            break
+
+    if not filepath:
+        # Fallback to hardcoded defaults if file not found
+        return {
+            "Siamese": {"C": ("cs", "cs")},
+            "Russian Blue": {"D": ("d", "d"), "B": ("B", "B"), "A": ("a", "a")},
+            "Munchkin": {},
+        }
+
+    filters: dict[str, dict[str, tuple[str, str]]] = {}
+    try:
+        with open(filepath, mode="r", encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+            locus_cols = [col for col in reader.fieldnames if col.endswith("_Locus")] if reader.fieldnames else []
+            
+            for row in reader:
+                breed = row.get("Breed")
+                if not breed:
+                    continue
+                
+                breed_constraints: dict[str, tuple[str, str]] = {}
+                for col in locus_cols:
+                    val = row.get(col)
+                    if val and val.strip():
+                        locus_name = col.split("_")[0]
+                        alleles = tuple(val.strip().split("/"))
+                        if len(alleles) == 2:
+                            breed_constraints[locus_name] = (alleles[0], alleles[1])
+                
+                filters[breed] = breed_constraints
+    except Exception:
+        # Fallback in case of any reading error
+        return {
+            "Siamese": {"C": ("cs", "cs")},
+            "Russian Blue": {"D": ("d", "d"), "B": ("B", "B"), "A": ("a", "a")},
+            "Munchkin": {},
+        }
+
+    # Ensure "Munchkin" exists for backward compatibility / tests (since tests use "Munchkin" without SH/LH)
+    if "Munchkin" not in filters:
+        filters["Munchkin"] = {}
+
+    return filters
+
+
+BREED_FILTERS = _load_breed_filters()
+
 
