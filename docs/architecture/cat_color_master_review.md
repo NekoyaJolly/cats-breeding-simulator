@@ -12,23 +12,23 @@
 
 - 元データ件数 (色柄データUTF8Ver.csv, 名前あり): **407**
 - 現行正本件数 (cat_color_genetic_map.csv): **330**
-- 生成した色柄概念 (ColorId) 件数: **383**
+- 生成した色柄概念 (ColorId) 件数: **389**
 
 | Status | 件数 |
 |---|---|
-| canonical | 265 |
-| alias | 19 |
+| canonical | 264 |
+| alias | 30 |
 | breed_specific | 84 |
 | excluded | 2 |
-| review | 13 |
-| **合計** | **383** |
+| review | 9 |
+| **合計** | **389** |
 
-- `GeneticRuleSource=review_required` (遺伝子ルール要確認): **170** 件
+- `GeneticRuleSource=review_required` (遺伝子ルール要確認): **178** 件
 - 正規化 (略称・タイポ展開) を適用した概念: **86** 件
 
 ### 1.1 CanonicalColorId と元データカバレッジ
 
-- alias 解決件数 (`Status=alias` かつ `CanonicalColorId` あり): **19 / 19**
+- alias 解決件数 (`Status=alias` かつ `CanonicalColorId` あり): **30 / 30**
 - alias 解決先が存在しない行数 (`CanonicalColorId` が空 or 実在しない): **0**
 - 元データ 407 件のカバレッジ (SourceCode が master のいずれかの行に保持): **407 / 407** (100%)
 
@@ -58,6 +58,8 @@
 
 | PrimaryName | CanonicalColorId | RegistryNotes |
 |---|---|---|
+| Blue Chinchilla Golden | `blue_shell_golden` | Shell/Chinchilla 同一概念: Blue Chinchilla Golden → Blue Shell Golden (blue_shell_golden) |
+| Blue Chinchilla Silver | `blue_shell_silver` | Shell/Chinchilla 同一概念: Blue Chinchilla Silver → Blue Shell Silver (blue_shell_silver) |
 | Blue Cream | `blue_tortie` | 同一概念: Blue Cream → Blue Tortie (blue_tortie) |
 | Blue Cream Point | `blue_tortie_point` | 同一概念: Blue Cream Point → Blue Tortie Point (blue_tortie_point) |
 | Blue Cream-White | `dilute_calico` | 同一概念: Blue Cream-White → Dilute Calico (dilute_calico) |
@@ -70,10 +72,19 @@
 | Brown Mackerel Torbie-White | `brown_patched_tabby_white` | TICA: Torbie = Patched Tabby (Brown Patched Tabby-White) |
 | Chestnut | `chocolate` | 同一概念: Chestnut → Chocolate (chocolate) |
 | Chestnut Tortie | `chocolate_tortie` | 同一概念: Chestnut Tortie → Chocolate Tortie (chocolate_tortie) |
+| Chinchilla Golden | `shell_golden` | Shell/Chinchilla 同一概念: Chinchilla Golden → Shell Golden (shell_golden) |
+| Chinchilla Golden-White | `shell_golden_white` | Shell/Chinchilla 同一概念: Chinchilla Golden-White → Shell Golden-White (shell_golden_white) |
+| Chinchilla Silver | `shell_silver` | Shell/Chinchilla 同一概念: Chinchilla Silver → Shell Silver (shell_silver) |
+| Chinchilla Silver-White | `shell_silver_white` | Shell/Chinchilla 同一概念: Chinchilla Silver-White → Shell Silver-White (shell_silver_white) |
 | Ebony | `black` | 同一概念: Ebony → Black (black) |
 | Lavender | `lilac` | 同一概念: Lavender → Lilac (lilac) |
 | Lilac Cream | `lilac_tortie` | 同一概念: Lilac Cream → Lilac Tortie (lilac_tortie) |
 | Mike Tri Color | `calico` | 同一概念: Mike Tri Color → Calico (calico) |
+| Peke-Face Red | `red` | Peke-Face は形態/タイプ由来語: Peke-Face Red → Red (red) |
+| Peke-Face Red Mackerel Tabby | `red_mackerel_tabby` | Peke-Face は形態/タイプ由来語: Peke-Face Red Mackerel Tabby → Red Mackerel Tabby (red_mackerel_tabby) |
+| Peke-Face Red Mackerel Tabby-White | `red_mackerel_tabby_white` | Peke-Face は形態/タイプ由来語: Peke-Face Red Mackerel Tabby-White → Red Mackerel Tabby-White (red_mackerel_tabby_white) |
+| Peke-Face Red Tabby | `red_tabby` | Peke-Face は形態/タイプ由来語: Peke-Face Red Tabby → Red Tabby (red_tabby) |
+| Peke-Face Red Tabby-White | `red_tabby_white` | Peke-Face は形態/タイプ由来語: Peke-Face Red Tabby-White → Red Tabby-White (red_tabby_white) |
 | Silver Classic Torbie | `silver_patched_tabby` | TICA: Torbie = Patched Tabby (Silver Patched Tabby) |
 | Silver Mackerel Torbie | `silver_patched_tabby` | TICA: Torbie = Patched Tabby (Silver Patched Tabby) |
 | Tortoiseshell-White | `calico` | 同一概念: Tortoiseshell-White → Calico (calico) |
@@ -115,9 +126,6 @@
 | Cream Mackerel Tabby-White | Cream Mc Tabby-White | Mc→Mackerel |
 | Cream Spotted Tabby-White | Cream Sp Tabby-White | Sp→Spotted |
 | Golden Mackerel Tabby | Golden Mc Tabby | Mc→Mackerel |
-| Peke-Face Red Mackerel Tabby | Peke-Face Red Mc Tabby | Mc→Mackerel |
-| Peke-Face Red Mackerel Tabby-White | P-F Red Mc Tabby-White | Mc→Mackerel, P-F→Peke-Face |
-| Peke-Face Red Tabby-White | P-F Red Tabby-White | P-F→Peke-Face |
 | Red Mackerel Tabby-White | Red Mc Tabby-White | Mc→Mackerel |
 | Red Spotted Tabby-White | Red Sp Tabby-White | Sp→Spotted |
 | Blue Silver Mackerel Tabby | Blue Silver Mc Tabby | Mc→Mackerel |
@@ -175,12 +183,15 @@
 | Brown Classic Torbie-White | Browm Classic Torbie-White | Browm→Brown |
 | Brown Mackerel Torbie | Brown Mackerel Tobie | Tobie→Torbie |
 | Brown Mackerel Torbie-White | Brown Mc Tobie-White | Mc→Mackerel, Tobie→Torbie |
+| Peke-Face Red Mackerel Tabby | Peke-Face Red Mc Tabby | Mc→Mackerel |
+| Peke-Face Red Mackerel Tabby-White | P-F Red Mc Tabby-White | Mc→Mackerel, P-F→Peke-Face |
+| Peke-Face Red Tabby-White | P-F Red Tabby-White | P-F→Peke-Face |
 | Silver Classic Torbie | Silver Classic Tobie | Tobie→Torbie |
 | Silver Mackerel Torbie | Silver Mackerel Tobie | Tobie→Torbie |
 
 ## 6. review にした色柄
 
-Calico Smoke (`calico_smoke`), Cream Shell Cameo (`cream_shell_cameo`), Shaded Chocolate (`shaded_chocolate`), Shaded Cream (`shaded_cream`), Shaded Tortie (`shaded_tortie`), Shaded Tortie-White (`shaded_tortie_white`), Shell Blue (`shell_blue`), Shell Cream (`shell_cream`), Smoke (`smoke`), Smoke Calico (`smoke_calico`), Smoke Calico Van (`smoke_calico_van`), Smoke Dilute Calico (`smoke_dilute_calico`), Smoke Tortoiseshell (`smoke_tortoiseshell`)
+Calico Smoke (`calico_smoke`), Cream Shell Cameo (`cream_shell_cameo`), Shell Blue (`shell_blue`), Shell Cream (`shell_cream`), Smoke (`smoke`), Smoke Calico (`smoke_calico`), Smoke Calico Van (`smoke_calico_van`), Smoke Dilute Calico (`smoke_dilute_calico`), Smoke Tortoiseshell (`smoke_tortoiseshell`)
 
 ## 7. excluded にした色柄
 
@@ -188,8 +199,8 @@ AOV (`aov`), Any Other Color (`any_other_color`)
 
 ## 8. 遺伝子ルールがまだ不確かな項目 (GeneticRuleSource=review_required)
 
-計 170 件。代表: 
-Blue Chinchilla Golden, Blue Chinchilla Silver, Blue Shaded, Blue Shaded Golden, Blue Shaded Silver, Chinchilla Golden, Chinchilla Golden-White, Chinchilla Silver, Chinchilla Silver-White, Shaded Cameo, Shaded Cameo-White, Shaded Golden, Shaded Golden-White, Shaded Silver, Shaded Silver-White, Shell Cameo, Shell Cameo-White, Shell Tortoiseshell, Shell Tortoiseshell-White, Blue Cream Lynx Point, Blue Cream Lynx Point-White, Blue Cream Point-White, Blue Lynx Point, Blue Lynx Point-White, Blue Point, Blue Point-White, Blue Tortie Point, Brown Lynx Point, Chocolate Cream Lynx Point-White, Chocolate Cream Point, Chocolate Lynx Point, Chocolate Lynx Point-White, Chocolate Point, Chocolate Point-White, Chocolate Silver Lynx Point-White, Chocolate Silver Tortie Lynx Point, Chocolate Tortie Lynx Point, Chocolate Tortie Lynx Point-White, Chocolate Tortie Point, Cream Lynx Point, Cream Point, Cream Point-White, Flame Lynx Point, Flame Point, Flame Point-White, Lilac Cream Lynx Point, Lilac Cream Point, Lilac Cream Point-White, Lilac Lynx Point, Lilac Point, Lilac Point-White, Red Lynx Point, Red Lynx Point-White, Red Point, Red Point-White, Seal Lynx Point, Seal Lynx Point-White, Seal Point, Seal Point-White, Seal Tortie Lynx Point ...
+計 178 件。代表: 
+Golden Mackerel Tabby, Golden Tabby, Blue Shaded, Blue Shaded Golden, Blue Shaded Silver, Blue Shell Golden, Blue Shell Silver, Shaded Cameo, Shaded Cameo-White, Shaded Chocolate, Shaded Cream, Shaded Golden, Shaded Golden-White, Shaded Silver, Shaded Silver-White, Shaded Tortie, Shaded Tortie-White, Shell Cameo, Shell Cameo-White, Shell Golden, Shell Golden-White, Shell Silver, Shell Silver-White, Shell Tortoiseshell, Shell Tortoiseshell-White, Blue Cream Lynx Point, Blue Cream Lynx Point-White, Blue Cream Point-White, Blue Lynx Point, Blue Lynx Point-White, Blue Point, Blue Point-White, Blue Tortie Point, Brown Lynx Point, Chocolate Cream Lynx Point-White, Chocolate Cream Point, Chocolate Lynx Point, Chocolate Lynx Point-White, Chocolate Point, Chocolate Point-White, Chocolate Silver Lynx Point-White, Chocolate Silver Tortie Lynx Point, Chocolate Tortie Lynx Point, Chocolate Tortie Lynx Point-White, Chocolate Tortie Point, Cream Lynx Point, Cream Point, Cream Point-White, Flame Lynx Point, Flame Point, Flame Point-White, Lilac Cream Lynx Point, Lilac Cream Point, Lilac Cream Point-White, Lilac Lynx Point, Lilac Point, Lilac Point-White, Red Lynx Point, Red Lynx Point-White, Red Point ...
 
 ## 9. 判断の根拠と不確かな点
 
@@ -199,7 +210,15 @@ Blue Chinchilla Golden, Blue Chinchilla Silver, Blue Shaded, Blue Shaded Golden,
 - **白斑**: `Van`(S/S) は一般表示で `-White` に正規化する方針のため `DisplayAllowed=false`。`Mitted`/`Bi-Color` も同様に一般非表示。
 - **遺伝子座**: マップに同一 Code・同一名で存在する座のみ `current_map` として取り込み、それ以外は名前から `inferred`。Point/Mink/Sepia/Shaded/WideBand 系と alias/breed_specific は `review_required`。
 - **既知のマップ不整合 (要確認)**: `Blue Cream`(code31) はマップ上 `O/O` (ホモ接合オレンジ) だがトーティは `O/o` のはず。master では `OrangeState=tortie` に補正した。エンジン側 CSV は本タスクでは変更していない。
-- **未確定で review に残したもの**: 単独 `Smoke`、`Calico Smoke`/`Smoke Calico`/`Smoke Dilute Calico` 等のスモーク×トーティ/キャリコ、`Shaded Chocolate`/`Shell Cream`/`Shell Blue` 等の shell/shaded 境界。
+- **未確定で review に残したもの**: 単独 `Smoke`、`Calico Smoke`/`Smoke Calico`/`Smoke Dilute Calico` 等のスモーク×トーティ/キャリコ、`Shell Cream`/`Shell Blue`/`Cream Shell Cameo` 等の基色不明な Shell 系。
+
+### 9.1 追加レビュー判断 (2026-06-24 反映)
+
+1. **Peke-Face / P-F**: 形態・タイプ由来語で色柄概念ではない。canonical にせず、`Peke-Face` を除去した汎用カラーへ alias 解決 (例: `Peke-Face Red`→`red`, `Peke-Face Red Tabby`→`red_tabby`)。`DisplayAllowed=false`、旧データ互換のため `InputAllowed=true`。
+2. **Chinchilla / Shell**: 同一概念。canonical は Shell 側に寄せ、`Chinchilla *` は alias とし `CanonicalColorId` を対応 Shell へ向ける (例: `Chinchilla Silver`→`shell_silver`, `Blue Chinchilla Silver`→`blue_shell_silver`)。元データに無い Shell 側 canonical は派生合成し、由来を Notes に記録 (SourceCode/Name は Chinchilla alias 行が保持)。
+3. **Shaded**: Shell/Chinchilla とは tipping 量が異なる別概念として canonical 維持。`GeneticRuleSource=review_required` を維持 (`Shaded Chocolate`/`Shaded Tortie` 等も review から canonical へ移動)。
+4. **Golden**: 単なる non_silver ではなく non_silver + agouti + wideband/tipping 系概念。`i/i` のみ・`Wb/-` のみでは確定しない。`SilverState=non_silver`・`AgoutiState=agouti` に補正し `GeneticRuleSource=review_required` を維持。
+5. **Smoke**: Shell/Shaded/Chinchilla/Golden(Wb系) とは別系統。`solid(a/a) + inhibitor I/-` の概念として `AgoutiState=solid`・`SilverState=smoke` に固定。
 
 ## 10. 今後人間がレビューすべきポイント
 

@@ -212,7 +212,43 @@ CFA/TICA 差・猫種固有呼称の扱い:
 
 ---
 
-## 12. 用語定義 (Any 禁止語の置換)
+## 12. 系統・呼称の分類ポリシー (追加レビュー判断 2026-06-24)
+
+色柄を機械可読に整理するための系統・呼称の確定ルール。`scripts/build_cat_color_master.py` の分類ロジックに実装済み。
+
+### 12.1 Peke-Face / P-F
+
+- **Peke-Face は色柄概念ではなく形態・タイプ由来の混入語**。canonical にしない。
+- `Peke-Face` を除去した残りの汎用カラーへ `Status=alias` で解決する (`CanonicalColorId` に解決先)。
+  - 例: `Peke-Face Red` → `red`、`Peke-Face Red Tabby` → `red_tabby`、`Peke-Face Red Mackerel Tabby` → `red_mackerel_tabby`、`Peke-Face Red Tabby-White` → `red_tabby_white`。
+- `DisplayAllowed=false`。旧データ互換維持のため `InputAllowed=true` は許容。`Notes` に除去・解決の旨を記録。
+
+### 12.2 Chinchilla / Shell
+
+- **Chinchilla と Shell は同一概念**。内部 canonical は **Shell 側**に寄せる。
+- `Chinchilla *` は `Status=alias` とし、`CanonicalColorId` を対応する Shell 系 `ColorId` へ向ける。
+  - 例: `Chinchilla Silver` → `shell_silver`、`Blue Chinchilla Silver` → `blue_shell_silver`、`Chinchilla Golden` → `shell_golden`。
+- 元データに対応する Shell 行が無い場合は **Shell 側 canonical を派生合成**する (遺伝子座は Chinchilla から引き継ぎ `review_required`)。合成行は `SourceCodes`/`SourceNames` を持たず、由来を `Notes` に記録する (元データの Code/Name は Chinchilla alias 行が保持し、喪失しない)。
+
+### 12.3 Shaded
+
+- **Shaded は Shell/Chinchilla とは tipping 量が異なる別概念**として `canonical` を維持する (Shell へ寄せない)。
+- 遺伝子座は不確かなため `GeneticRuleSource=review_required` を維持する。
+
+### 12.4 Golden
+
+- **Golden は単なる `non_silver` ではなく、`non_silver` + `agouti` + wideband/tipping 系概念**として扱う。
+- `i/i` のみで Golden と確定しない。`Wb/-` または wideband/tipping 系の補助情報を要するが、**`Wb/-` のみでも自動生成は確定しない**。
+- master では `SilverState=non_silver`・`AgoutiState=agouti` に補正し、`GeneticRuleSource=review_required` を維持する (マップの `I/I`・`a/a` 誤りに引きずられない)。
+
+### 12.5 Smoke
+
+- **Smoke は Shell/Shaded/Chinchilla/Golden(Wb系) とは別系統**。
+- `Smoke = solid(a/a) + inhibitor I/-` の概念。master では `AgoutiState=solid`・`SilverState=smoke` に固定し、Wb 系とは分離する。
+
+---
+
+## 13. 用語定義 (Any 禁止語の置換)
 
 機械可読な正本では曖昧語 `Any` を**仕様値・CSV値・モード名として使用しない**。意味別に以下を使う。
 
