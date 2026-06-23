@@ -12,23 +12,23 @@
 
 - 元データ件数 (色柄データUTF8Ver.csv, 名前あり): **407**
 - 現行正本件数 (cat_color_genetic_map.csv): **330**
-- 生成した色柄概念 (ColorId) 件数: **389**
+- 生成した色柄概念 (ColorId) 件数: **383**
 
 | Status | 件数 |
 |---|---|
-| canonical | 264 |
-| alias | 30 |
+| canonical | 266 |
+| alias | 25 |
 | breed_specific | 84 |
 | excluded | 2 |
-| review | 9 |
-| **合計** | **389** |
+| review | 6 |
+| **合計** | **383** |
 
-- `GeneticRuleSource=review_required` (遺伝子ルール要確認): **178** 件
+- `GeneticRuleSource=review_required` (遺伝子ルール要確認): **171** 件
 - 正規化 (略称・タイポ展開) を適用した概念: **86** 件
 
 ### 1.1 CanonicalColorId と元データカバレッジ
 
-- alias 解決件数 (`Status=alias` かつ `CanonicalColorId` あり): **30 / 30**
+- alias 解決件数 (`Status=alias` かつ `CanonicalColorId` あり): **25 / 25**
 - alias 解決先が存在しない行数 (`CanonicalColorId` が空 or 実在しない): **0**
 - 元データ 407 件のカバレッジ (SourceCode が master のいずれかの行に保持): **407 / 407** (100%)
 
@@ -58,8 +58,6 @@
 
 | PrimaryName | CanonicalColorId | RegistryNotes |
 |---|---|---|
-| Blue Chinchilla Golden | `blue_shell_golden` | Shell/Chinchilla 同一概念: Blue Chinchilla Golden → Blue Shell Golden (blue_shell_golden) |
-| Blue Chinchilla Silver | `blue_shell_silver` | Shell/Chinchilla 同一概念: Blue Chinchilla Silver → Blue Shell Silver (blue_shell_silver) |
 | Blue Cream | `blue_tortie` | 同一概念: Blue Cream → Blue Tortie (blue_tortie) |
 | Blue Cream Point | `blue_tortie_point` | 同一概念: Blue Cream Point → Blue Tortie Point (blue_tortie_point) |
 | Blue Cream-White | `dilute_calico` | 同一概念: Blue Cream-White → Dilute Calico (dilute_calico) |
@@ -72,10 +70,6 @@
 | Brown Mackerel Torbie-White | `brown_patched_tabby_white` | TICA: Torbie = Patched Tabby (Brown Patched Tabby-White) |
 | Chestnut | `chocolate` | 同一概念: Chestnut → Chocolate (chocolate) |
 | Chestnut Tortie | `chocolate_tortie` | 同一概念: Chestnut Tortie → Chocolate Tortie (chocolate_tortie) |
-| Chinchilla Golden | `shell_golden` | Shell/Chinchilla 同一概念: Chinchilla Golden → Shell Golden (shell_golden) |
-| Chinchilla Golden-White | `shell_golden_white` | Shell/Chinchilla 同一概念: Chinchilla Golden-White → Shell Golden-White (shell_golden_white) |
-| Chinchilla Silver | `shell_silver` | Shell/Chinchilla 同一概念: Chinchilla Silver → Shell Silver (shell_silver) |
-| Chinchilla Silver-White | `shell_silver_white` | Shell/Chinchilla 同一概念: Chinchilla Silver-White → Shell Silver-White (shell_silver_white) |
 | Ebony | `black` | 同一概念: Ebony → Black (black) |
 | Lavender | `lilac` | 同一概念: Lavender → Lilac (lilac) |
 | Lilac Cream | `lilac_tortie` | 同一概念: Lilac Cream → Lilac Tortie (lilac_tortie) |
@@ -85,6 +79,7 @@
 | Peke-Face Red Mackerel Tabby-White | `red_mackerel_tabby_white` | Peke-Face は形態/タイプ由来語: Peke-Face Red Mackerel Tabby-White → Red Mackerel Tabby-White (red_mackerel_tabby_white) |
 | Peke-Face Red Tabby | `red_tabby` | Peke-Face は形態/タイプ由来語: Peke-Face Red Tabby → Red Tabby (red_tabby) |
 | Peke-Face Red Tabby-White | `red_tabby_white` | Peke-Face は形態/タイプ由来語: Peke-Face Red Tabby-White → Red Tabby-White (red_tabby_white) |
+| Shell Blue | `blue_chinchilla_silver` | 団体/補足タグ: Blue Chinchilla / 同一概念: Shell Blue → Blue Chinchilla Silver (blue_chinchilla_silver) |
 | Silver Classic Torbie | `silver_patched_tabby` | TICA: Torbie = Patched Tabby (Silver Patched Tabby) |
 | Silver Mackerel Torbie | `silver_patched_tabby` | TICA: Torbie = Patched Tabby (Silver Patched Tabby) |
 | Tortoiseshell-White | `calico` | 同一概念: Tortoiseshell-White → Calico (calico) |
@@ -191,7 +186,7 @@
 
 ## 6. review にした色柄
 
-Calico Smoke (`calico_smoke`), Cream Shell Cameo (`cream_shell_cameo`), Shell Blue (`shell_blue`), Shell Cream (`shell_cream`), Smoke (`smoke`), Smoke Calico (`smoke_calico`), Smoke Calico Van (`smoke_calico_van`), Smoke Dilute Calico (`smoke_dilute_calico`), Smoke Tortoiseshell (`smoke_tortoiseshell`)
+Calico Smoke (`calico_smoke`), Smoke (`smoke`), Smoke Calico (`smoke_calico`), Smoke Calico Van (`smoke_calico_van`), Smoke Dilute Calico (`smoke_dilute_calico`), Smoke Tortoiseshell (`smoke_tortoiseshell`)
 
 ## 7. excluded にした色柄
 
@@ -199,8 +194,8 @@ AOV (`aov`), Any Other Color (`any_other_color`)
 
 ## 8. 遺伝子ルールがまだ不確かな項目 (GeneticRuleSource=review_required)
 
-計 178 件。代表: 
-Golden Mackerel Tabby, Golden Tabby, Blue Shaded, Blue Shaded Golden, Blue Shaded Silver, Blue Shell Golden, Blue Shell Silver, Shaded Cameo, Shaded Cameo-White, Shaded Chocolate, Shaded Cream, Shaded Golden, Shaded Golden-White, Shaded Silver, Shaded Silver-White, Shaded Tortie, Shaded Tortie-White, Shell Cameo, Shell Cameo-White, Shell Golden, Shell Golden-White, Shell Silver, Shell Silver-White, Shell Tortoiseshell, Shell Tortoiseshell-White, Blue Cream Lynx Point, Blue Cream Lynx Point-White, Blue Cream Point-White, Blue Lynx Point, Blue Lynx Point-White, Blue Point, Blue Point-White, Blue Tortie Point, Brown Lynx Point, Chocolate Cream Lynx Point-White, Chocolate Cream Point, Chocolate Lynx Point, Chocolate Lynx Point-White, Chocolate Point, Chocolate Point-White, Chocolate Silver Lynx Point-White, Chocolate Silver Tortie Lynx Point, Chocolate Tortie Lynx Point, Chocolate Tortie Lynx Point-White, Chocolate Tortie Point, Cream Lynx Point, Cream Point, Cream Point-White, Flame Lynx Point, Flame Point, Flame Point-White, Lilac Cream Lynx Point, Lilac Cream Point, Lilac Cream Point-White, Lilac Lynx Point, Lilac Point, Lilac Point-White, Red Lynx Point, Red Lynx Point-White, Red Point ...
+計 171 件。代表: 
+Golden Mackerel Tabby, Golden Tabby, Blue Chinchilla Golden, Blue Chinchilla Silver, Blue Shaded, Blue Shaded Golden, Blue Shaded Silver, Chinchilla Golden, Chinchilla Golden-White, Chinchilla Silver, Chinchilla Silver-White, Cream Shell Cameo, Shaded Cameo, Shaded Cameo-White, Shaded Chocolate, Shaded Cream, Shaded Golden, Shaded Golden-White, Shaded Silver, Shaded Silver-White, Shaded Tortie, Shaded Tortie-White, Shell Cameo, Shell Cameo-White, Shell Cream, Shell Tortoiseshell, Shell Tortoiseshell-White, Blue Cream Lynx Point, Blue Cream Lynx Point-White, Blue Cream Point-White, Blue Lynx Point, Blue Lynx Point-White, Blue Point, Blue Point-White, Blue Tortie Point, Brown Lynx Point, Chocolate Cream Lynx Point-White, Chocolate Cream Point, Chocolate Lynx Point, Chocolate Lynx Point-White, Chocolate Point, Chocolate Point-White, Chocolate Silver Lynx Point-White, Chocolate Silver Tortie Lynx Point, Chocolate Tortie Lynx Point, Chocolate Tortie Lynx Point-White, Chocolate Tortie Point, Cream Lynx Point, Cream Point, Cream Point-White, Flame Lynx Point, Flame Point, Flame Point-White, Lilac Cream Lynx Point, Lilac Cream Point, Lilac Cream Point-White, Lilac Lynx Point, Lilac Point, Lilac Point-White, Red Lynx Point ...
 
 ## 9. 判断の根拠と不確かな点
 
@@ -215,10 +210,10 @@ Golden Mackerel Tabby, Golden Tabby, Blue Shaded, Blue Shaded Golden, Blue Shade
 ### 9.1 追加レビュー判断 (2026-06-24 反映)
 
 1. **Peke-Face / P-F**: 形態・タイプ由来語で色柄概念ではない。canonical にせず、`Peke-Face` を除去した汎用カラーへ alias 解決 (例: `Peke-Face Red`→`red`, `Peke-Face Red Tabby`→`red_tabby`)。`DisplayAllowed=false`、旧データ互換のため `InputAllowed=true`。
-2. **Chinchilla / Shell**: 同一概念。canonical は Shell 側に寄せ、`Chinchilla *` は alias とし `CanonicalColorId` を対応 Shell へ向ける (例: `Chinchilla Silver`→`shell_silver`, `Blue Chinchilla Silver`→`blue_shell_silver`)。元データに無い Shell 側 canonical は派生合成し、由来を Notes に記録 (SourceCode/Name は Chinchilla alias 行が保持)。
-3. **Shaded**: Shell/Chinchilla とは tipping 量が異なる別概念として canonical 維持。`GeneticRuleSource=review_required` を維持 (`Shaded Chocolate`/`Shaded Tortie` 等も review から canonical へ移動)。
-4. **Golden**: 単なる non_silver ではなく non_silver + agouti + wideband/tipping 系概念。`i/i` のみ・`Wb/-` のみでは確定しない。`SilverState=non_silver`・`AgoutiState=agouti` に補正し `GeneticRuleSource=review_required` を維持。
-5. **Smoke**: Shell/Shaded/Chinchilla/Golden(Wb系) とは別系統。`solid(a/a) + inhibitor I/-` の概念として `AgoutiState=solid`・`SilverState=smoke` に固定。
+2. **Chinchilla / Shell**: 計算上は**同一の shell tipping 概念**(別々の遺伝子計算概念にしない)。表示名のみ基色で使い分ける — 黒系/ブルー系は **Chinchilla 表記を canonical** (Shell 表記を Aliases に併記)、赤系/クリーム系は **Shell / Shell Cameo を canonical**。`PatternState=shell`、`GeneticRuleSource=review_required`。ブルー系の `Shell Blue` は `Blue Chinchilla Silver` へ alias。最終表示は PrimaryName/Aliases/BreedContext/RegistryNotes に従う。
+3. **Shaded**: Shell/Chinchilla とは tipping 量が異なる別概念として canonical 維持。`PatternState=shaded`、`GeneticRuleSource=review_required` を維持 (`Shaded Chocolate`/`Shaded Tortie` 等も review から canonical へ移動)。
+4. **Golden**: 単なる non_silver ではなく non_silver + wideband/tipping 系概念。`i/i` のみ・`Wb/-` のみでは確定しない。`SilverState=non_silver`・`PatternState=shell または shaded` に保持し `GeneticRuleSource=review_required` を維持。
+5. **Smoke**: Shell/Shaded/Chinchilla/Golden(Wb系) とは別系統。`solid(a/a) + inhibitor I/-` の概念として `AgoutiState=solid`・`SilverState=smoke` に固定し、Wb/tipping 系と分離。
 
 ## 10. 今後人間がレビューすべきポイント
 

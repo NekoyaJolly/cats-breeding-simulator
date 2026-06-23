@@ -174,6 +174,8 @@ ALIAS_TARGETS: dict[str, str] = {
     # 実務商標名・別系統呼称
     "blue gray": "Blue",
     "bronze": "Brown Tabby",
+    # Shell/Chinchilla 同一概念 (#1): ブルー系は Chinchilla 表記優先のため Shell Blue は寄せる
+    "shell blue": "Blue Chinchilla Silver",
     # Oriental 呼称 (一般概念へ寄せる。表示は alias map 側で Oriental 文脈に復元)
     "ebony": "Black",
     "lavender": "Lilac",
@@ -209,12 +211,12 @@ BREED_SPECIFIC_RULES: list[tuple[str, str]] = [
 
 # 自動判断できず人間レビューに回す概念 (依頼プロンプトの review 指定相当)
 # 注: Shaded は別概念として canonical 維持 (追加レビュー判断 #3) のため review から外した。
-#     Shell は Chinchilla と同一概念へ寄せる (#2) が、基色不明な単独 Shell は review に残す。
+#     Shell/Chinchilla は計算上同一概念 (#1)。Shell Cream/Cream Shell Cameo は赤/クリーム系 Shell
+#     として canonical 化、Shell Blue はブルー系 Chinchilla へ alias 化 (ALIAS_TARGETS) したため review から外した。
 REVIEW_CONCEPTS = {
     "smoke",                       # 単独 Smoke は基色不明
     "calico smoke", "smoke calico", "smoke dilute calico", "smoke calico van",
     "smoke tortoiseshell",         # スモーク×トーティ/キャリコ境界が曖昧
-    "shell cream", "shell blue", "cream shell cameo",  # 基色不明な Shell 系
 }
 
 # 一般表示してよい代表 canonical 概念 (DisplayAllowed=true の明示許可リスト)。
@@ -395,6 +397,11 @@ def derive_attributes(name: str, loci: dict[str, str]) -> dict[str, str]:
     else:
         pattern = "none"
 
+    # 追加レビュー判断 #3/#4: Golden は wideband/tipping 系。
+    # PatternState は chinchilla 級なら shell、それ以外は shaded に固定する (tabby 名でも tipping 概念)。
+    if is_golden:
+        pattern = "shell" if is_chinchilla else "shaded"
+
     # --- ColorGroup ---
     if is_calico:
         group = "calico"
@@ -508,16 +515,6 @@ def classify(concept: str, attrs: dict[str, str], in_map: bool) -> dict[str, str
         # 旧データ互換のため InputAllowed=true は許容、DisplayAllowed=false。
         return _decision("alias", "general", False, True, genetic_src, resolves_to, registry, notes)
 
-    # 3.6) Chinchilla = Shell と同一概念 (追加レビュー判断 #2)
-    # 内部 canonical は Shell 側に寄せ、Chinchilla は alias とする。
-    if "chinchilla" in cl:
-        shell_name = re.sub(r"chinchilla", "Shell", concept, flags=re.IGNORECASE)
-        shell_name = re.sub(r"\s+", " ", shell_name).strip()
-        resolves_to = make_color_id(shell_name)
-        registry.append(f"Shell/Chinchilla 同一概念: {concept} → {shell_name} ({resolves_to})")
-        notes.append(f"Chinchilla は Shell と同一概念。一般表示は {shell_name} に寄せる (機械処理は CanonicalColorId)。")
-        return _decision("alias", "general", False, True, "review_required", resolves_to, registry, notes)
-
     # 4) Torbie (TICA) = Patched Tabby (CFA/実務)
     if "torbie" in cl:
         target_name = re.sub(r"torbie", "Patched Tabby", concept, flags=re.IGNORECASE)
@@ -550,12 +547,17 @@ def classify(concept: str, attrs: dict[str, str], in_map: bool) -> dict[str, str
     # 追加レビュー判断 #5: Smoke は別系統
     if "smoke" in cl:
         notes.append("Smoke = solid(a/a) + inhibitor I/-。Shell/Shaded/Chinchilla/Golden(Wb系)とは別系統。")
-    # 追加レビュー判断 #2/#3: Shell/Shaded の区別
-    if attrs["ColorGroup"] == "shaded" and "golden" not in cl:
-        if "shell" in cl:
-            notes.append("Shell = Chinchilla と同一概念 (canonical は Shell 側)。tipping量で Shaded と区別。")
-        else:
-            notes.append("Shaded = tipping量が Shell/Chinchilla と異なる別概念 (canonical 維持)。")
+    # 追加レビュー判断 #1: Chinchilla/Shell は計算上同一の shell tipping 概念。
+    # 表示名は基色で使い分ける (黒/ブルー系=Chinchilla 優先, 赤/クリーム系=Shell/Shell Cameo 優先)。
+    if "chinchilla" in cl:
+        registry.append("Shell/Chinchilla は計算上同一の shell tipping 概念。黒系/ブルー系は Chinchilla 表記優先 (Shell 表記とも)。")
+        notes.append("PatternState=shell。最終表示は PrimaryName/Aliases/BreedContext/RegistryNotes に従う。")
+    elif "shell" in cl:
+        registry.append("Shell/Chinchilla は計算上同一の shell tipping 概念。赤系/クリーム系等は Shell/Shell Cameo 表記優先。")
+        notes.append("PatternState=shell。最終表示は PrimaryName/Aliases/BreedContext/RegistryNotes に従う。")
+    # 追加レビュー判断 #2/#3: Shaded は Shell/Chinchilla と tipping量が異なる別概念
+    elif attrs["ColorGroup"] == "shaded" and "golden" not in cl:
+        notes.append("Shaded = tipping量が Shell/Chinchilla と異なる別概念 (PatternState=shaded, canonical 維持)。")
     if attrs["PointState"] in ("point",):
         notes.append("Point は normal_mode (breed_unselected) では C キャリア規則によりエンジンが非表示にする。")
     if attrs["WhiteState"] == "van":
@@ -617,8 +619,6 @@ class Concept:
         self.change_notes: set[str] = set()
         self.loci: dict[str, str] = {}
         self.in_map = False
-        self.synthetic = False       # Shell/Chinchilla 同一概念のため合成した canonical 行
-        self.derived_from = ""       # 合成元 (Chinchilla 名)
 
 
 def normalize_concept(raw: str) -> tuple[str, str, list[str], list[str]]:
@@ -687,30 +687,9 @@ def build_concepts(
             c.loci = _loci_from_map(gmap[code])
             c.in_map = True
 
-    # 追加レビュー判断 #2: Chinchilla = Shell 同一概念。
-    # Chinchilla 概念に対応する Shell 側 canonical が無ければ合成する
-    # (Chinchilla 行は classify() で alias 化され、ここで作る Shell 行が解決先になる)。
-    synthesized_shell: list[str] = []
-    for cl in list(concepts.keys()):
-        if "chinchilla" not in cl:
-            continue
-        ch = concepts[cl]
-        shell_name = re.sub(r"chinchilla", "Shell", ch.primary_name, flags=re.IGNORECASE)
-        shell_name = re.sub(r"\s+", " ", shell_name).strip()
-        shell_cl = shell_name.lower()
-        if shell_cl in concepts:
-            continue
-        sc = Concept(shell_name)
-        sc.loci = dict(ch.loci)        # 遺伝子座は Chinchilla から引き継ぐ (要確認)
-        sc.synthetic = True
-        sc.derived_from = ch.primary_name
-        concepts[shell_cl] = sc
-        synthesized_shell.append(shell_name)
-
     stats = {
         "name_mismatches": name_mismatches,
         "map_only": map_only,
-        "synthesized_shell": synthesized_shell,
         "source_codes": set(source.keys()),
         "map_codes": set(gmap.keys()),
     }
@@ -745,17 +724,19 @@ def build_rows(concepts: dict[str, Concept]) -> list[dict[str, str]]:
             registry_parts.append(decision["RegistryNotesExtra"])
 
         note_parts: list[str] = []
-        if c.synthetic:
-            note_parts.append(
-                f"派生概念: Shell = Chinchilla 同一概念。{c.derived_from} (alias) から canonical 化。"
-                "元データに直接の行は無い (SourceCode/Name は Chinchilla 側 alias 行が保持)。"
-            )
         if decision["NotesExtra"]:
             note_parts.append(decision["NotesExtra"])
         if c.change_notes:
             note_parts.append("正規化: " + ", ".join(sorted(c.change_notes)))
-        if not c.in_map and not c.synthetic:
+        if not c.in_map:
             note_parts.append("遺伝子座はマップ未収載のため名前から推定。")
+
+        # 追加レビュー判断 #1: Chinchilla canonical (黒/ブルー系で Chinchilla 表記優先) には、
+        # 同一概念の Shell 表記を Aliases に併記する (計算上は同一概念)。
+        if decision["Status"] == "canonical" and "chinchilla" in c.primary_name.lower():
+            shell_alt = re.sub(r"chinchilla", "Shell", c.primary_name, flags=re.IGNORECASE)
+            shell_alt = re.sub(r"\s+", " ", shell_alt).strip()
+            c.aliases.add(shell_alt)
 
         aliases = sorted(c.aliases)
 
@@ -837,12 +818,8 @@ def validate(rows: list[dict[str, str]], source_codes: set[int]) -> list[str]:
             errors.append(f"InputAllowed 不正: {cid}")
         if r["SexRestriction"] not in allowed_sex:
             errors.append(f"SexRestriction 不正: {cid} -> {r['SexRestriction']}")
-        # SourceNames は SourceCodes を持つ行 (= 元データ直結の行) でのみ必須。
-        # 派生 canonical (Shell 合成行) は元データ直結ではないため空欄可。ただし Notes に由来を要記録。
-        if r["SourceCodes"] and not r["SourceNames"]:
+        if not r["SourceNames"]:
             errors.append(f"SourceNames 空 (元データ名喪失): {cid}")
-        if not r["SourceCodes"] and not r["SourceNames"] and not r["Notes"]:
-            errors.append(f"元データ直結でない行に由来 Notes が無い: {cid}")
         # breed_specific で DisplayAllowed=true は Notes に理由が必要
         if r["Status"] == "breed_specific" and r["DisplayAllowed"] == "true" and "理由" not in r["Notes"]:
             errors.append(f"breed_specific なのに DisplayAllowed=true (理由未記載): {cid}")
@@ -1064,10 +1041,10 @@ def write_review(rows, concepts, stats, source, gmap) -> None:
     a("### 9.1 追加レビュー判断 (2026-06-24 反映)")
     a("")
     a("1. **Peke-Face / P-F**: 形態・タイプ由来語で色柄概念ではない。canonical にせず、`Peke-Face` を除去した汎用カラーへ alias 解決 (例: `Peke-Face Red`→`red`, `Peke-Face Red Tabby`→`red_tabby`)。`DisplayAllowed=false`、旧データ互換のため `InputAllowed=true`。")
-    a("2. **Chinchilla / Shell**: 同一概念。canonical は Shell 側に寄せ、`Chinchilla *` は alias とし `CanonicalColorId` を対応 Shell へ向ける (例: `Chinchilla Silver`→`shell_silver`, `Blue Chinchilla Silver`→`blue_shell_silver`)。元データに無い Shell 側 canonical は派生合成し、由来を Notes に記録 (SourceCode/Name は Chinchilla alias 行が保持)。")
-    a("3. **Shaded**: Shell/Chinchilla とは tipping 量が異なる別概念として canonical 維持。`GeneticRuleSource=review_required` を維持 (`Shaded Chocolate`/`Shaded Tortie` 等も review から canonical へ移動)。")
-    a("4. **Golden**: 単なる non_silver ではなく non_silver + agouti + wideband/tipping 系概念。`i/i` のみ・`Wb/-` のみでは確定しない。`SilverState=non_silver`・`AgoutiState=agouti` に補正し `GeneticRuleSource=review_required` を維持。")
-    a("5. **Smoke**: Shell/Shaded/Chinchilla/Golden(Wb系) とは別系統。`solid(a/a) + inhibitor I/-` の概念として `AgoutiState=solid`・`SilverState=smoke` に固定。")
+    a("2. **Chinchilla / Shell**: 計算上は**同一の shell tipping 概念**(別々の遺伝子計算概念にしない)。表示名のみ基色で使い分ける — 黒系/ブルー系は **Chinchilla 表記を canonical** (Shell 表記を Aliases に併記)、赤系/クリーム系は **Shell / Shell Cameo を canonical**。`PatternState=shell`、`GeneticRuleSource=review_required`。ブルー系の `Shell Blue` は `Blue Chinchilla Silver` へ alias。最終表示は PrimaryName/Aliases/BreedContext/RegistryNotes に従う。")
+    a("3. **Shaded**: Shell/Chinchilla とは tipping 量が異なる別概念として canonical 維持。`PatternState=shaded`、`GeneticRuleSource=review_required` を維持 (`Shaded Chocolate`/`Shaded Tortie` 等も review から canonical へ移動)。")
+    a("4. **Golden**: 単なる non_silver ではなく non_silver + wideband/tipping 系概念。`i/i` のみ・`Wb/-` のみでは確定しない。`SilverState=non_silver`・`PatternState=shell または shaded` に保持し `GeneticRuleSource=review_required` を維持。")
+    a("5. **Smoke**: Shell/Shaded/Chinchilla/Golden(Wb系) とは別系統。`solid(a/a) + inhibitor I/-` の概念として `AgoutiState=solid`・`SilverState=smoke` に固定し、Wb/tipping 系と分離。")
     a("")
     a("## 10. 今後人間がレビューすべきポイント")
     a("")

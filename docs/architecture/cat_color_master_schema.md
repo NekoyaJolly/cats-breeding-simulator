@@ -225,21 +225,23 @@ CFA/TICA 差・猫種固有呼称の扱い:
 
 ### 12.2 Chinchilla / Shell
 
-- **Chinchilla と Shell は同一概念**。内部 canonical は **Shell 側**に寄せる。
-- `Chinchilla *` は `Status=alias` とし、`CanonicalColorId` を対応する Shell 系 `ColorId` へ向ける。
-  - 例: `Chinchilla Silver` → `shell_silver`、`Blue Chinchilla Silver` → `blue_shell_silver`、`Chinchilla Golden` → `shell_golden`。
-- 元データに対応する Shell 行が無い場合は **Shell 側 canonical を派生合成**する (遺伝子座は Chinchilla から引き継ぎ `review_required`)。合成行は `SourceCodes`/`SourceNames` を持たず、由来を `Notes` に記録する (元データの Code/Name は Chinchilla alias 行が保持し、喪失しない)。
+- **計算上は同一の shell tipping 系概念**として扱う (別々の遺伝子計算概念にしない)。`PatternState=shell`、`GeneticRuleSource=review_required`。
+- **表示名は基色で使い分ける** (最終表示は CSV の `PrimaryName` / `Aliases` / `BreedContext` / `RegistryNotes` に従う):
+  - 黒系・ブルー系 → **Chinchilla 表記を canonical** とし、Shell 表記を `Aliases` に併記する (例: `Chinchilla Silver` (canonical, Aliases に `Shell Silver`)、`Blue Chinchilla Silver` (Aliases に `Blue Shell Silver`))。
+  - 赤系・クリーム系 → **Shell / Shell Cameo 表記を canonical** とする (例: `Shell Cameo`、`Cream Shell Cameo`、`Shell Cream`)。
+  - 上記に合わない表記 (例: ブルー系を Shell 表記した `Shell Blue`) は、対応する canonical へ `Status=alias` で寄せる (`Shell Blue` → `blue_chinchilla_silver`)。
+- 同一概念のため、片方の表記を入力しても他方の `ColorId` に解決できるよう `Aliases` / `CanonicalColorId` を整える。
 
 ### 12.3 Shaded
 
-- **Shaded は Shell/Chinchilla とは tipping 量が異なる別概念**として `canonical` を維持する (Shell へ寄せない)。
-- 遺伝子座は不確かなため `GeneticRuleSource=review_required` を維持する。
+- **Shaded は Shell/Chinchilla とは tipping 量が異なる別概念**として `canonical` を維持する (Shell/Chinchilla へ寄せない)。
+- `PatternState=shaded`。遺伝子座は不確かなため `GeneticRuleSource=review_required` を維持する。
 
 ### 12.4 Golden
 
-- **Golden は単なる `non_silver` ではなく、`non_silver` + `agouti` + wideband/tipping 系概念**として扱う。
+- **Golden は単なる `non_silver` ではなく、`non_silver` + wideband/tipping 系概念**として扱う。
 - `i/i` のみで Golden と確定しない。`Wb/-` または wideband/tipping 系の補助情報を要するが、**`Wb/-` のみでも自動生成は確定しない**。
-- master では `SilverState=non_silver`・`AgoutiState=agouti` に補正し、`GeneticRuleSource=review_required` を維持する (マップの `I/I`・`a/a` 誤りに引きずられない)。
+- master では `SilverState=non_silver`・`PatternState=shell または shaded` (chinchilla 級は `shell`、それ以外は `shaded`) として保持し、`GeneticRuleSource=review_required` を維持する (マップの `I/I`・`a/a` 誤りに引きずられない)。
 
 ### 12.5 Smoke
 
