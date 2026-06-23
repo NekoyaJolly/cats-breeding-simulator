@@ -1,0 +1,409 @@
+﻿Code,CoatColor
+0,
+1,White
+2,Blue
+3,Black
+4,Red
+5,Peke-Face Red
+6,Cream
+7,Cameo
+8,Ruddy
+9,Fawn
+10,Sable
+11,Champagne
+12,Platinum
+13,Blue Gray
+14,Silver
+15,Bronze
+16,Lilac
+17,Chocolate
+18,Brown
+19,Lavender
+20,Blue Silver
+21,Sepia Agouti
+22,Ebony
+23,Chestnut
+24,Shell Cameo
+30,Tortoiseshell
+31,Blue Cream
+32,Calico
+33,Dilute Calico
+34,Mike Tri Color
+35,Blue-White
+36,Black-White
+37,Red-White
+38,Cream-White
+39,Cameo-White
+40,Tortoiseshell-White
+41,Blue Cream-White
+42,Blue-White Van
+43,Black-White Van
+44,Red-White Van
+45,Cream-White Van
+46,Cameo-White Van
+47,Van Calico
+48,Dilute Calico Van
+49,Blue Smoke-White
+50,Black Smoke-White
+51,Cream Smoke-White
+52,Tortie Smoke-White
+53,Blue Cream Smoke-White
+54,Cameo Red Smoke-White
+60,Chinchilla Silver
+61,Chinchilla Golden
+62,Shaded Silver
+63,Shaded Golden
+64,Blue Chinchilla Silver
+65,Blue Shaded Silver
+66,Shaded Cameo
+70,Black Smoke
+71,Blue Smoke
+72,Tortie Smoke
+73,Cream Smoke
+74,Blue Cream Smoke
+75,Cameo Smoke
+80,Seal Point
+81,Blue Point
+82,Lilac Point
+83,Red Point
+84,Chocolate Point
+85,Cream Point
+86,Tortie Point
+87,Blue Cream Point
+88,Lilac Cream Point
+89,Seal Tortie Point
+90,Choco Tortie Point
+91,Flame Point
+100,Seal Lynx Point
+101,Blue Lynx Point
+102,Brown Lynx Point
+103,Lilac Lynx Point
+104,Red Lynx Point
+105,Chocolate Lynx Point
+106,Cream Lynx Point
+107,Seal Tortie Lynx Point
+108,Choco Tortie Lynx Point
+109,Blue Cream Lynx Point
+110,Lilac Cream Lynx Point
+120,Seal Point Mitted
+121,Blue Point Mitted
+130,Silver Tabby
+131,Silver Mackerel Tabby
+132,Brown Tabby
+133,Brown Mackerel Tabby
+134,Blue Tabby
+135,Blue Mackerel Tabby
+136,Red Tabby
+137,Red Mackerel Tabby
+138,Cream Tabby
+139,Cream Mackerel Tabby
+140,Cameo Tabby
+141,Cameo Mackerel Tabby
+142,Peke-Face Red Tabby
+143,Peke-Face Red Mc Tabby
+144,Golden Tabby
+145,Golden Mc Tabby
+146,Chestnut Tabby
+147,Lavender Tabby
+148,Ebony Tabby
+149,Fawn Tabby
+150,Cinnamon Tabby
+151,Blue Silver Tabby
+152,Chestnut Silver Tabby
+153,Silver Ticked Tabby
+154,Brown Ticked Tabby
+155,Blue Ticked Tabby
+160,Silver Patched Tabby
+161,Silver Patched Mc Tabby
+162,Brown Patched Tabby
+163,Brown Patched Mc Tabby
+165,Blue Patched Tabby
+166,Blue Patched Mc Tabby
+167,Cinnamon Patched Tabby
+168,Ebony Patched Tabby
+169,Chestnut Patched Tabby
+170,Lavender Patched Tabby
+171,Fawn Patched Tabby
+180,Silver Tabby-White
+181,Silver Mc Tabby-White
+182,Brown Tabby-White
+183,Brown Mc Tabby-White
+184,Blue Tabby-White
+185,Blue Mc Tabby-White
+186,Red Tabby-White
+187,Red Mc Tabby-White
+188,P-F Red Tabby-White
+189,P-F Red Mc Tabby-White
+190,Cream Tabby-White
+191,Cream Mc Tabby-White
+192,Cameo Tabby-White
+193,Cameo Mc Tabby-White
+194,Silver Tc Tabby-White
+195,Brown Tc Tabby-White
+196,Blue Tc Tabby-White
+200,Silver Pt Tabby-White
+201,Silver Pt Mc Tabby-White
+202,Brown Pt Tabby-White
+203,Brown Pt Mc Tabby-White
+204,Blue Pt Tabby-White
+205,Blue Pt Mc Tabby-White
+206,Silver Tabby-White Van
+207,Silver Mc Tabby-W Van
+208,Brown Tabby-White Van
+209,Brown Mc Tabby-White Van
+210,Blue Tabby-White Van
+211,Blue Mc Tabby-White Van
+212,Red Tabby-White Van
+213,Red Mc Tabby-White Van
+214,Cream Tabby-White Van
+215,Cream Mc Tabby-White Van
+216,Cameo Tabby-White Van
+217,Cameo Mc Tabby-White Van
+220,Silver Pt Tabby-W Van
+221,Silver Pt Mc Tabby-W Van
+222,Brown Pt Tabby-White Van
+223,Brown Pt Mc Tabby-W Van
+224,Blue Pt Tabby-White Van
+225,Blue Pt Mc Tabby-W Van
+230,Silver Spotted Tabby
+231,Brown Spotted Tabby
+232,Red Spotted Tabby
+233,Blue Spotted Tabby
+234,Cream Spotted Tabby
+235,Tawny Spotted Tabby
+236,Cinnamon Spotted Tabby
+237,Fawn Spotted Tabby
+238,Chocolate Spotted Tabby
+239,Lavender Spotted Tabby
+240,Silver Sp Tabby-White
+241,Brown Sp Tabby-White
+242,Red Sp Tabby-White
+243,Blue Sp Tabby-White
+244,Cream Sp Tabby-White
+250,Leopard
+260,Any Other Color
+261,AOV
+270,Silver Pt Sp Tabby
+271,Brown Pt Sp Tabby
+272,Blue Pt Sp Tabby
+273,Silver Pt Sp Tabby-White
+274,Brown Pt Sp Tabby-White
+275,Blue Pt Sp Tabby-White
+276,Blue Smoke-White Van
+277,Black Smoke-White Van
+278,Cream Smoke-White Van
+279,Tortie Smoke-White Van
+280,Blue Cream Smoke-White Van
+281,Cameo Red Smoke-White Van
+282,Silver Ticked Tabby-White
+283,Brown Ticked Tabby-White
+284,Chocolate Point Mitted
+285,Snow
+286,Blue Silver Tabby-White
+287,Sorrel (Red)
+288,Sorrel Spotted Tabby
+289,Brown-White
+290,Cinnamon
+291,Seal Tortie Point
+292,Seal Point Bi-Color
+293,Chocolate Point Bi-Color
+294,Blue Point Bi-Color
+295,Lilac Point Bi-Color
+296,Brown Marbled Tabby
+297,Seal Point(A.O.C)
+298,Blue Marble
+299,Flame Point Bi-Color
+300,Shell Tortoiseshell
+301,Blue Tortie-White
+302,Blue Silver Pt Tabby-White
+303,Blue Silver Pt T-W Van
+304,Shaded Tortie
+305,Blue Tortie
+306,Seal Lynx Point Bi-Color
+307,Brown Classic Tobie
+308,Tortie Point Bi-Color
+309,Chocolate Tortie Point Bi-Color
+310,Blue Silver Mc Tabby
+311,Shaded Cameo-White
+312,Calico Smoke
+313,Smoke Dilute Calico
+314,Red Point Bi-Color
+315,Cream Point Bi-Color
+316,Silver Classic Tobie
+317,Silver Mackerel Tobie
+318,Brown Mackerel Tobie
+319,Blue Tortie Point Mitted
+320,Lilac Point Mitted
+321,Blue Tortie Point Bi-Color
+322,Blue Silver Mc Tabby-White
+323,Red Point Mitted
+324,Smoke
+325,Ebony Silver
+326,Shaded Chocolate
+327,Chocolate Tortie
+328,Lilac Tortie
+329,Cream Cameo Tabby
+330,Cream Cameo Mc Tabby
+331,Cream Cameo Tabby-White
+332,Cream Cameo Mc Tabby-W
+333,Blue Silver Tabby-W Van
+334,Chocolate Lynx Point-White
+335,Cream Cameo
+336,Seal Tortie Point Bi-Color
+337,Seal Tortie Point Mitted
+338,Browm Classic Torbie-White
+339,Platinum Mink(Lilac Mink)
+340,Blue Silver Classic Tabby
+341,Cream Shell Cameo
+342,Flame Lynx Point
+343,Shell Cream
+344,Shaded Cream
+345,Tortie Point Mitted
+346,Seal Tortie Point
+347,Blue Cream Point Bi-Color
+348,Sable Ticked Tabby
+349,Chocolate Cream P Bi-Color
+350,Shell Blue(Blue Chinchilla)
+351,Seal Point (A.O.C)
+352,Blue Point (A.O.C)
+353,Cream Point Mitted
+354,Shaded Silver-White
+355,Tortoiseshell-White Van
+356,Champagne Mink
+357,Champagne Solid 
+358,Platinum Solid
+359,Seal Lynx Point-White
+360,Natural Point
+361,Platinum Point
+362,Champagne Point
+363,Blue Cream Point Mitted
+364,Blue Silver Patched Tabby
+365,Seal Lynx Point Van Bi-C
+366,Blue Lynx Point Van Bi-C
+367,Flame Point Bi-Color
+368,Brown Mc Tobie-White
+369,Blue Lynx Point-White
+370,Natural Mink (Seal Mink)
+371,Chocolate Point-White
+372,Blue Solid
+373,Blue Mink
+374,Choco Tortie Point Mitted
+375,Chocolate Point Mitted
+376,Blue Cream-White Van
+377,Choco Silver Lynx Point-W
+378,Chocolate Patched Tabby
+379,Seal Point-White
+380,Snow Spotted Tabby
+381,Seal Tortie Point-White
+382,Chocolate-White
+383,Blue Point-White
+384,Shell Tortoiseshell-White
+385,Natural Solid
+386,Cameo(Red Silver) Tabby
+387,Seal Tortie Lynx Point-W
+388,Blue Chinchilla Golden
+389,Blue Silver Pt Mc Tabby-W
+390,Blue Silver Pt Mc Tabby
+391,Red Lynx Point-White
+392,Chocolate Silver Spotted Tabby
+393,Ebony Silver Ticked T
+394,Shaded Tortie-White
+395,Black Brown Spotted Tabby
+396,Ebony Silver Mc Tabby
+397,Red Silver(Cameo)Tabby-W
+398,Chocolate Tabby
+399,Blue Silver Spotted Tabby
+400,Cinnamon-White
+401,Blue Ticked Tabby-White
+402,Chestnut Tortie
+403,Flame Point Mitted
+404,Chestnut Tortie-White
+405,Chestnut Tortie Point-W
+406,Choco Silver Tortie Lynx Point 
+407,Brown Sp Tabby (Rosettes)
+408,Choco Tortie Lynx Point Mitted
+409,Shell Cameo-White
+410,Ebony Smoke
+411,Ebony Tabby
+412,Ebony Mackerel Tabby
+413,Red Point-White
+414,Chinchilla Silver-White
+415,Chinchilla Golden-White
+416,Red Ticked Tabby
+417,Cream Ticked Tabby
+418,Chocolate Lynx Point (AOC)
+419,Chocolate Pt Tabby-White
+420,Cream Silver Tabby-White
+421,Smoke Calico Van
+422,Cameo Spotted Tabby
+423,Blue Silver Pt Sp Tabby
+424,Ebony Silver Spotted Tabby
+425,Silver Marbled Tabby
+426,Blue Silver Sp Tabby-W
+427,Cream Point-White
+428,Lilac-White
+429,Choco Cream Point
+430,Choco Tortie Lynx Point-W
+431,Choco Cream Lynx Point-W
+432,Ebony-White
+433,Ebony Silver Ticked T-W
+434,Ebony Silver Tabby-White
+435,Seal Mink Spotted Tabby
+436,Cinnamon Tabby(AOC)
+437,Cream Classic Tabby-White
+438,Blue Classic Tabby-White
+439,Smoke Tortoiseshell
+440,Lilac Point-White
+441,Lilac Tabby
+442,Cinnamon Mackerel Tabby
+443,Chocolate Tortie Lynx Point-White
+444,Blue Spotted
+445,Blue Cream Point-White
+446,Brown Pt Ticked Tabby-W
+447,Black(A.O.C)
+448,Blue Shaded
+449,Cream Cameo Tabby-White Van
+450,Blue Silver-White
+451,Silver Lynx Point
+452,Blue Lynx Point Bi-Color
+453,Lilac Point Bi-Color
+454,Chocolate Tortie Lynx Point
+455,Lilac Cream
+456,Seal Bi-Color
+457,Blue Cream Lynx Point-White
+458,Smoke Calico
+459,Brown Pt Ticked Tabby
+460,Blue Silver Pt Tabby-White Van
+461,Black Silver Spotted Tabby
+462,Silver Pt Tc Tabby-White
+463,Lilac Tortie Point Mitted
+464,Lilac Cream Point-White
+465,Seal Tortie Lynx Point-White
+466,Brown Classic Tabby-White
+467,Brown Ticked Pt Tabby
+468,Lilac Silver Tabby-White
+469,Cream Lynx Point Bi-Color
+470,Black(AOC)
+471,Cinnamon Ticked Tabby
+472,Chocolate Lynx Point Bi-Color
+473,Silver Pt Ticked Tabby
+474,Seal Mink
+475,Shaded Tortie Lynx Point-White
+476,Silver Patched Ticked Tabby
+477,Brown Patched Sp Tabby
+478,Blue Tortie Point
+479,Black Silver Marbled Tabby
+480,Lilac Tabby-White
+481,Shell Tortoiseshell
+482,Silver Classic Tabby
+483,Seal Tortie Lynx Point Bi-Color
+484,Seal Tortie Lynx Point Mitted
+485,Silver-White
+486,Shaded Golden-White
+487,Cream Ticked Tabby-White
+488,Blue Shaded Golden
+489,Lilac Tortie Lynx Point Mitted
+490,Tortie Point-White
+491,Flame Point-White
+492,Blue Silver Ticked Tabby
+493,Blue Lynx Point Mitted
