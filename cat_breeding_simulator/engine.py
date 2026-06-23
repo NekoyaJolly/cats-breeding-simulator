@@ -63,6 +63,19 @@ class CoatColorCalculator:
         return self._to_results(aggregate)
 
     def _resolve_parent_genotypes(self, phenotype: str, sex: str, breed: str | None) -> list[ParentGenotype]:
+        if breed:
+            breed_lower = breed.lower()
+            if "abyssinian" in breed_lower or "somali" in breed_lower:
+                phenotype_lower = phenotype.lower()
+                if phenotype_lower == "blue":
+                    phenotype = "Blue Ticked Tabby"
+                elif phenotype_lower == "cinnamon":
+                    phenotype = "Cinnamon Ticked Tabby"
+                elif phenotype_lower == "fawn":
+                    phenotype = "Fawn Ticked Tabby"
+                elif phenotype_lower == "red":
+                    phenotype = "Red Ticked Tabby"
+
         phenotype_key = self._normalize_color_key(phenotype)
         phenotype_options = PHENOTYPE_GENOTYPES.get(phenotype_key)
         if phenotype_options is None:
@@ -397,31 +410,35 @@ class CoatColorCalculator:
     ) -> str | None:
         sex = kitten.sex
         candidates = []
-        for row in COLOR_DEFINITIONS:
-            color = row.get("CoatColor")
-            if not color:
+        for color, sex_dict in PHENOTYPE_GENOTYPES.items():
+            genotypes = sex_dict.get(sex.lower(), [])
+            if not genotypes:
                 continue
+            base_genotype = genotypes[0]
 
             match_all = True
-            for col in row:
-                if not col.endswith("_Locus"):
-                    continue
-                locus = col.split("_")[0]
-                condition = row.get(col)
-                if condition and condition.strip():
-                    kitten_alleles = kitten.loci.get(locus)
-                    if not kitten_alleles:
-                        match_all = False
-                        break
-                    if not self._matches_locus_condition(kitten_alleles, condition, locus, sex):
-                        match_all = False
-                        break
+            for locus in AUTOSOMAL_LOCI + ("O",):
+                condition_alleles = base_genotype.loci.get(locus)
+                kitten_alleles = kitten.loci.get(locus)
+                if not condition_alleles or not kitten_alleles:
+                    match_all = False
+                    break
+                
+                condition_str = "/".join(condition_alleles)
+                if not self._matches_locus_condition(kitten_alleles, condition_str, locus, sex):
+                    match_all = False
+                    break
 
             if match_all:
                 candidates.append(color)
 
         if not candidates:
             return None
+
+        # 親に "Bronze" が指定されていなければ、"Bronze" を除外する
+        if "Bronze" in candidates:
+            if "bronze" not in sire_color.lower() and "bronze" not in dam_color.lower():
+                candidates.remove("Bronze")
 
         if len(candidates) == 1:
             return candidates[0]
