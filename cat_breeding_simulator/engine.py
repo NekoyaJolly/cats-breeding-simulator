@@ -77,7 +77,7 @@ class CoatColorCalculator:
         breed_constraints = BREED_FILTERS.get(breed_key, {})
         filtered: list[ParentGenotype] = []
         for genotype in genotypes:
-            if all(self._matches_exact(genotype.loci[locus], required) for locus, required in breed_constraints.items()):
+            if all(self._matches_exact(genotype.loci[locus], required) for locus, required in breed_constraints.items() if locus in genotype.loci):
                 filtered.append(genotype)
         return filtered
 
@@ -241,6 +241,11 @@ class CoatColorCalculator:
 
     @staticmethod
     def _matches_exact(actual: tuple[str, str], required: tuple[str, str]) -> bool:
+        if "Y" in actual:
+            non_y_allele = actual[0] if actual[1] == "Y" else actual[1]
+            if required[0] == required[1]:
+                return non_y_allele == required[0]
+            return False
         return actual == required or actual == (required[1], required[0])
 
     @staticmethod
