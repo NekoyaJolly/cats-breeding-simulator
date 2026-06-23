@@ -39,7 +39,7 @@ def test_breed_filter_enforces_siamese_point_genotypes() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["results"]
-    assert all("Siamese Point" in result["color"] for result in payload["results"])
+    assert all("Point" in result["color"] for result in payload["results"])
 
 
 def test_invalid_sex_specific_color_returns_422() -> None:

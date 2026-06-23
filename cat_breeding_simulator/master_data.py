@@ -240,6 +240,43 @@ def _load_phenotype_genotypes() -> dict[str, dict[str, list[ParentGenotype]]]:
 
 PHENOTYPE_GENOTYPES = _load_phenotype_genotypes()
 
+
+def _load_color_definitions() -> list[dict[str, str]]:
+    import csv
+    import os
+
+    filename = "cat_color_genetic_map.csv"
+    filepath = None
+
+    paths_to_try = [
+        filename,
+        os.path.join("docs", "architecture", filename),
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "docs", "architecture", filename),
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), filename),
+    ]
+    for path in paths_to_try:
+        if os.path.exists(path):
+            filepath = path
+            break
+
+    if not filepath:
+        return []
+
+    definitions = []
+    try:
+        with open(filepath, mode="r", encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if row.get("CoatColor"):
+                    definitions.append(dict(row))
+    except Exception:
+        pass
+    return definitions
+
+
+COLOR_DEFINITIONS = _load_color_definitions()
+
+
 def _load_breed_filters() -> dict[str, dict[str, tuple[str, str]]]:
     import csv
     import os

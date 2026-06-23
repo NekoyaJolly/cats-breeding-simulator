@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass
 
-from cat_breeding_simulator.master_data import AUTOSOMAL_LOCI, BREED_FILTERS, PHENOTYPE_GENOTYPES, ParentGenotype
+from cat_breeding_simulator.master_data import AUTOSOMAL_LOCI, BREED_FILTERS, PHENOTYPE_GENOTYPES, ParentGenotype, COLOR_DEFINITIONS
 
 
 ProbabilityMap = dict[tuple[str, str], float]
@@ -54,7 +54,7 @@ class CoatColorCalculator:
                 for sire_gamete, sire_probability in sire_gametes.items():
                     for dam_gamete, dam_probability in dam_gametes.items():
                         kitten = self._combine_gametes(sire_gamete, dam_gamete)
-                        phenotype = self._classify_phenotype(kitten)
+                        phenotype = self._classify_phenotype(kitten, sire_color, dam_color)
                         phenotype = self._post_process_color_name(
                             phenotype, sire_color, dam_color, breed
                         )
@@ -129,7 +129,12 @@ class CoatColorCalculator:
             kitten_loci[locus] = (sire_map[locus], dam_map[locus])
         return KittenGenotype(sex=sex, loci=kitten_loci)
 
-    def _classify_phenotype(self, kitten: KittenGenotype) -> str:
+    def _classify_phenotype(self, kitten: KittenGenotype, sire_color: str = "", dam_color: str = "") -> str:
+        if sire_color and dam_color:
+            matched = self._find_matching_color(kitten, sire_color, dam_color)
+            if matched:
+                return matched
+
         if self._has_dominant(kitten.loci["W"], "W"):
             return "White"
 
@@ -386,3 +391,119 @@ class CoatColorCalculator:
                 elif "Red Ticked Tabby" in name:
                     name = name.replace("Red Ticked Tabby", "Red")
         return name
+
+    def _find_matching_color(
+        self, kitten: KittenGenotype, sire_color: str, dam_color: str
+    ) -> str | None:
+        sex = kitten.sex
+        candidates = []
+        for row in COLOR_DEFINITIONS:
+            color = row.get("CoatColor")
+            if not color:
+                continue
+
+            match_all = True
+            for col in row:
+                if not col.endswith("_Locus"):
+                    continue
+                locus = col.split("_")[0]
+                condition = row.get(col)
+                if condition and condition.strip():
+                    kitten_alleles = kitten.loci.get(locus)
+                    if not kitten_alleles:
+                        match_all = False
+                        break
+                    if not self._matches_locus_condition(kitten_alleles, condition, locus, sex):
+                        match_all = False
+                        break
+
+            if match_all:
+                candidates.append(color)
+
+        if not candidates:
+            return None
+
+        if len(candidates) == 1:
+            return candidates[0]
+
+        def _has_pattern(c_name: str, pat: str) -> bool:
+            name_lower = c_name.lower()
+            if pat == "mackerel":
+                return "mackerel" in name_lower or "mc" in name_lower.split()
+            if pat == "classic":
+                return "classic" in name_lower
+            if pat == "ticked":
+                return "ticked" in name_lower or "tc" in name_lower.split()
+            if pat == "spotted":
+                return "spotted" in name_lower or "sp" in name_lower.split()
+            return False
+
+        has_mackerel = _has_pattern(sire_color, "mackerel") or _has_pattern(dam_color, "mackerel")
+        has_classic = _has_pattern(sire_color, "classic") or _has_pattern(dam_color, "classic")
+        has_ticked = _has_pattern(sire_color, "ticked") or _has_pattern(dam_color, "ticked")
+        has_spotted = _has_pattern(sire_color, "spotted") or _has_pattern(dam_color, "spotted")
+
+        pattern_candidates = []
+        for cand in candidates:
+            cand_lower = cand.lower()
+            if has_mackerel and ("mackerel" in cand_lower or " mc " in f" {cand_lower} "):
+                pattern_candidates.append(cand)
+            elif has_classic and "classic" in cand_lower:
+                pattern_candidates.append(cand)
+            elif has_ticked and ("ticked" in cand_lower or " tc " in f" {cand_lower} "):
+                pattern_candidates.append(cand)
+            elif has_spotted and ("spotted" in cand_lower or " sp " in f" {cand_lower} "):
+                pattern_candidates.append(cand)
+
+        if pattern_candidates:
+            return pattern_candidates[0]
+
+        non_pattern_candidates = []
+        for cand in candidates:
+            cand_lower = cand.lower()
+            if not any(pat in cand_lower for pat in ["mackerel", "classic", "ticked", "spotted"]):
+                non_pattern_candidates.append(cand)
+
+        if non_pattern_candidates:
+            return non_pattern_candidates[0]
+
+        return candidates[0]
+
+    @staticmethod
+    def _matches_locus_condition(
+        kitten_alleles: tuple[str, str], condition: str, locus: str, sex: str
+    ) -> bool:
+        if not condition or not condition.strip():
+            return True
+
+        cond_alleles = condition.strip().split("/")
+        if len(cond_alleles) != 2:
+            return False
+
+        c1, c2 = cond_alleles
+        k1, k2 = kitten_alleles
+
+        if locus == "O":
+            if sex.lower() == "male":
+                non_y_k = k1 if k2 == "Y" else k2
+                if c1 == "O" and c2 == "O":
+                    return non_y_k == "O"
+                if c1 == "o" and c2 == "o":
+                    return non_y_k == "o"
+                return False
+            else:
+                if (c1 == "O" and c2 == "o") or (c1 == "o" and c2 == "O"):
+                    return sorted(kitten_alleles) == ["O", "o"]
+                return sorted(kitten_alleles) == sorted([c1, c2])
+
+        if locus == "S":
+            return sorted(kitten_alleles) == sorted([c1, c2])
+
+        if c1 == c2 and c1.islower():
+            return sorted(kitten_alleles) == sorted([c1, c2])
+
+        if c1 != c2:
+            return sorted(kitten_alleles) == sorted([c1, c2])
+
+        dominant_allele = c1
+        return dominant_allele in kitten_alleles
