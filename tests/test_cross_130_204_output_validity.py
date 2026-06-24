@@ -122,7 +122,9 @@ def test_expected_direction_colors_present(report) -> None:
         ("Male", "Brown Tabby"),
         ("Female", "Blue Tabby"),      # 父 D/d 由来 (希釈)
         ("Female", "Blue Silver Tabby"),
-        ("Female", "Silver Pt Tabby"),  # 母 O/o 由来 (パッチド)
+        # 母 O/o 由来 (パッチド)。cat_color_master.csv 接続により出力名は canonical 形へ
+        # 正規化される (Pt→Patched)。旧期待値 "Silver Pt Tabby" を canonical 名へ更新。
+        ("Female", "Silver Patched Tabby"),
         ("Female", "Calico"),
         ("Female", "Tortoiseshell"),
     }

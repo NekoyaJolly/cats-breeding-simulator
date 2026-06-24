@@ -6,6 +6,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 
 from cat_breeding_simulator.master_data import AUTOSOMAL_LOCI, BREED_FILTERS, PHENOTYPE_GENOTYPES, ParentGenotype, COLOR_DEFINITIONS
+from cat_breeding_simulator.color_master import COLOR_MASTER
 
 
 ProbabilityMap = dict[tuple[str, str], float]
@@ -236,6 +237,9 @@ class CoatColorCalculator:
                     phenotype = "Fawn Ticked Tabby"
                 elif phenotype_lower == "red":
                     phenotype = "Red Ticked Tabby"
+
+        # cat_color_master.csv による入力名の解決 (alias 受理 + 通常モードでの制限)。
+        phenotype = self._resolve_input_color_name(phenotype, breed)
 
         phenotype_key = self._normalize_color_key(phenotype)
         phenotype_options = PHENOTYPE_GENOTYPES.get(phenotype_key)
@@ -493,6 +497,37 @@ class CoatColorCalculator:
     def _is_homozygous(alleles: tuple[str, str], allele: str) -> bool:
         return alleles[0] == allele and alleles[1] == allele
 
+    def _resolve_input_color_name(self, name: str, breed: str | None) -> str:
+        """cat_color_master.csv を用いて入力色名を解決する (名前正規化レイヤ)。
+
+        - alias は canonical 概念へ寄せ、その概念を表す engine 認識名 (PHENOTYPE_GENOTYPES の
+          キー) を返す (spec: canonical を engine に渡す)。
+        - excluded / review は通常計算の入力色として使えないため拒否する。
+        - breed_specific は猫種未指定の通常モードでは拒否する (猫種指定時は文脈ありとして許可)。
+        - master 未登録、または canonical 概念に engine 認識名が無い場合は、元名が直接認識
+          できればそれを使い、そうでなければ元名のまま返す (後段で Unsupported を送出)。
+        """
+
+        resolved = COLOR_MASTER.resolve(name)
+        if resolved is not None:
+            if resolved.status in ("excluded", "review"):
+                raise BreedingCalculationError(
+                    f"'{name}' は通常計算の入力色として使用できません (status={resolved.status})。"
+                )
+            if resolved.status == "breed_specific" and not breed:
+                raise BreedingCalculationError(
+                    f"'{name}' は猫種固有色 ({resolved.breed_context}) のため、"
+                    "猫種を指定しない通常モードでは入力できません。"
+                )
+            # canonical 概念を優先して engine 認識名 (PHENOTYPE_GENOTYPES のキー) を探す
+            for candidate in resolved.engine_candidate_names:
+                if self._normalize_color_key(candidate) in PHENOTYPE_GENOTYPES:
+                    return candidate
+        # master 未登録 / 候補が engine 未知 → 元名が直接認識できればそれを使う
+        if self._normalize_color_key(name) in PHENOTYPE_GENOTYPES:
+            return name
+        return name
+
     @staticmethod
     def _normalize_color_key(color: str) -> str:
         normalized = " ".join(color.replace("_", " ").replace("-", " - ").split()).replace(" - ", "-")
@@ -515,6 +550,9 @@ class CoatColorCalculator:
         name = self._clean_phenotype_name(name)
         name = self._apply_breed_color_names(name, breed)
         name = self._simplify_patterns(name, sire_color, dam_color, breed)
+        # 出力色名を cat_color_master.csv の canonical PrimaryName へ正規化する
+        # (alias 統合・略記展開)。集計はこの canonical 名で行われ自動的にマージされる。
+        name = COLOR_MASTER.canonical_name(name)
         return name
 
     def _clean_phenotype_name(self, name: str) -> str:
