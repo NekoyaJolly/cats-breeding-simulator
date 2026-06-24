@@ -1,10 +1,17 @@
-"""表現型と潜在遺伝子型の対応表。"""
+"""表現型と潜在遺伝子型の対応表、および計算モード別の親遺伝子型生成。"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
 AUTOSOMAL_LOCI: tuple[str, ...] = ("B", "D", "A", "C", "W", "S", "Mc", "Ta", "Sp", "I", "Wb")
+
+# サポートする計算モード。carrier_exploration は Phase 2 で実装予定 (engine 側で明示エラー)。
+SUPPORTED_MODES: tuple[str, ...] = ("normal", "explicit_carrier")
+
+# normal_mode で X/- 展開する座位 (優性ヘテロ未確定) と、閉じる座位 (キャリア非展開)。
+NORMAL_OPENED_LOCI: tuple[str, ...] = ("D", "I", "Mc", "Ta")
+NORMAL_CLOSED_LOCI: tuple[str, ...] = ("A", "B", "C", "Wb")
 
 
 @dataclass(frozen=True, slots=True)
@@ -16,41 +23,12 @@ class ParentGenotype:
     loci: dict[str, tuple[str, str]]
 
 
-def _build_genotype(phenotype: str, sex: str, **overrides: tuple[str, str]) -> ParentGenotype:
-    defaults: dict[str, tuple[str, str]] = {
-        "B": ("B", "B"),
-        "D": ("D", "D"),
-        "A": ("a", "a"),
-        "C": ("C", "C"),
-        "W": ("w", "w"),
-        "S": ("s", "s"),
-        "Mc": ("Mc", "Mc"),
-        "Ta": ("ta", "ta"),
-        "Sp": ("sp", "sp"),
-        "I": ("i", "i"),
-        "Wb": ("wb", "wb"),
-    }
-    defaults.update(overrides)
-    if sex == "male":
-        defaults["O"] = overrides.get("O", ("o", "Y"))
-    else:
-        defaults["O"] = overrides.get("O", ("o", "o"))
-    return ParentGenotype(phenotype=phenotype, sex=sex, loci=defaults)
+@dataclass(frozen=True, slots=True)
+class ColorBase:
+    """1カラー (CSV 1行) の基準遺伝子型。親候補生成はここから mode 別に行う。"""
 
-
-def _variants(
-    phenotype: str,
-    sex: str,
-    base_overrides: dict[str, tuple[str, str]],
-    carrier_sets: tuple[dict[str, tuple[str, str]], ...],
-) -> list[ParentGenotype]:
-    genotypes: list[ParentGenotype] = []
-    genotypes.append(_build_genotype(phenotype, sex, **base_overrides))
-    for carrier_set in carrier_sets:
-        merged = dict(base_overrides)
-        merged.update(carrier_set)
-        genotypes.append(_build_genotype(phenotype, sex, **merged))
-    return genotypes
+    autosomal: dict[str, tuple[str, str]]  # B/D/A/C/W/S/Mc/Ta/Sp/I/Wb
+    o: tuple[str, str]                      # O_Locus (例: ("o","o"), ("O","o"))
 
 
 def _build_normal_parent_genotypes(phenotype: str, sex: str, base_loci: dict[str, tuple[str, str]]) -> list[ParentGenotype]:
@@ -65,16 +43,15 @@ def _build_normal_parent_genotypes(phenotype: str, sex: str, base_loci: dict[str
     - カテゴリA' (タビーの A-locus / 通常モードでは展開しない):
         A タビーは normal_mode では A/A 相当として扱い A/a を展開しない。
         理由: A/a を展開すると a/a×a/a が成立し、タビー親から Solid / Tortie /
-        Calico / Smoke (いずれも a/a 前提) が出てしまう。これは表現型から要求されない
-        潜在キャリアの自動展開であり通常モードでは禁止する。A/a は明示キャリア
-        (explicit_carrier_mode) または全キャリア探索 (carrier_exploration_mode) でのみ使う。
+        Calico / Smoke (いずれも a/a 前提) が出てしまう。A/a は explicit_carrier_mode /
+        carrier_exploration_mode でのみ使う。
     - カテゴリB (表現型確定・劣性固定 / 固定する):
         d/d, a/a, cs/cs, cb/cb, cb/cs, i/i, s/s など。CSVの劣性ホモはそのまま固定。
     - カテゴリC (表現型から要求されない潜在キャリア / 通常モードでは展開しない):
-        B/b チョコ, B/bl シナモン, C/cs ポイント, C/cb セピア。
+        B/b チョコ, B/bl シナモン, C/cs ポイント, C/cb セピア, Wb ワイドバンド。
         明示キャリア情報または血統・産子履歴がある場合のみ explicit_carrier で扱う。
 
-    シミュレーター正本 V9 §2.4 に準拠 (A の非展開は本ルールの改訂)。
+    シミュレーター正本 V9 §2.4 に準拠 (A・Wb の非展開を含む)。
     """
 
     import itertools
@@ -100,6 +77,8 @@ def _build_normal_parent_genotypes(phenotype: str, sex: str, base_loci: dict[str
     # A (タビー) は除外する。normal_mode では A を A/A 相当に固定し A/a を展開しない。
     #   A/a を展開すると a/a×a/a が成立し、タビー親から Solid / Tortie / Calico / Smoke
     #   (a/a 前提) が出てしまうため。A/a は explicit_carrier / carrier_exploration でのみ扱う。
+    # Wb (ワイドバンド) も除外する。normal_mode では Wb を展開しない (Shell/Shaded/Chinchilla/
+    #   Golden の wide band キャリアを自動展開しない)。Wb は explicit_carrier 等でのみ扱う。
     # S (白斑) は除外する。白斑は不完全優性で S/S(Van) と S/s(バイカラー/-White) は
     # 表現型で区別でき、入力の白斑レベルから接合性が確定する (= ヘテロ不可視ではない)。
     # さらに S/S の Van 色を S/s へ展開すると逆引きMAPが汚染され、S/s の子が Van 名へ
@@ -109,7 +88,6 @@ def _build_normal_parent_genotypes(phenotype: str, sex: str, base_loci: dict[str
         "I": ("I", "i"),
         "Mc": ("Mc", "mc"),
         "Ta": ("Ta", "ta"),
-        "Wb": ("Wb", "wb"),
     }
 
     loci_options: dict[str, list[tuple[str, str]]] = {}
@@ -117,7 +95,7 @@ def _build_normal_parent_genotypes(phenotype: str, sex: str, base_loci: dict[str
         options = [val]
         hetero = dominant_expandable.get(locus)
         # 優性形質が「優性ホモ」で表現されている場合のみ X/- としてヘテロを追加する。
-        # 劣性ホモ (カテゴリB) や B/C (カテゴリC) はここで展開しない。
+        # 劣性ホモ (カテゴリB) や B/C/A/Wb (カテゴリC/A') はここで展開しない。
         if hetero is not None and val == (hetero[0], hetero[0]):
             options.append(hetero)
         loci_options[locus] = options
@@ -132,143 +110,174 @@ def _build_normal_parent_genotypes(phenotype: str, sex: str, base_loci: dict[str
     return genotypes
 
 
-def _load_phenotype_genotypes() -> dict[str, dict[str, list[ParentGenotype]]]:
+def _color_base_from_row(color: str, locus_cols: list[str], row: dict[str, str]) -> ColorBase:
+    """CSV 1行から ColorBase (基準遺伝子型) を構築する。B は名前から推定する。"""
+
+    color_lower = color.lower()
+    if "chocolate" in color_lower or "lilac" in color_lower or "choco" in color_lower:
+        b_allele = ("b", "b")
+    elif "cinnamon" in color_lower or "fawn" in color_lower:
+        b_allele = ("bl", "bl")
+    else:
+        b_allele = ("B", "B")
+
+    autosomal: dict[str, tuple[str, str]] = {"B": b_allele}
+    for col in locus_cols:
+        val = row.get(col)
+        if val and val.strip():
+            locus_name = col.split("_")[0]
+            if locus_name == "O":
+                continue
+            alleles = val.strip().split("/")
+            if len(alleles) == 2:
+                autosomal[locus_name] = (alleles[0], alleles[1])
+
+    o_val = (row.get("O_Locus") or "o/o").strip()
+    o_parts = o_val.split("/")
+    o_alleles: tuple[str, str] = (o_parts[0], o_parts[1]) if len(o_parts) == 2 else ("o", "o")
+    return ColorBase(autosomal=autosomal, o=o_alleles)
+
+
+def _load_color_base_loci() -> dict[str, list[ColorBase]]:
+    """cat_color_genetic_map.csv から色ごとの基準遺伝子型を読み込む。
+
+    同名複数行 (同一カラー名で複数 Code) は list で保持する。親遺伝子型は mode に応じて
+    build_parent_genotypes() がこの基準から動的に生成する。
+    """
+
     import csv
     import os
 
-    results = {
-        "Black": {
-            "male": _variants("Black", "male", {}, ({"B": ("B", "b")}, {"B": ("B", "bl")}, {"D": ("D", "d")})),
-            "female": _variants("Black", "female", {}, ({"B": ("B", "b")}, {"B": ("B", "bl")}, {"D": ("D", "d")})),
-        },
-        "Blue": {
-            "male": _variants("Blue", "male", {"D": ("d", "d")}, ({"B": ("B", "b"), "D": ("d", "d")}, {"B": ("B", "bl"), "D": ("d", "d")})),
-            "female": _variants("Blue", "female", {"D": ("d", "d")}, ({"B": ("B", "b"), "D": ("d", "d")}, {"B": ("B", "bl"), "D": ("d", "d")})),
-        },
-        "Red": {
-            "male": _variants("Red", "male", {"O": ("O", "Y"), "A": ("A", "A")}, ({"O": ("O", "Y"), "B": ("B", "b"), "A": ("A", "A")}, {"O": ("O", "Y"), "D": ("D", "d"), "A": ("A", "A")})),
-            "female": _variants("Red", "female", {"O": ("O", "O"), "A": ("A", "A")}, ({"O": ("O", "O"), "B": ("B", "b"), "A": ("A", "A")}, {"O": ("O", "O"), "D": ("D", "d"), "A": ("A", "A")})),
-        },
-        "Cream": {
-            "male": _variants("Cream", "male", {"O": ("O", "Y"), "D": ("d", "d"), "A": ("A", "A")}, ({"O": ("O", "Y"), "D": ("d", "d"), "B": ("B", "b"), "A": ("A", "A")}, {"O": ("O", "Y"), "D": ("d", "d"), "B": ("B", "bl"), "A": ("A", "A")})),
-            "female": _variants("Cream", "female", {"O": ("O", "O"), "D": ("d", "d"), "A": ("A", "A")}, ({"O": ("O", "O"), "D": ("d", "d"), "B": ("B", "b"), "A": ("A", "A")}, {"O": ("O", "O"), "D": ("d", "d"), "B": ("B", "bl"), "A": ("A", "A")})),
-        },
-        "Mackerel Tabby": {
-            "male": _variants("Mackerel Tabby", "male", {"A": ("A", "a"), "Mc": ("Mc", "mc")}, ({"A": ("A", "a"), "Mc": ("Mc", "mc"), "D": ("D", "d")},)),
-            "female": _variants("Mackerel Tabby", "female", {"A": ("A", "a"), "Mc": ("Mc", "mc")}, ({"A": ("A", "a"), "Mc": ("Mc", "mc"), "D": ("D", "d")},)),
-        },
-        "Cream Tabby-White": {
-            "male": [_build_genotype("Cream Tabby-White", "male", O=("O", "Y"), D=("d", "d"), A=("A", "A"), Mc=("Mc", "Mc"), S=("S", "s"))],
-            "female": [_build_genotype("Cream Tabby-White", "female", O=("O", "O"), D=("d", "d"), A=("A", "A"), Mc=("Mc", "Mc"), S=("S", "s"))],
-        },
-        "Calico": {
-            "male": [],
-            "female": [_build_genotype("Calico", "female", O=("O", "o"), A=("A", "A"), S=("S", "s")), _build_genotype("Calico", "female", O=("O", "o"), A=("A", "A"), S=("S", "S"))],
-        },
-        "Dilute Calico": {
-            "male": [],
-            "female": [_build_genotype("Dilute Calico", "female", O=("O", "o"), D=("d", "d"), A=("A", "A"), S=("S", "s")), _build_genotype("Dilute Calico", "female", O=("O", "o"), D=("d", "d"), A=("A", "A"), S=("S", "S"))],
-        },
-        "Pointed": {
-            "male": [_build_genotype("Pointed", "male", C=("cs", "cs"), A=("a", "a")), _build_genotype("Pointed", "male", C=("cs", "cs"), A=("A", "a"), D=("D", "d"))],
-            "female": [_build_genotype("Pointed", "female", C=("cs", "cs"), A=("a", "a")), _build_genotype("Pointed", "female", C=("cs", "cs"), A=("A", "a"), D=("D", "d"))],
-        },
-        "Silver": {
-            "male": [_build_genotype("Silver", "male", A=("A", "A"), I=("I", "i"), Mc=("Mc", "Mc"))],
-            "female": [_build_genotype("Silver", "female", A=("A", "A"), I=("I", "i"), Mc=("Mc", "Mc"))],
-        },
-        "Smoke": {
-            "male": [_build_genotype("Smoke", "male", I=("I", "i"))],
-            "female": [_build_genotype("Smoke", "female", I=("I", "i"))],
-        },
-        "White": {
-            "male": [_build_genotype("White", "male", W=("W", "w")), _build_genotype("White", "male", W=("W", "W"), D=("D", "d"))],
-            "female": [_build_genotype("White", "female", W=("W", "w")), _build_genotype("White", "female", W=("W", "W"), D=("D", "d"))],
-        },
-    }
-
     filename = "cat_color_genetic_map.csv"
-    filepath = None
-
     paths_to_try = [
         filename,
         os.path.join("docs", "architecture", filename),
         os.path.join(os.path.dirname(os.path.dirname(__file__)), "docs", "architecture", filename),
         os.path.join(os.path.dirname(os.path.dirname(__file__)), filename),
     ]
-    for path in paths_to_try:
-        if os.path.exists(path):
-            filepath = path
-            break
-
+    filepath = next((path for path in paths_to_try if os.path.exists(path)), None)
     if not filepath:
-        return results
+        return {}
 
-    results = {}
+    base: dict[str, list[ColorBase]] = {}
     try:
         with open(filepath, mode="r", encoding="utf-8-sig") as f:
             reader = csv.DictReader(f)
-            locus_cols = [col for col in reader.fieldnames if col.endswith("_Locus")] if reader.fieldnames else []
-            
+            locus_cols = [c for c in (reader.fieldnames or []) if c.endswith("_Locus")]
             for row in reader:
                 color = row.get("CoatColor")
                 if not color:
                     continue
-                
-                # Determine B locus from name
-                color_lower = color.lower()
-                if "chocolate" in color_lower or "lilac" in color_lower or "choco" in color_lower:
-                    b_allele = ("b", "b")
-                elif "cinnamon" in color_lower or "fawn" in color_lower:
-                    b_allele = ("bl", "bl")
-                else:
-                    b_allele = ("B", "B")
-                
-                base_loci = {"B": b_allele}
-                
-                for col in locus_cols:
-                    val = row.get(col)
-                    if val and val.strip():
-                        locus_name = col.split("_")[0]
-                        if locus_name == "O":
-                            continue
-                        alleles = tuple(val.strip().split("/"))
-                        if len(alleles) == 2:
-                            base_loci[locus_name] = (alleles[0], alleles[1])
-                
-                # O Locus parsing
-                o_val = row.get("O_Locus", "o/o")
-                o_alleles = tuple(o_val.strip().split("/")) if o_val else ("o", "o")
-                if len(o_alleles) != 2:
-                    o_alleles = ("o", "o")
-                
-                # Build Male Genotypes
-                male_loci = dict(base_loci)
-                if o_alleles == ("O", "o"):
-                    male_variants = []
-                else:
-                    male_o_allele = "O" if "O" in o_alleles else "o"
-                    male_loci["O"] = (male_o_allele, "Y")
-                    male_variants = _build_normal_parent_genotypes(color, "male", male_loci)
-                    
-                # Build Female Genotypes
-                female_loci = dict(base_loci)
-                female_loci["O"] = o_alleles
-                female_variants = _build_normal_parent_genotypes(color, "female", female_loci)
-                
-                if color not in results:
-                    results[color] = {"male": [], "female": []}
-                
-                results[color]["male"].extend(male_variants)
-                results[color]["female"].extend(female_variants)
-                
+                base.setdefault(color, []).append(_color_base_from_row(color, locus_cols, row))
     except Exception:
-        pass
-        
+        return {}
+    return base
+
+
+COLOR_BASE_LOCI = _load_color_base_loci()
+
+
+def _parse_carrier_genotype(value: str) -> tuple[str, str] | None:
+    """"C/cs" のような明示キャリア指定を (allele, allele) に変換する。不正なら None。"""
+
+    parts = value.strip().split("/")
+    if len(parts) != 2:
+        return None
+    return (parts[0], parts[1])
+
+
+def _genotype_signature(loci: dict[str, tuple[str, str]]) -> tuple:
+    """重複排除用に遺伝子型を順序非依存のキーへ変換する。"""
+
+    return tuple(sorted((locus, tuple(sorted(alleles))) for locus, alleles in loci.items()))
+
+
+def _apply_explicit_carriers(
+    genotypes: list[ParentGenotype],
+    color: str,
+    sex: str,
+    carriers: dict[str, str],
+) -> list[ParentGenotype]:
+    """normal 展開済み候補に、明示キャリア指定座位を上書きして「開ける」。"""
+
+    overrides: dict[str, tuple[str, str]] = {}
+    for locus, value in carriers.items():
+        parsed = _parse_carrier_genotype(value)
+        if parsed is not None:
+            overrides[locus] = parsed
+    if not overrides:
+        return genotypes
+
+    out: list[ParentGenotype] = []
+    seen: set[tuple] = set()
+    for genotype in genotypes:
+        loci = dict(genotype.loci)
+        loci.update(overrides)
+        signature = _genotype_signature(loci)
+        if signature in seen:
+            continue
+        seen.add(signature)
+        out.append(ParentGenotype(phenotype=color, sex=sex, loci=loci))
+    return out
+
+
+def build_parent_genotypes(
+    color: str,
+    sex: str,
+    mode: str = "normal",
+    carriers: dict[str, str] | None = None,
+) -> list[ParentGenotype]:
+    """指定モードに応じた親遺伝子型候補を生成する。
+
+    - normal: 未明示キャリアを閉じる (A/B/C/Wb 非展開、D/I/Mc/Ta のみ X/- 展開)。
+    - explicit_carrier: normal を基準に、carriers で指定された座位のみ上書きで開ける。
+
+    carrier_exploration は本関数では扱わない (Phase 2)。色が未知なら空リストを返す。
+    """
+
+    entries = COLOR_BASE_LOCI.get(color)
+    if not entries:
+        return []
+
+    out: list[ParentGenotype] = []
+    seen: set[tuple] = set()
+    for entry in entries:
+        sex_loci: dict[str, tuple[str, str]] = dict(entry.autosomal)
+        if sex == "male":
+            # トーティ (O/o) はメス限定。オスは O/Y または o/Y。
+            if "O" in entry.o and "o" in entry.o:
+                continue
+            male_o = "O" if "O" in entry.o else "o"
+            sex_loci["O"] = (male_o, "Y")
+        else:
+            sex_loci["O"] = entry.o
+
+        genotypes = _build_normal_parent_genotypes(color, sex, sex_loci)
+        if mode == "explicit_carrier" and carriers:
+            genotypes = _apply_explicit_carriers(genotypes, color, sex, carriers)
+
+        for genotype in genotypes:
+            signature = _genotype_signature(genotype.loci)
+            if signature in seen:
+                continue
+            seen.add(signature)
+            out.append(genotype)
+    return out
+
+
+def _build_phenotype_genotypes() -> dict[str, dict[str, list[ParentGenotype]]]:
+    """全色の normal_mode 親遺伝子型を事前構築する (逆引きMAP・入力名解決に使用)。"""
+
+    results: dict[str, dict[str, list[ParentGenotype]]] = {}
+    for color in COLOR_BASE_LOCI:
+        results[color] = {
+            "male": build_parent_genotypes(color, "male", "normal"),
+            "female": build_parent_genotypes(color, "female", "normal"),
+        }
     return results
 
 
-PHENOTYPE_GENOTYPES = _load_phenotype_genotypes()
+PHENOTYPE_GENOTYPES = _build_phenotype_genotypes()
 
 
 def _load_color_definitions() -> list[dict[str, str]]:
@@ -339,12 +348,12 @@ def _load_breed_filters() -> dict[str, dict[str, tuple[str, str]]]:
         with open(filepath, mode="r", encoding="utf-8-sig") as f:
             reader = csv.DictReader(f)
             locus_cols = [col for col in reader.fieldnames if col.endswith("_Locus")] if reader.fieldnames else []
-            
+
             for row in reader:
                 breed = row.get("Breed")
                 if not breed:
                     continue
-                
+
                 breed_constraints: dict[str, tuple[str, str]] = {}
                 for col in locus_cols:
                     val = row.get(col)
@@ -353,7 +362,7 @@ def _load_breed_filters() -> dict[str, dict[str, tuple[str, str]]]:
                         alleles = tuple(val.strip().split("/"))
                         if len(alleles) == 2:
                             breed_constraints[locus_name] = (alleles[0], alleles[1])
-                
+
                 filters[breed] = breed_constraints
     except Exception:
         # Fallback in case of any reading error
@@ -371,5 +380,3 @@ def _load_breed_filters() -> dict[str, dict[str, tuple[str, str]]]:
 
 
 BREED_FILTERS = _load_breed_filters()
-
-

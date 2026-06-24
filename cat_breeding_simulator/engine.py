@@ -5,7 +5,17 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass
 
-from cat_breeding_simulator.master_data import AUTOSOMAL_LOCI, BREED_FILTERS, PHENOTYPE_GENOTYPES, ParentGenotype, COLOR_DEFINITIONS
+from cat_breeding_simulator.master_data import (
+    AUTOSOMAL_LOCI,
+    BREED_FILTERS,
+    COLOR_DEFINITIONS,
+    NORMAL_CLOSED_LOCI,
+    NORMAL_OPENED_LOCI,
+    PHENOTYPE_GENOTYPES,
+    SUPPORTED_MODES,
+    ParentGenotype,
+    build_parent_genotypes,
+)
 from cat_breeding_simulator.color_master import COLOR_MASTER
 
 
@@ -126,10 +136,9 @@ class KittenResult:
 
 @dataclass(frozen=True, slots=True)
 class CalculationReport:
-    """通常計算の結果 + 内部診断値。
+    """計算結果 + 内部診断値 + モード情報。
 
-    既存APIレスポンス (results のみ) を壊さないため、未分類率などの診断値は
-    本データクラス経由でのみ参照する (HTTPレスポンスには含めない)。
+    既存フィールド (results 等) は後方互換のため維持し、モード情報は新規フィールドとして追加する。
     """
 
     results: list[KittenResult]
@@ -137,6 +146,10 @@ class CalculationReport:
     unmatched_probability: float
     unmatched_genotype_count: int
     unmatched_samples: list[dict[str, object]]
+    mode: str = "normal"
+    opened_loci: list[str] | None = None     # X/- 展開 or 明示キャリアで開けた座位
+    closed_loci: list[str] | None = None     # キャリア非展開で閉じた座位
+    assumptions: list[str] | None = None     # 計算前提の人間可読メモ
 
 
 @dataclass(frozen=True, slots=True)
@@ -154,23 +167,58 @@ class BreedingCalculationError(ValueError):
 class CoatColorCalculator:
     """Split -> Cross -> Evaluate -> Aggregate を実装する計算器。"""
 
-    def calculate(self, sire_color: str, dam_color: str, breed: str | None = None) -> list[KittenResult]:
+    def calculate(
+        self,
+        sire_color: str,
+        dam_color: str,
+        breed: str | None = None,
+        mode: str = "normal",
+        sire_carriers: dict[str, str] | None = None,
+        dam_carriers: dict[str, str] | None = None,
+    ) -> list[KittenResult]:
         """既存API互換: 表示用結果リストのみを返す。"""
 
-        return self.calculate_report(sire_color, dam_color, breed).results
+        return self.calculate_report(
+            sire_color, dam_color, breed, mode, sire_carriers, dam_carriers
+        ).results
 
     def calculate_report(
-        self, sire_color: str, dam_color: str, breed: str | None = None
+        self,
+        sire_color: str,
+        dam_color: str,
+        breed: str | None = None,
+        mode: str = "normal",
+        sire_carriers: dict[str, str] | None = None,
+        dam_carriers: dict[str, str] | None = None,
     ) -> CalculationReport:
-        """結果に加えて未分類率などの内部診断値を返す。
+        """結果に加えて未分類率などの内部診断値とモード情報を返す。
+
+        計算モード:
+          - normal: 未明示キャリアを閉じる (A/B/C/Wb 非展開、D/I/Mc/Ta のみ X/- 展開)。
+          - explicit_carrier: 指定された座位のみ開ける (sire_carriers / dam_carriers)。
+          - carrier_exploration: 未実装 (Phase 2)。指定時は明示エラー。
 
         分類不能 (どの正規カラーにも還元できない) 子猫を黙って捨てて 100% に
-        再正規化することはしない。未分類は unmatched_probability として保持し、
-        テスト・デバッグで検出できるようにする。
+        再正規化することはしない。未分類は unmatched_probability として保持する。
+        通常結果とキャリア仮定結果を 1 つの表に混ぜない (mode ごとに分離)。
         """
 
-        sire_genotypes = self._resolve_parent_genotypes(sire_color, "male", breed)
-        dam_genotypes = self._resolve_parent_genotypes(dam_color, "female", breed)
+        if mode == "carrier_exploration":
+            raise BreedingCalculationError(
+                "carrier_exploration_mode は未実装です (Phase 2 で対応予定)。"
+                "通常結果に混在させないため、現状は明示的に拒否します。"
+            )
+        if mode not in SUPPORTED_MODES:
+            raise BreedingCalculationError(
+                f"未知の計算モード '{mode}'。利用可能: {', '.join(SUPPORTED_MODES)}。"
+            )
+
+        sire_genotypes = self._resolve_parent_genotypes(
+            sire_color, "male", breed, mode, sire_carriers
+        )
+        dam_genotypes = self._resolve_parent_genotypes(
+            dam_color, "female", breed, mode, dam_carriers
+        )
 
         if not sire_genotypes:
             raise BreedingCalculationError("No valid sire genotypes remain after filtering.")
@@ -216,15 +264,59 @@ class CoatColorCalculator:
                         aggregate[(kitten.sex, phenotype)] += weight
 
         results = self._to_results(aggregate, unmatched_probability)
+        opened_loci, closed_loci, assumptions = self._build_mode_metadata(
+            mode, sire_carriers, dam_carriers
+        )
         return CalculationReport(
             results=results,
             matched_probability=round(matched_probability, 6),
             unmatched_probability=round(unmatched_probability, 6),
             unmatched_genotype_count=len(unmatched_keys),
             unmatched_samples=unmatched_samples,
+            mode=mode,
+            opened_loci=opened_loci,
+            closed_loci=closed_loci,
+            assumptions=assumptions,
         )
 
-    def _resolve_parent_genotypes(self, phenotype: str, sex: str, breed: str | None) -> list[ParentGenotype]:
+    @staticmethod
+    def _build_mode_metadata(
+        mode: str,
+        sire_carriers: dict[str, str] | None,
+        dam_carriers: dict[str, str] | None,
+    ) -> tuple[list[str], list[str], list[str]]:
+        """mode に応じた opened_loci / closed_loci / assumptions を構築する。"""
+
+        assumptions = [
+            "A (タビー): A/A 相当に固定 (A/a 非展開)",
+            "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
+            "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
+            "Wb (ワイドバンド): 非展開",
+            "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+            "S (白斑): 入力レベルで確定 (非展開)",
+        ]
+        opened = list(NORMAL_OPENED_LOCI)
+        closed = list(NORMAL_CLOSED_LOCI)
+
+        if mode == "explicit_carrier":
+            for parent, carriers in (("sire", sire_carriers), ("dam", dam_carriers)):
+                for locus, genotype in (carriers or {}).items():
+                    if locus not in opened:
+                        opened.append(locus)
+                    if locus in closed:
+                        closed.remove(locus)
+                    assumptions.append(f"{locus}: {parent} に {genotype} を明示指定 (開放)")
+
+        return opened, closed, assumptions
+
+    def _resolve_parent_genotypes(
+        self,
+        phenotype: str,
+        sex: str,
+        breed: str | None,
+        mode: str = "normal",
+        carriers: dict[str, str] | None = None,
+    ) -> list[ParentGenotype]:
         if breed:
             breed_lower = breed.lower()
             if "abyssinian" in breed_lower or "somali" in breed_lower:
@@ -242,12 +334,12 @@ class CoatColorCalculator:
         phenotype = self._resolve_input_color_name(phenotype, breed)
 
         phenotype_key = self._normalize_color_key(phenotype)
-        phenotype_options = PHENOTYPE_GENOTYPES.get(phenotype_key)
-        if phenotype_options is None:
+        if phenotype_key not in PHENOTYPE_GENOTYPES:
             supported = ", ".join(sorted(PHENOTYPE_GENOTYPES))
             raise BreedingCalculationError(f"Unsupported color '{phenotype}'. Supported colors: {supported}")
 
-        genotypes = list(phenotype_options[sex])
+        # mode に応じた親遺伝子型候補を生成する (normal: キャリア閉鎖 / explicit_carrier: 指定座位を開放)。
+        genotypes = build_parent_genotypes(phenotype_key, sex, mode, carriers)
         if not genotypes:
             raise BreedingCalculationError(f"Color '{phenotype_key}' is not valid for a {sex}.")
 
