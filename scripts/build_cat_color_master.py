@@ -191,6 +191,9 @@ ALIAS_TARGETS: dict[str, str] = {
     # CFA「Blue Cream Smoke」= TICA「Blue Tortie Smoke」(Blue Cream = Blue Tortie の smoke 版)
     "blue cream smoke": "Blue Tortie Smoke",
     "blue cream smoke-white": "Blue Tortie Smoke-White",
+    # Smoke×Tortie/Calico の Van 変種: Van は WhiteState=van に保持し一般表示は -White canonical へ寄せる
+    "tortie smoke-white van": "Tortie Smoke-White",
+    "blue cream smoke-white van": "Blue Tortie Smoke-White",
     # Oriental 呼称 (一般概念へ寄せる。表示は alias map 側で Oriental 文脈に復元)
     "ebony": "Black",
     "lavender": "Lilac",
@@ -1103,7 +1106,7 @@ def write_review(rows, concepts, stats, source, gmap) -> None:
     a("")
     a("1. `review` は現在 0 件 (全件確定済み)。新たに不確かな概念が出たら review へ戻す。")
     a("2. `review_required` の遺伝子座 (特に Wb 系 Shaded/Chinchilla/Golden、Point/Mink/Sepia の C 系)。")
-    a("   - Van 系の寄せ方針: 今回 `Smoke Calico Van` のみ確定 (→`tortie_smoke_white`)。`Tortie Smoke-White Van`(279)/`Blue Cream Smoke-White Van`(280) は今回 review 対象外のため canonical のまま。同じ Van 寄せを適用するか要確認。")
+    a("   - Van 系の寄せ方針: Smoke×Tortie/Calico の Van (`Smoke Calico Van`/`Tortie Smoke-White Van`(279)/`Blue Cream Smoke-White Van`(280)) は -White canonical へ alias 化済 (`WhiteState=van` 保持, 一般表示は -White)。**その他の Van** (例: `Black-White Van`, `Silver Tabby-White Van`, 各 Smoke-White Van(276-278,281), タビー系 -White Van 多数) は現状 canonical+`DisplayAllowed=false` のまま。全 Van を一律 -White canonical へ alias 化するか要確認。")
     a("3. alias の `CanonicalColorId` 解決先が妥当か (特に Torbie→Patched Tabby のパターン語処理)。")
     a("4. breed_specific の BreedContext 割り当て (Oriental/Burmese/Tonkinese の境界)。")
     a("5. `Tortoiseshell-White` を `Calico` へ寄せた判断 (CFA は白量で区別する場合あり)。")
