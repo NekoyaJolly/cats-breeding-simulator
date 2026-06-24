@@ -18,6 +18,7 @@ from cat_breeding_simulator.master_data import (
     build_parent_genotypes,
 )
 from cat_breeding_simulator.color_master import COLOR_MASTER
+from cat_breeding_simulator.display_alias_map import DISPLAY_ALIAS_MAP
 
 
 ProbabilityMap = dict[tuple[str, str], float]
@@ -814,11 +815,15 @@ class CoatColorCalculator:
         self, name: str, sire_color: str, dam_color: str, breed: str | None
     ) -> str:
         name = self._clean_phenotype_name(name)
-        name = self._apply_breed_color_names(name, breed)
         name = self._simplify_patterns(name, sire_color, dam_color, breed)
         # 出力色名を cat_color_master.csv の canonical PrimaryName へ正規化する
         # (alias 統合・略記展開)。集計はこの canonical 名で行われ自動的にマージされる。
         name = COLOR_MASTER.canonical_name(name)
+        # 猫種別表示名 (Abyssinian の Ruddy、Oriental の Ebony 等) と一般 Van 正規化を
+        # cat_color_display_alias_map.csv 駆動で適用する (データ正本 §4 / §1.1)。
+        # canonical 正規化の「後」に置く: Ebony/Chestnut/Lavender は master では alias のため、
+        # 先に canonical 化しないと猫種別呼称が一般名へ戻ってしまう。
+        name = DISPLAY_ALIAS_MAP.resolve_display_name(name, breed)
         return name
 
     def _clean_phenotype_name(self, name: str) -> str:
@@ -897,26 +902,6 @@ class CoatColorCalculator:
         name = name.replace("Tabby-W", "Tabby-White")
         name = name.replace("__TABBY_WHITE__", "Tabby-White")
         name = name.replace("T-W", "Tabby-White").replace("-W Van", "-White Van")
-        return name
-
-    def _apply_breed_color_names(self, name: str, breed: str | None) -> str:
-        if not breed:
-            return name
-        breed_lower = breed.lower()
-        if "abyssinian" in breed_lower or "somali" in breed_lower:
-            if "Silver Ticked Tabby" in name:
-                name = name.replace(" Ticked Tabby", "")
-            else:
-                if "Brown Ticked Tabby" in name or "Black Ticked Tabby" in name:
-                    name = name.replace("Brown Ticked Tabby", "Ruddy").replace("Black Ticked Tabby", "Ruddy")
-                elif "Blue Ticked Tabby" in name:
-                    name = name.replace("Blue Ticked Tabby", "Blue")
-                elif "Cinnamon Ticked Tabby" in name:
-                    name = name.replace("Cinnamon Ticked Tabby", "Cinnamon")
-                elif "Fawn Ticked Tabby" in name:
-                    name = name.replace("Fawn Ticked Tabby", "Fawn")
-                elif "Red Ticked Tabby" in name:
-                    name = name.replace("Red Ticked Tabby", "Red")
         return name
 
     # 通常のXYオスには出してはいけない、本来メス限定のカラー名マーカー。

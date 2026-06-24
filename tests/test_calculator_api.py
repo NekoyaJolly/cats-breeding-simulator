@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 
 from cat_breeding_simulator.engine import BreedingCalculationError, CoatColorCalculator
 from cat_breeding_simulator.color_master import COLOR_MASTER
+from cat_breeding_simulator.display_alias_map import DISPLAY_ALIAS_MAP
 from cat_breeding_simulator.master_data import COLOR_DEFINITIONS
 from main import app
 
@@ -124,6 +125,81 @@ def test_excluded_input_rejected() -> None:
     calculator = CoatColorCalculator()
     with pytest.raises(BreedingCalculationError):
         calculator.calculate("Smoke", "Black", breed=None)
+
+
+# --- cat_color_display_alias_map.csv 表示名解決レイヤの回帰テスト ---
+#
+# 猫種別表示名 (Oriental の Ebony/Chestnut/Lavender、Abyssinian/Somali の Ruddy 等) と
+# 一般表示の Van -> -White 正規化 (データ正本 §4 / §5.2) を検証する。
+# 統合方針: engine.py のハードコードを CSV 駆動へ置換 (§1.1)。
+
+
+def _colors(report) -> set[str]:
+    return {result.color for result in report.results}
+
+
+def test_oriental_restores_breed_specific_names() -> None:
+    """Oriental 文脈で Black/Chocolate/Lilac が Ebony/Chestnut/Lavender へ復元される。"""
+
+    calculator = CoatColorCalculator()
+    # Chestnut (=Chocolate) 同士。濃色の子は Chestnut、希釈の子は Lavender (=Lilac) になる。
+    report = calculator.calculate_report("Chestnut", "Chestnut", breed="Oriental Shorthair")
+    colors = _colors(report)
+    assert "Chestnut" in colors
+    assert "Lavender" in colors
+    # 一般名 (Chocolate/Lilac) が Oriental 文脈で残らない
+    assert "Chocolate" not in colors and "Lilac" not in colors
+    assert report.unmatched_probability == 0
+
+
+def test_oriental_ebony_from_alias_input() -> None:
+    """alias 入力 Ebony は canonical(Black) 解決後、Oriental 文脈で Ebony 表示に戻る。"""
+
+    calculator = CoatColorCalculator()
+    report = calculator.calculate_report("Ebony", "Ebony", breed="Oriental Longhair")
+    colors = _colors(report)
+    assert "Ebony" in colors
+    assert "Black" not in colors
+
+
+def test_general_display_keeps_canonical_not_breed_name() -> None:
+    """猫種未指定の一般表示では猫種別呼称 (Ebony 等) を出さず canonical(Black) のまま。"""
+
+    calculator = CoatColorCalculator()
+    report = calculator.calculate_report("Black", "Black", breed=None)
+    colors = _colors(report)
+    assert "Black" in colors
+    assert "Ebony" not in colors
+
+
+def test_abyssinian_ruddy_preserved() -> None:
+    """Abyssinian/Somali の Ruddy 表示が CSV 駆動でも保持される (置換前と同一)。"""
+
+    calculator = CoatColorCalculator()
+    for breed in ("Abyssinian", "Somali"):
+        report = calculator.calculate_report("Ruddy", "Ruddy", breed=breed)
+        colors = _colors(report)
+        assert "Ruddy" in colors, f"{breed} で Ruddy が出力されない: {colors}"
+
+
+def test_display_map_van_normalized_to_white_in_general() -> None:
+    """一般表示では Van を -White に正規化する (データ正本 §5.2)。"""
+
+    assert DISPLAY_ALIAS_MAP.resolve_display_name("Black-White Van", None) == "Black-White"
+    assert (
+        DISPLAY_ALIAS_MAP.resolve_display_name("Tortoiseshell-White Van", None)
+        == "Tortoiseshell-White"
+    )
+
+
+def test_display_map_breed_name_composes_with_white_suffix() -> None:
+    """-White / -White Van 接尾辞を保ったまま基底名を猫種別呼称へ変換する。"""
+
+    resolve = DISPLAY_ALIAS_MAP.resolve_display_name
+    assert resolve("Brown Ticked Tabby-White", "Abyssinian") == "Ruddy-White"
+    assert resolve("Black-White Van", "Oriental Shorthair") == "Ebony-White"
+    # 未登録猫種は素通し
+    assert resolve("Black", "Persian") == "Black"
 
 
 def test_ui_path_130x204_only_tabby_via_api() -> None:
