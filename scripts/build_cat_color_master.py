@@ -157,7 +157,12 @@ def make_color_id(name: str) -> str:
 # 3. 分類用の決定テーブル
 # ---------------------------------------------------------------------------
 # 純粋に運用上の非カラー (通常計算・入力候補に使わない)
-EXCLUDED_CONCEPTS = {"any other color", "aov"}
+# "smoke" 単独は基色を持たないカテゴリ名のため excluded (追加レビュー判断: Smoke系)。
+EXCLUDED_CONCEPTS = {"any other color", "aov", "smoke"}
+
+# 元データに直接の行は無いが、alias 解決先として必要な canonical 概念
+# (追加レビュー判断 #7)。元データ Code/Name は対応する Blue Cream Smoke 系 alias 行が保持する。
+SYNTHESIZED_CANONICALS = ["Blue Tortie Smoke", "Blue Tortie Smoke-White"]
 
 # 別名 → canonical 概念名。CFA/TICA/日本実務/猫種呼称差の同一概念統合。
 # resolves_to は対象概念の ColorId を後段で算出する。
@@ -176,6 +181,16 @@ ALIAS_TARGETS: dict[str, str] = {
     "bronze": "Brown Tabby",
     # Shell/Chinchilla 同一概念 (#1): ブルー系は Chinchilla 表記優先のため Shell Blue は寄せる
     "shell blue": "Blue Chinchilla Silver",
+    # Smoke×Tortie/Calico 系の確定 (追加レビュー判断). Smoke = solid + I/-。
+    # Calico = Tortie + White, Dilute Calico = Blue Tortie + White として正規表示へ寄せる。
+    "smoke tortoiseshell": "Tortie Smoke",
+    "calico smoke": "Tortie Smoke-White",
+    "smoke calico": "Tortie Smoke-White",
+    "smoke calico van": "Tortie Smoke-White",
+    "smoke dilute calico": "Blue Tortie Smoke-White",
+    # CFA「Blue Cream Smoke」= TICA「Blue Tortie Smoke」(Blue Cream = Blue Tortie の smoke 版)
+    "blue cream smoke": "Blue Tortie Smoke",
+    "blue cream smoke-white": "Blue Tortie Smoke-White",
     # Oriental 呼称 (一般概念へ寄せる。表示は alias map 側で Oriental 文脈に復元)
     "ebony": "Black",
     "lavender": "Lilac",
@@ -210,14 +225,11 @@ BREED_SPECIFIC_RULES: list[tuple[str, str]] = [
 ]
 
 # 自動判断できず人間レビューに回す概念 (依頼プロンプトの review 指定相当)
-# 注: Shaded は別概念として canonical 維持 (追加レビュー判断 #3) のため review から外した。
-#     Shell/Chinchilla は計算上同一概念 (#1)。Shell Cream/Cream Shell Cameo は赤/クリーム系 Shell
-#     として canonical 化、Shell Blue はブルー系 Chinchilla へ alias 化 (ALIAS_TARGETS) したため review から外した。
-REVIEW_CONCEPTS = {
-    "smoke",                       # 単独 Smoke は基色不明
-    "calico smoke", "smoke calico", "smoke dilute calico", "smoke calico van",
-    "smoke tortoiseshell",         # スモーク×トーティ/キャリコ境界が曖昧
-}
+# 注: 当初 review に残した項目は順次確定済み。
+#   - Shaded は別概念として canonical 維持 (#3)。Shell/Chinchilla は計算上同一概念 (#1)。
+#   - Smoke 単独は excluded、Smoke×Tortie/Calico は alias で正規表示へ寄せた (Smoke系確定)。
+# 現時点で自動判断不能な概念は無いため空。新たに不確かなものが出たらここへ追加する。
+REVIEW_CONCEPTS: set[str] = set()
 
 # 一般表示してよい代表 canonical 概念 (DisplayAllowed=true の明示許可リスト)。
 # ここに無い canonical でも構造から true 判定する場合があるが、Point/Mink/Sepia/
@@ -363,7 +375,8 @@ def derive_attributes(name: str, loci: dict[str, str]) -> dict[str, str]:
         white = "mitted"
     elif is_bicolor:
         white = "bicolor"
-    elif is_white or s_loc in ("S/s", "s/S"):
+    # Calico は定義上「トーティ + 白」なので白斑ありとして扱う (loci 欠落時の補完)
+    elif is_white or is_calico or s_loc in ("S/s", "s/S"):
         white = "white"
     else:
         white = "none"
@@ -484,8 +497,11 @@ def classify(concept: str, attrs: dict[str, str], in_map: bool) -> dict[str, str
 
     # 1) excluded
     if cl in EXCLUDED_CONCEPTS:
-        return _decision("excluded", "general", False, False, "review_required",
-                         "", [], ["運用上の非カラー区分。通常計算・入力候補に使わない。"])
+        if cl == "smoke":
+            note = "基色を持たないカテゴリ名。具体色柄ではないため通常計算・入力候補から除外。"
+        else:
+            note = "運用上の非カラー区分。通常計算・入力候補に使わない。"
+        return _decision("excluded", "general", False, False, "review_required", "", [], [note])
 
     # 2) review (明示)
     if cl in REVIEW_CONCEPTS:
@@ -499,6 +515,8 @@ def classify(concept: str, attrs: dict[str, str], in_map: bool) -> dict[str, str
         breed = detect_breed_specific(cl) or "general"
         registry.append(f"同一概念: {concept} → {target} ({make_color_id(target)})")
         notes.append(f"一般表示は {target} に寄せる (機械処理は CanonicalColorId を参照)。")
+        if "van" in cl:
+            notes.append("Van 情報は WhiteState=van / SourceNames に保持。一般表示では Van を出さない。")
         if breed != "general":
             notes.append(f"{breed} 文脈の呼称。")
         return _decision("alias", breed, False, True, "review_required" if breed != "general" else genetic_src,
@@ -619,6 +637,8 @@ class Concept:
         self.change_notes: set[str] = set()
         self.loci: dict[str, str] = {}
         self.in_map = False
+        self.synthetic = False       # 元データに無く alias 解決先として追加した canonical
+        self.synthetic_note = ""     # 合成理由 (Notes に記録)
 
 
 def normalize_concept(raw: str) -> tuple[str, str, list[str], list[str]]:
@@ -687,9 +707,25 @@ def build_concepts(
             c.loci = _loci_from_map(gmap[code])
             c.in_map = True
 
+    # 追加レビュー判断 #7: 元データに無いが alias 解決先として必要な canonical を追加。
+    synthesized: list[str] = []
+    for name in SYNTHESIZED_CANONICALS:
+        cl = name.lower()
+        if cl in concepts:
+            continue
+        sc = Concept(name)
+        sc.synthetic = True
+        sc.synthetic_note = (
+            "元データに直接の行は無い canonical (alias 解決先として追加: 追加レビュー判断 #7)。"
+            "SourceCode/Name は対応する Blue Cream Smoke 系 alias 行が保持し喪失しない。"
+        )
+        concepts[cl] = sc
+        synthesized.append(name)
+
     stats = {
         "name_mismatches": name_mismatches,
         "map_only": map_only,
+        "synthesized": synthesized,
         "source_codes": set(source.keys()),
         "map_codes": set(gmap.keys()),
     }
@@ -724,11 +760,13 @@ def build_rows(concepts: dict[str, Concept]) -> list[dict[str, str]]:
             registry_parts.append(decision["RegistryNotesExtra"])
 
         note_parts: list[str] = []
+        if c.synthetic:
+            note_parts.append(c.synthetic_note)
         if decision["NotesExtra"]:
             note_parts.append(decision["NotesExtra"])
         if c.change_notes:
             note_parts.append("正規化: " + ", ".join(sorted(c.change_notes)))
-        if not c.in_map:
+        if not c.in_map and not c.synthetic:
             note_parts.append("遺伝子座はマップ未収載のため名前から推定。")
 
         # 追加レビュー判断 #1: Chinchilla canonical (黒/ブルー系で Chinchilla 表記優先) には、
@@ -818,8 +856,13 @@ def validate(rows: list[dict[str, str]], source_codes: set[int]) -> list[str]:
             errors.append(f"InputAllowed 不正: {cid}")
         if r["SexRestriction"] not in allowed_sex:
             errors.append(f"SexRestriction 不正: {cid} -> {r['SexRestriction']}")
-        if not r["SourceNames"]:
+        # SourceNames は SourceCodes を持つ行 (元データ直結) でのみ必須。
+        # 合成 canonical (alias 解決先として追加) は SourceCodes を持たないため空欄可。
+        # ただし由来を Notes に必ず記録する (元データ名は対応 alias 行が保持)。
+        if r["SourceCodes"] and not r["SourceNames"]:
             errors.append(f"SourceNames 空 (元データ名喪失): {cid}")
+        if not r["SourceCodes"] and not r["SourceNames"] and not r["Notes"]:
+            errors.append(f"元データ直結でない行に由来 Notes が無い: {cid}")
         # breed_specific で DisplayAllowed=true は Notes に理由が必要
         if r["Status"] == "breed_specific" and r["DisplayAllowed"] == "true" and "理由" not in r["Notes"]:
             errors.append(f"breed_specific なのに DisplayAllowed=true (理由未記載): {cid}")
@@ -1046,10 +1089,21 @@ def write_review(rows, concepts, stats, source, gmap) -> None:
     a("4. **Golden**: 単なる non_silver ではなく non_silver + wideband/tipping 系概念。`i/i` のみ・`Wb/-` のみでは確定しない。`SilverState=non_silver`・`PatternState=shell または shaded` に保持し `GeneticRuleSource=review_required` を維持。")
     a("5. **Smoke**: Shell/Shaded/Chinchilla/Golden(Wb系) とは別系統。`solid(a/a) + inhibitor I/-` の概念として `AgoutiState=solid`・`SilverState=smoke` に固定し、Wb/tipping 系と分離。")
     a("")
+    a("### 9.2 Smoke×Tortie/Calico 系の確定 (残 review 6件)")
+    a("")
+    a("- **Smoke** (単独): `Status=excluded`。基色を持たないカテゴリ名で具体色柄ではないため通常計算・入力候補から除外 (`DisplayAllowed=false`/`InputAllowed=false`/`CanonicalColorId` 空)。")
+    a("- **Smoke Tortoiseshell** → `tortie_smoke` (正規表示 Tortie Smoke, `a/a + I/- + O/o`, female_only)。")
+    a("- **Calico Smoke** / **Smoke Calico** → `tortie_smoke_white` (Calico = Tortie + White, 正規表示 Tortie Smoke-White)。")
+    a("- **Smoke Calico Van** → `tortie_smoke_white`。Van 情報は `WhiteState=van`/`SourceNames`/`Notes` に保持し、一般表示では Van を出さず Tortie Smoke-White に寄せる (`DisplayAllowed=false`/`InputAllowed=true`)。")
+    a("- **Smoke Dilute Calico** → `blue_tortie_smoke_white` (Dilute Calico = Blue Tortie + White, 正規表示 Blue Tortie Smoke-White)。`Blue Cream Smoke-White` / `Blue Cream Smoke` も同系統として alias 化 (Blue Cream = Blue Tortie の smoke 版)。")
+    a("- canonical 不在のため `blue_tortie_smoke` / `blue_tortie_smoke_white` を追加合成 (元データ Code/Name は Blue Cream Smoke 系 alias 行が保持)。`tortie_smoke` / `tortie_smoke_white` は元データ由来で既存。")
+    a("- Smoke 系遺伝: `Smoke=a/a+I/-`、`Tortie Smoke=a/a+I/-+O/o`、`Blue Tortie Smoke=a/a+I/-+O/o+d/d`、White ありは `S/-`。")
+    a("")
     a("## 10. 今後人間がレビューすべきポイント")
     a("")
-    a("1. `review` 行を canonical / alias / breed_specific のいずれへ確定するか。")
+    a("1. `review` は現在 0 件 (全件確定済み)。新たに不確かな概念が出たら review へ戻す。")
     a("2. `review_required` の遺伝子座 (特に Wb 系 Shaded/Chinchilla/Golden、Point/Mink/Sepia の C 系)。")
+    a("   - Van 系の寄せ方針: 今回 `Smoke Calico Van` のみ確定 (→`tortie_smoke_white`)。`Tortie Smoke-White Van`(279)/`Blue Cream Smoke-White Van`(280) は今回 review 対象外のため canonical のまま。同じ Van 寄せを適用するか要確認。")
     a("3. alias の `CanonicalColorId` 解決先が妥当か (特に Torbie→Patched Tabby のパターン語処理)。")
     a("4. breed_specific の BreedContext 割り当て (Oriental/Burmese/Tonkinese の境界)。")
     a("5. `Tortoiseshell-White` を `Calico` へ寄せた判断 (CFA は白量で区別する場合あり)。")

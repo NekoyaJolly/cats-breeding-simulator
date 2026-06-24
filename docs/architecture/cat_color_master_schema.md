@@ -247,6 +247,18 @@ CFA/TICA 差・猫種固有呼称の扱い:
 
 - **Smoke は Shell/Shaded/Chinchilla/Golden(Wb系) とは別系統**。
 - `Smoke = solid(a/a) + inhibitor I/-` の概念。master では `AgoutiState=solid`・`SilverState=smoke` に固定し、Wb 系とは分離する。
+- 遺伝条件: `Smoke = a/a + I/-`、`Tortie Smoke = a/a + I/- + O/o`、`Blue Tortie Smoke = a/a + I/- + O/o + d/d`。White ありは `S/-` を付与する。
+
+### 12.6 Smoke × Tortie / Calico の確定
+
+- **`Smoke` 単独**は基色を持たないカテゴリ名のため `Status=excluded` (`DisplayAllowed=false`/`InputAllowed=false`/`CanonicalColorId` 空)。具体色柄ではないため通常計算・入力候補から除外する。
+- **トーティ系 smoke** は正規表示へ alias 解決する:
+  - `Smoke Tortoiseshell` → `tortie_smoke` (Tortie Smoke)
+  - `Calico Smoke` / `Smoke Calico` / `Smoke Calico Van` → `tortie_smoke_white` (Tortie Smoke-White。Calico = Tortie + White)
+  - `Smoke Dilute Calico` → `blue_tortie_smoke_white` (Blue Tortie Smoke-White。Dilute Calico = Blue Tortie + White)
+  - `Blue Cream Smoke` → `blue_tortie_smoke`、`Blue Cream Smoke-White` → `blue_tortie_smoke_white` (CFA Blue Cream = TICA Blue Tortie の smoke 版)
+- **Van** は `WhiteState=van` / `SourceNames` / `Notes` に保持し、一般表示では出さず `-White` の canonical へ寄せる (`DisplayAllowed=false`/`InputAllowed=true`)。
+- canonical が元データに無い `blue_tortie_smoke` / `blue_tortie_smoke_white` は alias 解決先として**追加合成**する (§12 の運用と同様、由来を `Notes` に記録)。`tortie_smoke` / `tortie_smoke_white` は元データ由来。
 
 ---
 
