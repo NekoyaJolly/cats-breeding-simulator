@@ -61,15 +61,20 @@ def _build_normal_parent_genotypes(phenotype: str, sex: str, base_loci: dict[str
     X/- = {X/X, X/x} の両方を計算対象に含める。
 
     - カテゴリA (表現型確定・優性ヘテロ不確定 / 通常モードでも展開する):
-        D 濃色 -> D/-, A タビー -> A/-, I シルバー -> I/-, S 白斑あり -> S/-,
-        Mc マッカレル -> Mc/-, Ta ティックド -> Ta/-, Wb ワイドバンド -> Wb/-
+        D 濃色 -> D/-, I シルバー -> I/-, Mc マッカレル -> Mc/-, Ta ティックド -> Ta/-。
+    - カテゴリA' (タビーの A-locus / 通常モードでは展開しない):
+        A タビーは normal_mode では A/A 相当として扱い A/a を展開しない。
+        理由: A/a を展開すると a/a×a/a が成立し、タビー親から Solid / Tortie /
+        Calico / Smoke (いずれも a/a 前提) が出てしまう。これは表現型から要求されない
+        潜在キャリアの自動展開であり通常モードでは禁止する。A/a は明示キャリア
+        (explicit_carrier_mode) または全キャリア探索 (carrier_exploration_mode) でのみ使う。
     - カテゴリB (表現型確定・劣性固定 / 固定する):
         d/d, a/a, cs/cs, cb/cb, cb/cs, i/i, s/s など。CSVの劣性ホモはそのまま固定。
     - カテゴリC (表現型から要求されない潜在キャリア / 通常モードでは展開しない):
         B/b チョコ, B/bl シナモン, C/cs ポイント, C/cb セピア。
         明示キャリア情報または血統・産子履歴がある場合のみ explicit_carrier で扱う。
 
-    シミュレーター正本 V9 / データ正本 V9 の同ルールに準拠。
+    シミュレーター正本 V9 §2.4 に準拠 (A の非展開は本ルールの改訂)。
     """
 
     import itertools
@@ -92,13 +97,15 @@ def _build_normal_parent_genotypes(phenotype: str, sex: str, base_loci: dict[str
 
     # カテゴリA: 優性ホモで記載されている座に、ヘテロ (優性/劣性) の可能性を加える。
     #
+    # A (タビー) は除外する。normal_mode では A を A/A 相当に固定し A/a を展開しない。
+    #   A/a を展開すると a/a×a/a が成立し、タビー親から Solid / Tortie / Calico / Smoke
+    #   (a/a 前提) が出てしまうため。A/a は explicit_carrier / carrier_exploration でのみ扱う。
     # S (白斑) は除外する。白斑は不完全優性で S/S(Van) と S/s(バイカラー/-White) は
     # 表現型で区別でき、入力の白斑レベルから接合性が確定する (= ヘテロ不可視ではない)。
     # さらに S/S の Van 色を S/s へ展開すると逆引きMAPが汚染され、S/s の子が Van 名へ
     # 誤マッチするため、S は CSV 記載値のまま固定する。
     dominant_expandable: dict[str, tuple[str, str]] = {
         "D": ("D", "d"),
-        "A": ("A", "a"),
         "I": ("I", "i"),
         "Mc": ("Mc", "mc"),
         "Ta": ("Ta", "ta"),

@@ -124,3 +124,31 @@ def test_excluded_input_rejected() -> None:
     calculator = CoatColorCalculator()
     with pytest.raises(BreedingCalculationError):
         calculator.calculate("Smoke", "Black", breed=None)
+
+
+def test_ui_path_130x204_only_tabby_via_api() -> None:
+    """UI 経路 (API → ColorNameResolver 経由) で 130×204 を計算し、出力健全性を検証する。
+
+    A を normal_mode で展開しないため、全出力はタビー/パッチドタビー系 (Solid/Smoke/
+    Tortie/Calico は出ない)。出力名は canonical 形 (Pt→Patched)。合計は 100%。
+    """
+
+    response = client.post(
+        "/api/v1/calculate",
+        json={"sire_color": "Silver Tabby", "dam_color": "Blue Pt Tabby-White", "breed": "Any"},
+    )
+    assert response.status_code == 200
+    results = response.json()["results"]
+    assert results
+
+    colors = {r["color"] for r in results}
+    # 全出力がタビー系 (a/a 前提の Solid/Smoke/Tortie/Calico が無い)
+    non_tabby = sorted(c for c in colors if "Tabby" not in c)
+    assert not non_tabby, f"UI経路で非タビー系が出力された: {non_tabby}"
+    # 出力名は canonical 形 (略記 Pt が単語として残らない)
+    assert not [c for c in colors if "Pt" in c.split()]
+    # 母 O/o 由来の Patched Tabby が出る
+    assert "Silver Patched Tabby" in colors
+    # 合計100%
+    total = round(sum(r["probability_pct"] for r in results), 4)
+    assert abs(total - 100.0) < 0.01, f"合計が100%でない: {total}"

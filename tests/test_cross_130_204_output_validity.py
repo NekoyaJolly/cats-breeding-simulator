@@ -1,14 +1,18 @@
 """130 (Silver Tabby) x 204 (Blue Pt Tabby-White) 通常計算の出力健全性テスト。
 
-通常モードでは「優性表現型のヘテロ未確定ルール」に従い、表現されている優性形質は
-X/- = {X/X, X/x} として扱う。よって父 Silver Tabby は I/-(シルバー)・D/-(濃色)・A/-(タビー)
-となり、子には Brown 系 (父 I/i)・Blue 系 (父 D/d)・パッチド系 (母 O/o) が正しく出る。
+通常モードでは、表現されている優性形質のうち D(濃色)・I(シルバー) は
+X/- = {X/X, X/x} として扱う。よって父 Silver Tabby は D/-・I/- となり、子には
+Blue 系 (父 D/d)・Brown 系 (父 I/i) が正しく出る。母 O/o によりメスには
+Patched Tabby 系が出る。
 
-一方、表現型から要求されない潜在キャリア (B/b チョコ, B/bl シナモン, C/cs ポイント,
-C/cb セピア) は通常モードでは展開しない。本テストは、これらカテゴリC由来の文脈外カラーが
-出ないこと・オス禁止ルール・0%禁止・未分類ゼロ・合計100% を回帰検証する。
+一方、A(タビー) は normal_mode では A/A 相当に固定し A/a を展開しない。
+よって a/a 前提の Solid / Smoke / Tortie / Calico / Tortoiseshell は通常結果に出さない
+(母 O/o のトーティは Patched Tabby であり Calico/Tortoiseshell ではない)。
+B/C 系の潜在キャリア (チョコ/シナモン/ポイント/セピア) も展開しない。
 
-明示キャリアモードや猫種指定モードでは別の許容範囲となるため、本テストとは分離する。
+本テストは、これら非展開カラーが出ないこと・全出力がタビー系であること・
+オス禁止ルール・0%禁止・未分類ゼロ・合計100% を回帰検証する。
+明示キャリア/全キャリア探索モードでは別の許容範囲となるため分離する。
 """
 
 from __future__ import annotations
@@ -21,12 +25,13 @@ from cat_breeding_simulator.engine import CoatColorCalculator
 SIRE_COLOR = "Silver Tabby"
 DAM_COLOR = "Blue Pt Tabby-White"
 
-# 通常結果に現れてはならない、潜在キャリア (カテゴリC) 由来の語/表記。
+# 通常結果に現れてはならない語/表記。
 # 注意:
 #   - "Point" は "Lynx Point" / "Seal Point" 等も巻き込んで禁止 ("Pt"=Patched略記は別語で対象外)。
-#   - "Blue Cream" は禁止に含めない。希釈トーティ (d/d) のメスは正当な通常結果であり、
-#     父が D/- (濃色ヘテロ未確定) のため希釈系が出るのは正しい。オスのみ別途禁止する。
-#   - "Lilac"/"Lilac Cream"/"Chocolate"/"Cinnamon"/"Fawn" は B 座 (b/bl) 由来 = カテゴリCなので禁止。
+#   - A(タビー) を normal_mode で展開しないため、a/a 前提の Solid / Smoke / Tortie /
+#     Calico / Tortoiseshell は通常結果に出ない (B/D 条件未明示の希釈トーティ Blue Cream/
+#     Blue Tortie も同様に禁止)。Solid 単独色は test_all_colors_are_tabby_pattern で別途検出する。
+#   - "Lilac"/"Chocolate"/"Cinnamon"/"Fawn" は B 座 (b/bl) 由来 = カテゴリCなので禁止。
 FORBIDDEN_SUBSTRINGS = (
     "Mink",
     "Sepia",
@@ -42,9 +47,13 @@ FORBIDDEN_SUBSTRINGS = (
     "Cinnamon",
     "Lilac",
     "Fawn",
-    "Lilac Cream",
     "Choco",
     "Lynx Point",
+    # a/a 前提 (A を normal_mode で展開しないため出ない)
+    "Smoke",
+    "Tortie",
+    "Tortoiseshell",
+    "Calico",
 )
 
 # オス結果に現れてはならないトーティ・クリーム混合・キャリコ系。
@@ -71,6 +80,18 @@ def test_no_forbidden_colors_in_normal_mode(report) -> None:
         if token in r.color
     ]
     assert not offenders, f"通常結果に禁止カラーが含まれている: {offenders}"
+
+
+def test_all_colors_are_tabby_pattern(report) -> None:
+    """A を normal_mode で展開しないため、全出力はタビー/パッチドタビー系になる。
+
+    Solid (Black/Blue/Red/Cream/Silver/Cameo 単独) や Smoke/Tortie/Calico/Tortoiseshell
+    のような a/a 前提カラーは出てはならない。これらは "Tabby" を名前に含まないため、
+    全出力が "Tabby" を含むことで検出する。
+    """
+
+    non_tabby = sorted({r.color for r in report.results if "Tabby" not in r.color})
+    assert not non_tabby, f"タビー系でない (a/a前提の) カラーが出力されている: {non_tabby}"
 
 
 def test_males_have_no_tortie_or_cream_mix(report) -> None:
@@ -103,13 +124,13 @@ def test_probabilities_sum_to_100(report) -> None:
 
 
 def test_expected_direction_colors_present(report) -> None:
-    """優性表現型のヘテロ未確定ルールにより現れるべき代表カラーを検証する。
+    """通常モードで現れるべき代表カラー (タビー/パッチドタビー系) を検証する。
 
-    - 父 I/- (シルバー優性ヘテロ未確定) → 非シルバーの Brown 系・Calico・Tortoiseshell
+    - 父 I/- (シルバー優性ヘテロ未確定) → 非シルバーの Brown 系
     - 父 D/- (濃色優性ヘテロ未確定) → 希釈の Blue 系・Blue Silver 系
-    - 父 A/- (タビー優性ヘテロ未確定) → ソリッド系
-    - 母 O/o → メスにパッチド (Pt) 系
-    低確率でも分類が成立し、これらの方向性が出ることを確認する。
+    - 母 O/o → メスに Patched Tabby 系 (※ a/a 前提の Calico/Tortoiseshell ではない)
+    A は展開しないため出力は全てタビー系。出力名は cat_color_master.csv で canonical 形
+    (Pt→Patched) に正規化される。低確率でも分類が成立し方向性が出ることを確認する。
     """
 
     colors = {(r.sex, r.color) for r in report.results}
@@ -122,11 +143,10 @@ def test_expected_direction_colors_present(report) -> None:
         ("Male", "Brown Tabby"),
         ("Female", "Blue Tabby"),      # 父 D/d 由来 (希釈)
         ("Female", "Blue Silver Tabby"),
-        # 母 O/o 由来 (パッチド)。cat_color_master.csv 接続により出力名は canonical 形へ
-        # 正規化される (Pt→Patched)。旧期待値 "Silver Pt Tabby" を canonical 名へ更新。
+        # 母 O/o 由来は Patched Tabby 系 (canonical 形: Pt→Patched)。
         ("Female", "Silver Patched Tabby"),
-        ("Female", "Calico"),
-        ("Female", "Tortoiseshell"),
+        ("Female", "Brown Patched Tabby"),   # 父 I/i + 母 O/o
+        ("Female", "Blue Patched Tabby"),    # 父 D/d + 母 O/o
     }
     missing = expected_present - colors
     assert not missing, f"期待される方向性のカラーが欠落している: {missing}"
