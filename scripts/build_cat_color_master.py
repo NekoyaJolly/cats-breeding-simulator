@@ -162,7 +162,11 @@ EXCLUDED_CONCEPTS = {"any other color", "aov", "smoke"}
 
 # 元データに直接の行は無いが、alias 解決先として必要な canonical 概念
 # (追加レビュー判断 #7)。元データ Code/Name は対応する Blue Cream Smoke 系 alias 行が保持する。
-SYNTHESIZED_CANONICALS = ["Blue Tortie Smoke", "Blue Tortie Smoke-White"]
+SYNTHESIZED_CANONICALS = [
+    "Blue Tortie Smoke",
+    "Blue Tortie Smoke-White",
+    "Blue Tortie Smoke-White Van",   # Van は独立概念 (S/S)。Blue Cream Smoke-White Van の解決先
+]
 
 # 別名 → canonical 概念名。CFA/TICA/日本実務/猫種呼称差の同一概念統合。
 # resolves_to は対象概念の ColorId を後段で算出する。
@@ -186,14 +190,15 @@ ALIAS_TARGETS: dict[str, str] = {
     "smoke tortoiseshell": "Tortie Smoke",
     "calico smoke": "Tortie Smoke-White",
     "smoke calico": "Tortie Smoke-White",
-    "smoke calico van": "Tortie Smoke-White",
     "smoke dilute calico": "Blue Tortie Smoke-White",
     # CFA「Blue Cream Smoke」= TICA「Blue Tortie Smoke」(Blue Cream = Blue Tortie の smoke 版)
     "blue cream smoke": "Blue Tortie Smoke",
     "blue cream smoke-white": "Blue Tortie Smoke-White",
-    # Smoke×Tortie/Calico の Van 変種: Van は WhiteState=van に保持し一般表示は -White canonical へ寄せる
-    "tortie smoke-white van": "Tortie Smoke-White",
-    "blue cream smoke-white van": "Blue Tortie Smoke-White",
+    # Van は -White(S/s) とは遺伝的に別概念(S/S)。-White へは寄せず、同一 Van 概念へまとめる。
+    # 一般表示の Van→-White 正規化は表示名マスタ (cat_color_display_alias_map.csv) が担う。
+    # (Tortie Smoke-White Van(279) は canonical の Van 概念。Calico Van は名称違いの同一 Van 概念へ。)
+    "smoke calico van": "Tortie Smoke-White Van",
+    "blue cream smoke-white van": "Blue Tortie Smoke-White Van",
     # Oriental 呼称 (一般概念へ寄せる。表示は alias map 側で Oriental 文脈に復元)
     "ebony": "Black",
     "lavender": "Lilac",
@@ -519,7 +524,7 @@ def classify(concept: str, attrs: dict[str, str], in_map: bool) -> dict[str, str
         registry.append(f"同一概念: {concept} → {target} ({make_color_id(target)})")
         notes.append(f"一般表示は {target} に寄せる (機械処理は CanonicalColorId を参照)。")
         if "van" in cl:
-            notes.append("Van 情報は WhiteState=van / SourceNames に保持。一般表示では Van を出さない。")
+            notes.append("Van は独立概念 (S/S) として保持し CanonicalColorId は同一 Van 概念を指す (-White へは寄せない)。一般表示の Van→-White 正規化は表示名マスタが担う。")
         if breed != "general":
             notes.append(f"{breed} 文脈の呼称。")
         return _decision("alias", breed, False, True, "review_required" if breed != "general" else genetic_src,
@@ -582,7 +587,7 @@ def classify(concept: str, attrs: dict[str, str], in_map: bool) -> dict[str, str
     if attrs["PointState"] in ("point",):
         notes.append("Point は normal_mode (breed_unselected) では C キャリア規則によりエンジンが非表示にする。")
     if attrs["WhiteState"] == "van":
-        notes.append("Van (S/S) は一般表示で -White に正規化。入力/猫種文脈でのみ Van 表示。")
+        notes.append("Van (S/S) は -White (S/s) と別の独立概念として保持 (InputAllowed=true, CanonicalColorId=自身)。一般表示の Van→-White 正規化は表示名マスタ (cat_color_display_alias_map.csv) が担い master では collapse しない。")
     return _decision("canonical", "general", display, True, genetic_src, "", registry, notes)
 
 
@@ -1096,17 +1101,25 @@ def write_review(rows, concepts, stats, source, gmap) -> None:
     a("")
     a("- **Smoke** (単独): `Status=excluded`。基色を持たないカテゴリ名で具体色柄ではないため通常計算・入力候補から除外 (`DisplayAllowed=false`/`InputAllowed=false`/`CanonicalColorId` 空)。")
     a("- **Smoke Tortoiseshell** → `tortie_smoke` (正規表示 Tortie Smoke, `a/a + I/- + O/o`, female_only)。")
-    a("- **Calico Smoke** / **Smoke Calico** → `tortie_smoke_white` (Calico = Tortie + White, 正規表示 Tortie Smoke-White)。")
-    a("- **Smoke Calico Van** → `tortie_smoke_white`。Van 情報は `WhiteState=van`/`SourceNames`/`Notes` に保持し、一般表示では Van を出さず Tortie Smoke-White に寄せる (`DisplayAllowed=false`/`InputAllowed=true`)。")
+    a("- **Calico Smoke** / **Smoke Calico** → `tortie_smoke_white` (S/s, Calico = Tortie + White, 正規表示 Tortie Smoke-White)。")
     a("- **Smoke Dilute Calico** → `blue_tortie_smoke_white` (Dilute Calico = Blue Tortie + White, 正規表示 Blue Tortie Smoke-White)。`Blue Cream Smoke-White` / `Blue Cream Smoke` も同系統として alias 化 (Blue Cream = Blue Tortie の smoke 版)。")
-    a("- canonical 不在のため `blue_tortie_smoke` / `blue_tortie_smoke_white` を追加合成 (元データ Code/Name は Blue Cream Smoke 系 alias 行が保持)。`tortie_smoke` / `tortie_smoke_white` は元データ由来で既存。")
-    a("- Smoke 系遺伝: `Smoke=a/a+I/-`、`Tortie Smoke=a/a+I/-+O/o`、`Blue Tortie Smoke=a/a+I/-+O/o+d/d`、White ありは `S/-`。")
+    a("- **Van (S/S) は -White(S/s) へ寄せない** (別概念)。`Tortie Smoke-White Van` → canonical `tortie_smoke_white_van`、`Smoke Calico Van` → alias → `tortie_smoke_white_van`、`Blue Cream Smoke-White Van` → alias → `blue_tortie_smoke_white_van`。`WhiteState=van`/`InputAllowed=true`/`DisplayAllowed=false`。一般表示の Van→-White 正規化は表示名マスタが担う (§9.3)。")
+    a("- canonical 不在のため `blue_tortie_smoke` / `blue_tortie_smoke_white` / `blue_tortie_smoke_white_van` を追加合成 (元データ Code/Name は Blue Cream Smoke 系 alias 行が保持)。`tortie_smoke` / `tortie_smoke_white` / `tortie_smoke_white_van` は元データ由来。")
+    a("- Smoke 系遺伝: `Smoke=a/a+I/-`、`Tortie Smoke=a/a+I/-+O/o`、`Blue Tortie Smoke=a/a+I/-+O/o+d/d`、White ありは `S/-`、Van は `S/S`。")
+    a("")
+    a("### 9.3 Van (S/S) の扱い (遺伝的同一性 vs 表示正規化)")
+    a("")
+    a("- Van は `-White`(S/s) と遺伝的に別概念。**入力で Van が与えられたら S/S を保持し子に Van を出せる**必要があるため、master では Van を独立概念として保持し `-White` へ collapse しない。")
+    a("- Van 行: `WhiteState=van`/`InputAllowed=true`/`DisplayAllowed=false`、`CanonicalColorId` は自身または同一 Van 概念 (-White へは向けない)。")
+    a("- 一般表示での Van→-White 正規化は表示名マスタ (`cat_color_display_alias_map.csv`) が担当。これにより `CanonicalColorId` は全行で一貫して『遺伝的・概念的同一性』を意味する。")
+    a("- 適用範囲: Smoke×Tortie/Calico の Van は上記で確定。その他の Van (`Black-White Van`, `Silver Tabby-White Van`, 各 `Smoke-White Van`, タビー系 `-White Van` 多数) は元々 canonical(`DisplayAllowed=false`) であり本方針と整合済 (変更不要)。")
     a("")
     a("## 10. 今後人間がレビューすべきポイント")
     a("")
     a("1. `review` は現在 0 件 (全件確定済み)。新たに不確かな概念が出たら review へ戻す。")
     a("2. `review_required` の遺伝子座 (特に Wb 系 Shaded/Chinchilla/Golden、Point/Mink/Sepia の C 系)。")
-    a("   - Van 系の寄せ方針: Smoke×Tortie/Calico の Van (`Smoke Calico Van`/`Tortie Smoke-White Van`(279)/`Blue Cream Smoke-White Van`(280)) は -White canonical へ alias 化済 (`WhiteState=van` 保持, 一般表示は -White)。**その他の Van** (例: `Black-White Van`, `Silver Tabby-White Van`, 各 Smoke-White Van(276-278,281), タビー系 -White Van 多数) は現状 canonical+`DisplayAllowed=false` のまま。全 Van を一律 -White canonical へ alias 化するか要確認。")
+    a("3. Van の表示正規化 (Van→-White) は表示名マスタ `cat_color_display_alias_map.csv` の整備時に実装する (master は Van を独立概念として保持済, §9.3)。")
+    a("4. その他 Van 概念の名称重複統合 (例: `Van Calico`(47) と `Tortoiseshell-White Van`(355) は同一遺伝概念の可能性) は未着手。必要なら別途 alias 統合する。")
     a("3. alias の `CanonicalColorId` 解決先が妥当か (特に Torbie→Patched Tabby のパターン語処理)。")
     a("4. breed_specific の BreedContext 割り当て (Oriental/Burmese/Tonkinese の境界)。")
     a("5. `Tortoiseshell-White` を `Calico` へ寄せた判断 (CFA は白量で区別する場合あり)。")

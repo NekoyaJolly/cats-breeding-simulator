@@ -12,23 +12,23 @@
 
 - 元データ件数 (色柄データUTF8Ver.csv, 名前あり): **407**
 - 現行正本件数 (cat_color_genetic_map.csv): **330**
-- 生成した色柄概念 (ColorId) 件数: **385**
+- 生成した色柄概念 (ColorId) 件数: **386**
 
 | Status | 件数 |
 |---|---|
-| canonical | 264 |
-| alias | 34 |
+| canonical | 266 |
+| alias | 33 |
 | breed_specific | 84 |
 | excluded | 3 |
 | review | 0 |
-| **合計** | **385** |
+| **合計** | **386** |
 
 - `GeneticRuleSource=review_required` (遺伝子ルール要確認): **166** 件
 - 正規化 (略称・タイポ展開) を適用した概念: **86** 件
 
 ### 1.1 CanonicalColorId と元データカバレッジ
 
-- alias 解決件数 (`Status=alias` かつ `CanonicalColorId` あり): **34 / 34**
+- alias 解決件数 (`Status=alias` かつ `CanonicalColorId` あり): **33 / 33**
 - alias 解決先が存在しない行数 (`CanonicalColorId` が空 or 実在しない): **0**
 - 元データ 407 件のカバレッジ (SourceCode が master のいずれかの行に保持): **407 / 407** (100%)
 
@@ -62,7 +62,7 @@
 | Blue Cream Point | `blue_tortie_point` | 同一概念: Blue Cream Point → Blue Tortie Point (blue_tortie_point) |
 | Blue Cream Smoke | `blue_tortie_smoke` | 同一概念: Blue Cream Smoke → Blue Tortie Smoke (blue_tortie_smoke) |
 | Blue Cream Smoke-White | `blue_tortie_smoke_white` | 同一概念: Blue Cream Smoke-White → Blue Tortie Smoke-White (blue_tortie_smoke_white) |
-| Blue Cream Smoke-White Van | `blue_tortie_smoke_white` | 同一概念: Blue Cream Smoke-White Van → Blue Tortie Smoke-White (blue_tortie_smoke_white) |
+| Blue Cream Smoke-White Van | `blue_tortie_smoke_white_van` | 同一概念: Blue Cream Smoke-White Van → Blue Tortie Smoke-White Van (blue_tortie_smoke_white_van) |
 | Blue Cream-White | `dilute_calico` | 同一概念: Blue Cream-White → Dilute Calico (dilute_calico) |
 | Blue Gray | `blue` | 同一概念: Blue Gray → Blue (blue) |
 | Blue Tortie-White | `dilute_calico` | 同一概念: Blue Tortie-White → Dilute Calico (dilute_calico) |
@@ -87,10 +87,9 @@
 | Silver Classic Torbie | `silver_patched_tabby` | TICA: Torbie = Patched Tabby (Silver Patched Tabby) |
 | Silver Mackerel Torbie | `silver_patched_tabby` | TICA: Torbie = Patched Tabby (Silver Patched Tabby) |
 | Smoke Calico | `tortie_smoke_white` | 同一概念: Smoke Calico → Tortie Smoke-White (tortie_smoke_white) |
-| Smoke Calico Van | `tortie_smoke_white` | 同一概念: Smoke Calico Van → Tortie Smoke-White (tortie_smoke_white) |
+| Smoke Calico Van | `tortie_smoke_white_van` | 同一概念: Smoke Calico Van → Tortie Smoke-White Van (tortie_smoke_white_van) |
 | Smoke Dilute Calico | `blue_tortie_smoke_white` | 同一概念: Smoke Dilute Calico → Blue Tortie Smoke-White (blue_tortie_smoke_white) |
 | Smoke Tortoiseshell | `tortie_smoke` | 同一概念: Smoke Tortoiseshell → Tortie Smoke (tortie_smoke) |
-| Tortie Smoke-White Van | `tortie_smoke_white` | 同一概念: Tortie Smoke-White Van → Tortie Smoke-White (tortie_smoke_white) |
 | Tortoiseshell-White | `calico` | 同一概念: Tortoiseshell-White → Calico (calico) |
 
 ## 4. 猫種固有呼称として分離 (breed_specific)
@@ -228,17 +227,25 @@ Golden Mackerel Tabby, Golden Tabby, Blue Chinchilla Golden, Blue Chinchilla Sil
 
 - **Smoke** (単独): `Status=excluded`。基色を持たないカテゴリ名で具体色柄ではないため通常計算・入力候補から除外 (`DisplayAllowed=false`/`InputAllowed=false`/`CanonicalColorId` 空)。
 - **Smoke Tortoiseshell** → `tortie_smoke` (正規表示 Tortie Smoke, `a/a + I/- + O/o`, female_only)。
-- **Calico Smoke** / **Smoke Calico** → `tortie_smoke_white` (Calico = Tortie + White, 正規表示 Tortie Smoke-White)。
-- **Smoke Calico Van** → `tortie_smoke_white`。Van 情報は `WhiteState=van`/`SourceNames`/`Notes` に保持し、一般表示では Van を出さず Tortie Smoke-White に寄せる (`DisplayAllowed=false`/`InputAllowed=true`)。
+- **Calico Smoke** / **Smoke Calico** → `tortie_smoke_white` (S/s, Calico = Tortie + White, 正規表示 Tortie Smoke-White)。
 - **Smoke Dilute Calico** → `blue_tortie_smoke_white` (Dilute Calico = Blue Tortie + White, 正規表示 Blue Tortie Smoke-White)。`Blue Cream Smoke-White` / `Blue Cream Smoke` も同系統として alias 化 (Blue Cream = Blue Tortie の smoke 版)。
-- canonical 不在のため `blue_tortie_smoke` / `blue_tortie_smoke_white` を追加合成 (元データ Code/Name は Blue Cream Smoke 系 alias 行が保持)。`tortie_smoke` / `tortie_smoke_white` は元データ由来で既存。
-- Smoke 系遺伝: `Smoke=a/a+I/-`、`Tortie Smoke=a/a+I/-+O/o`、`Blue Tortie Smoke=a/a+I/-+O/o+d/d`、White ありは `S/-`。
+- **Van (S/S) は -White(S/s) へ寄せない** (別概念)。`Tortie Smoke-White Van` → canonical `tortie_smoke_white_van`、`Smoke Calico Van` → alias → `tortie_smoke_white_van`、`Blue Cream Smoke-White Van` → alias → `blue_tortie_smoke_white_van`。`WhiteState=van`/`InputAllowed=true`/`DisplayAllowed=false`。一般表示の Van→-White 正規化は表示名マスタが担う (§9.3)。
+- canonical 不在のため `blue_tortie_smoke` / `blue_tortie_smoke_white` / `blue_tortie_smoke_white_van` を追加合成 (元データ Code/Name は Blue Cream Smoke 系 alias 行が保持)。`tortie_smoke` / `tortie_smoke_white` / `tortie_smoke_white_van` は元データ由来。
+- Smoke 系遺伝: `Smoke=a/a+I/-`、`Tortie Smoke=a/a+I/-+O/o`、`Blue Tortie Smoke=a/a+I/-+O/o+d/d`、White ありは `S/-`、Van は `S/S`。
+
+### 9.3 Van (S/S) の扱い (遺伝的同一性 vs 表示正規化)
+
+- Van は `-White`(S/s) と遺伝的に別概念。**入力で Van が与えられたら S/S を保持し子に Van を出せる**必要があるため、master では Van を独立概念として保持し `-White` へ collapse しない。
+- Van 行: `WhiteState=van`/`InputAllowed=true`/`DisplayAllowed=false`、`CanonicalColorId` は自身または同一 Van 概念 (-White へは向けない)。
+- 一般表示での Van→-White 正規化は表示名マスタ (`cat_color_display_alias_map.csv`) が担当。これにより `CanonicalColorId` は全行で一貫して『遺伝的・概念的同一性』を意味する。
+- 適用範囲: Smoke×Tortie/Calico の Van は上記で確定。その他の Van (`Black-White Van`, `Silver Tabby-White Van`, 各 `Smoke-White Van`, タビー系 `-White Van` 多数) は元々 canonical(`DisplayAllowed=false`) であり本方針と整合済 (変更不要)。
 
 ## 10. 今後人間がレビューすべきポイント
 
 1. `review` は現在 0 件 (全件確定済み)。新たに不確かな概念が出たら review へ戻す。
 2. `review_required` の遺伝子座 (特に Wb 系 Shaded/Chinchilla/Golden、Point/Mink/Sepia の C 系)。
-   - Van 系の寄せ方針: Smoke×Tortie/Calico の Van (`Smoke Calico Van`/`Tortie Smoke-White Van`(279)/`Blue Cream Smoke-White Van`(280)) は -White canonical へ alias 化済 (`WhiteState=van` 保持, 一般表示は -White)。**その他の Van** (例: `Black-White Van`, `Silver Tabby-White Van`, 各 Smoke-White Van(276-278,281), タビー系 -White Van 多数) は現状 canonical+`DisplayAllowed=false` のまま。全 Van を一律 -White canonical へ alias 化するか要確認。
+3. Van の表示正規化 (Van→-White) は表示名マスタ `cat_color_display_alias_map.csv` の整備時に実装する (master は Van を独立概念として保持済, §9.3)。
+4. その他 Van 概念の名称重複統合 (例: `Van Calico`(47) と `Tortoiseshell-White Van`(355) は同一遺伝概念の可能性) は未着手。必要なら別途 alias 統合する。
 3. alias の `CanonicalColorId` 解決先が妥当か (特に Torbie→Patched Tabby のパターン語処理)。
 4. breed_specific の BreedContext 割り当て (Oriental/Burmese/Tonkinese の境界)。
 5. `Tortoiseshell-White` を `Calico` へ寄せた判断 (CFA は白量で区別する場合あり)。

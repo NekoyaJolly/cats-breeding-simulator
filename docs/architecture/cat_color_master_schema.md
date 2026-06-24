@@ -252,13 +252,24 @@ CFA/TICA 差・猫種固有呼称の扱い:
 ### 12.6 Smoke × Tortie / Calico の確定
 
 - **`Smoke` 単独**は基色を持たないカテゴリ名のため `Status=excluded` (`DisplayAllowed=false`/`InputAllowed=false`/`CanonicalColorId` 空)。具体色柄ではないため通常計算・入力候補から除外する。
-- **トーティ系 smoke** は正規表示へ alias 解決する:
+- **トーティ系 smoke** (S/s, -White) は正規表示へ alias 解決する:
   - `Smoke Tortoiseshell` → `tortie_smoke` (Tortie Smoke)
-  - `Calico Smoke` / `Smoke Calico` / `Smoke Calico Van` → `tortie_smoke_white` (Tortie Smoke-White。Calico = Tortie + White)
+  - `Calico Smoke` / `Smoke Calico` → `tortie_smoke_white` (Tortie Smoke-White。Calico = Tortie + White)
   - `Smoke Dilute Calico` → `blue_tortie_smoke_white` (Blue Tortie Smoke-White。Dilute Calico = Blue Tortie + White)
   - `Blue Cream Smoke` → `blue_tortie_smoke`、`Blue Cream Smoke-White` → `blue_tortie_smoke_white` (CFA Blue Cream = TICA Blue Tortie の smoke 版)
-- **Van** は `WhiteState=van` / `SourceNames` / `Notes` に保持し、一般表示では出さず `-White` の canonical へ寄せる (`DisplayAllowed=false`/`InputAllowed=true`)。
-- canonical が元データに無い `blue_tortie_smoke` / `blue_tortie_smoke_white` は alias 解決先として**追加合成**する (§12 の運用と同様、由来を `Notes` に記録)。`tortie_smoke` / `tortie_smoke_white` は元データ由来。
+- **Van (S/S)** は -White(S/s) と遺伝的に別概念なので **-White へは寄せない** (§12.7)。同一 Van 概念へまとめる:
+  - `Tortie Smoke-White Van` → canonical `tortie_smoke_white_van`、`Smoke Calico Van` → alias → `tortie_smoke_white_van`
+  - `Blue Cream Smoke-White Van` → alias → `blue_tortie_smoke_white_van`
+- canonical が元データに無い `blue_tortie_smoke` / `blue_tortie_smoke_white` / `blue_tortie_smoke_white_van` は alias 解決先として**追加合成**する (由来を `Notes` に記録)。`tortie_smoke` / `tortie_smoke_white` / `tortie_smoke_white_van` は元データ由来。
+
+### 12.7 Van (S/S) の扱い — 遺伝的同一性 vs 表示正規化
+
+`Van` (S/S = 高白斑ホモ) は `-White` (S/s) と**遺伝的に別概念**である ([`01_シミュレーター正本_V9.md`](./01_シミュレーター正本_V9.md) §2.4)。入力で Van が与えられたら `S/S` を保持して子に Van を出せる必要があるため、master では Van を **collapse しない**。
+
+- Van 行は **独立概念**として保持する: `WhiteState=van`、`InputAllowed=true`、`DisplayAllowed=false`、`CanonicalColorId` は**自身**または**同一 Van 概念** (-White 側 S/s には向けない)。
+- 名称違いの同一 Van 概念 (例: `Smoke Calico Van` = `Tortie Smoke-White Van`) は片方を canonical、他方を alias とし、`CanonicalColorId` は Van 概念を指す (遺伝的同一性)。
+- **一般表示での Van → -White 正規化は表示名マスタ ([`cat_color_display_alias_map.csv`](./cat_color_display_alias_map.csv)) が担う** (遺伝定義と表示名定義の分離 / データ正本 §1.2)。master の `CanonicalColorId` を表示正規化に流用しない。
+- これにより、`CanonicalColorId` は全行で一貫して「**遺伝的・概念的同一性**」を意味する (`alias` = 同じ遺伝概念の別名)。表示の寄せ (Van→-White) はそれとは独立。
 
 ---
 
