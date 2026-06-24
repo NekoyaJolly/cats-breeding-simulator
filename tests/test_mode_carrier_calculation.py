@@ -149,11 +149,51 @@ def test_explicit_carrier_metadata_opens_locus(calc) -> None:
     assert "C" not in (report.closed_loci or [])
 
 
-# --- carrier_exploration_mode は予約のみ (Phase 2) ---
+# --- carrier_exploration_mode (Phase 2) ---
 
-def test_carrier_exploration_mode_rejected(calc) -> None:
-    with pytest.raises(BreedingCalculationError):
-        calc.calculate("Silver Tabby", "Blue Pt Tabby-White", mode="carrier_exploration")
+def test_carrier_exploration_reveals_point_from_one_point_parent(calc) -> None:
+    """片親 Point (cs/cs) × 相手 Full の場合、相手 C/cs キャリア仮説で Point が出現する。
+
+    normal の results には Point は出ず、carrier_exploration_results に分離される。
+    """
+    report = calc.calculate_report("Seal Point", "Black", breed=None, mode="carrier_exploration")
+    # baseline (normal) には Point が出ない
+    assert not any("Point" in r.color for r in report.results)
+    scenarios = report.carrier_exploration_results or []
+    c_scenarios = [s for s in scenarios if s.scenario.startswith("C_")]
+    assert c_scenarios, "C キャリアシナリオが生成されていない"
+    point_scenario = c_scenarios[0]
+    assert any("Point" in color for color in point_scenario.new_colors)
+    assert point_scenario.probability_basis == "conditional_on_other_parent_carrier"
+    assert point_scenario.prior_probability_applied is False
+    assert abs(round(sum(r.probability_pct for r in point_scenario.results), 4) - 100.0) < 0.01
+
+
+def test_carrier_exploration_reveals_solid_from_one_solid_parent(calc) -> None:
+    """片親 Solid (a/a) × 相手 Tabby の場合、相手 A/a キャリア仮説で Solid が出現する。"""
+    report = calc.calculate_report("Brown Tabby", "Black", breed=None, mode="carrier_exploration")
+    scenarios = report.carrier_exploration_results or []
+    a_scenarios = [s for s in scenarios if s.scenario.startswith("A_")]
+    assert a_scenarios
+    assert a_scenarios[0].new_colors  # ソリッドが新規に現れる
+
+
+def test_carrier_exploration_no_scenario_when_both_dominant(calc) -> None:
+    """両親が同型 (Black=a/a, B/B, C/C, D/D) では、片親劣性発現の条件が無く scenario を生成しない。
+
+    両親とも隠れキャリアかもしれない、という探索は自動生成しない (禁止事項)。
+    """
+    report = calc.calculate_report("Black", "Black", breed=None, mode="carrier_exploration")
+    assert report.carrier_exploration_results == []
+
+
+def test_carrier_exploration_results_separated_from_normal(calc) -> None:
+    """carrier_exploration の new_colors は normal results に混ざらない。"""
+    report = calc.calculate_report("Seal Point", "Black", breed=None, mode="carrier_exploration")
+    normal_colors = {r.color for r in report.results}
+    for scenario in report.carrier_exploration_results or []:
+        for color in scenario.new_colors:
+            assert color not in normal_colors
 
 
 def test_unknown_mode_rejected(calc) -> None:

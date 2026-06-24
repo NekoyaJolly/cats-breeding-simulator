@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from cat_breeding_simulator.master_data import (
     AUTOSOMAL_LOCI,
     BREED_FILTERS,
+    COLOR_BASE_LOCI,
     COLOR_DEFINITIONS,
     NORMAL_CLOSED_LOCI,
     NORMAL_OPENED_LOCI,
@@ -106,6 +107,46 @@ def _expressed_genotype_key(loci: dict[str, tuple[str, str]], sex: str) -> tuple
     )
 
 
+def _carrier_options_for(
+    locus: str, recessive_alleles: tuple[str, str], dominant_alleles: tuple[str, str]
+) -> list[tuple[tuple[str, str], str]]:
+    """carrier_exploration: 片親 (recessive) が劣性を完全発現し、相手 (dominant) が優性発現の場合に、
+    相手に開ける (carrier 遺伝子型, ラベル) のリストを返す。該当しなければ []。
+
+    両親とも優性発現 (= 両方が隠れキャリアかもしれない) のケースは生成しない (条件付き探索の対象外)。
+    """
+
+    if locus == "A":
+        # 片親 a/a ソリッド → 相手が A/a なら子に a/a (ソリッド/トーティ/キャリコ) が出得る
+        if recessive_alleles == ("a", "a") and "A" in dominant_alleles and dominant_alleles != ("a", "a"):
+            return [(("A", "a"), "A/a (ソリッドキャリア)")]
+    elif locus == "B":
+        # 相手は黒系 (B/B) のときのみ。片親 b/b → 相手 B/b (チョコ)、片親 bl/bl → 相手 B/bl (シナモン)
+        if dominant_alleles == ("B", "B"):
+            if recessive_alleles == ("b", "b"):
+                return [(("B", "b"), "B/b (チョコレートキャリア)")]
+            if recessive_alleles == ("bl", "bl"):
+                return [(("B", "bl"), "B/bl (シナモンキャリア)")]
+    elif locus == "C":
+        # 相手はフルカラー (C/C) のときのみ。片親 cs/cs→C/cs(ポイント)、cb/cb→C/cb(セピア)、
+        # cb/cs(ミンク)→C/cs と C/cb の両方を提示。
+        if dominant_alleles == ("C", "C"):
+            if recessive_alleles == ("cs", "cs"):
+                return [(("C", "cs"), "C/cs (ポイントキャリア)")]
+            if recessive_alleles == ("cb", "cb"):
+                return [(("C", "cb"), "C/cb (セピアキャリア)")]
+            if set(recessive_alleles) == {"cb", "cs"}:
+                return [
+                    (("C", "cs"), "C/cs (ポイントキャリア)"),
+                    (("C", "cb"), "C/cb (セピアキャリア)"),
+                ]
+    elif locus == "D":
+        # 片親 d/d 希釈 → 相手が D/d なら子に d/d (希釈) が条件付きで増える
+        if recessive_alleles == ("d", "d") and dominant_alleles != ("d", "d"):
+            return [(("D", "d"), "D/d (希釈キャリア)")]
+    return []
+
+
 GENOTYPE_TO_COLOR_MAP: dict[tuple[str, tuple], list[str]] = {}
 
 
@@ -135,6 +176,19 @@ class KittenResult:
 
 
 @dataclass(frozen=True, slots=True)
+class CarrierScenario:
+    """carrier_exploration の 1 シナリオ (片親の劣性発現に対し、相手がキャリアの場合の条件付き結果)。"""
+
+    scenario: str                                  # 機械用ID 例: "C_cs_on_dam"
+    label: str                                     # 人間可読の仮説説明
+    assumed_carriers: dict[str, dict[str, str]]    # 例: {"dam": {"C": "C/cs"}}
+    probability_basis: str                         # "conditional_on_other_parent_carrier"
+    prior_probability_applied: bool                # 事前確率を掛けたか (常に False)
+    results: list[KittenResult]                    # この仮説の条件付き結果 (合計100%)
+    new_colors: list[str]                          # baseline (normal) に無く、この仮説で現れる色
+
+
+@dataclass(frozen=True, slots=True)
 class CalculationReport:
     """計算結果 + 内部診断値 + モード情報。
 
@@ -150,6 +204,8 @@ class CalculationReport:
     opened_loci: list[str] | None = None     # X/- 展開 or 明示キャリアで開けた座位
     closed_loci: list[str] | None = None     # キャリア非展開で閉じた座位
     assumptions: list[str] | None = None     # 計算前提の人間可読メモ
+    # carrier_exploration_mode の条件付きシナリオ。normal results とは完全分離する。
+    carrier_exploration_results: list[CarrierScenario] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -203,15 +259,12 @@ class CoatColorCalculator:
         通常結果とキャリア仮定結果を 1 つの表に混ぜない (mode ごとに分離)。
         """
 
-        if mode == "carrier_exploration":
-            raise BreedingCalculationError(
-                "carrier_exploration_mode は未実装です (Phase 2 で対応予定)。"
-                "通常結果に混在させないため、現状は明示的に拒否します。"
-            )
         if mode not in SUPPORTED_MODES:
             raise BreedingCalculationError(
                 f"未知の計算モード '{mode}'。利用可能: {', '.join(SUPPORTED_MODES)}。"
             )
+        if mode == "carrier_exploration":
+            return self._calculate_carrier_exploration(sire_color, dam_color, breed)
 
         sire_genotypes = self._resolve_parent_genotypes(
             sire_color, "male", breed, mode, sire_carriers
@@ -308,6 +361,127 @@ class CoatColorCalculator:
                     assumptions.append(f"{locus}: {parent} に {genotype} を明示指定 (開放)")
 
         return opened, closed, assumptions
+
+    # --- carrier_exploration_mode (Phase 2) ---
+    #
+    # 「片親が劣性形質を完全発現している場合に、相手がそのキャリアだったらどうなるか」のみを
+    # 条件付きシナリオとして提示する。両親とも通常表現型で両方が隠れキャリア、という仮定は
+    # 自動生成しない。事前確率 (実集団のキャリア頻度) は一切掛けない。
+    # normal の確定結果 (results) とは完全に分離する。
+
+    def _calculate_carrier_exploration(
+        self, sire_color: str, dam_color: str, breed: str | None
+    ) -> CalculationReport:
+        baseline = self.calculate_report(sire_color, dam_color, breed, mode="normal")
+        scenarios = self._build_carrier_scenarios(sire_color, dam_color, breed, baseline)
+        assumptions = list(baseline.assumptions or [])
+        assumptions.append(
+            "carrier_exploration: 各シナリオは『片親の劣性発現に対し相手がキャリア』の条件付き結果。"
+            "事前確率 (キャリア頻度) は掛けない。normal results とは分離して提示する。"
+        )
+        return CalculationReport(
+            results=baseline.results,
+            matched_probability=baseline.matched_probability,
+            unmatched_probability=baseline.unmatched_probability,
+            unmatched_genotype_count=baseline.unmatched_genotype_count,
+            unmatched_samples=baseline.unmatched_samples,
+            mode="carrier_exploration",
+            opened_loci=baseline.opened_loci,
+            closed_loci=baseline.closed_loci,
+            assumptions=assumptions,
+            carrier_exploration_results=scenarios,
+        )
+
+    def _resolved_base_loci(
+        self, color: str, sex: str, breed: str | None
+    ) -> dict[str, tuple[str, str]] | None:
+        """入力色名を解決し、その色の基準遺伝子型 (autosomal) を返す。未知なら None。"""
+
+        name = self._resolve_input_color_name(color, breed)
+        key = self._normalize_color_key(name)
+        entries = COLOR_BASE_LOCI.get(key)
+        if not entries:
+            return None
+        return dict(entries[0].autosomal)
+
+    # carrier_exploration の各 locus の既定値 (CSV に欠落していた場合のフォールバック)。
+    _CARRIER_LOCUS_DEFAULTS: dict[str, tuple[str, str]] = {
+        "A": ("a", "a"),
+        "B": ("B", "B"),
+        "C": ("C", "C"),
+        "D": ("D", "D"),
+    }
+
+    def _build_carrier_scenarios(
+        self, sire_color: str, dam_color: str, breed: str | None, baseline: CalculationReport
+    ) -> list[CarrierScenario]:
+        sire_base = self._resolved_base_loci(sire_color, "male", breed)
+        dam_base = self._resolved_base_loci(dam_color, "female", breed)
+        if sire_base is None or dam_base is None:
+            return []
+
+        baseline_colors = {result.color for result in baseline.results}
+        scenarios: list[CarrierScenario] = []
+        for locus in ("A", "B", "C", "D"):
+            default = self._CARRIER_LOCUS_DEFAULTS[locus]
+            sire_alleles = sire_base.get(locus, default)
+            dam_alleles = dam_base.get(locus, default)
+
+            # 父が劣性発現 → 母 (相手) にキャリアを開ける
+            for carrier, carrier_label in _carrier_options_for(locus, sire_alleles, dam_alleles):
+                scenario = self._compute_carrier_scenario(
+                    locus, "dam", carrier, carrier_label,
+                    sire_color, dam_color, breed, baseline_colors, recessive_parent=sire_color,
+                )
+                if scenario is not None:
+                    scenarios.append(scenario)
+
+            # 母が劣性発現 → 父 (相手) にキャリアを開ける
+            for carrier, carrier_label in _carrier_options_for(locus, dam_alleles, sire_alleles):
+                scenario = self._compute_carrier_scenario(
+                    locus, "sire", carrier, carrier_label,
+                    sire_color, dam_color, breed, baseline_colors, recessive_parent=dam_color,
+                )
+                if scenario is not None:
+                    scenarios.append(scenario)
+        return scenarios
+
+    def _compute_carrier_scenario(
+        self,
+        locus: str,
+        open_parent: str,
+        carrier: tuple[str, str],
+        carrier_label: str,
+        sire_color: str,
+        dam_color: str,
+        breed: str | None,
+        baseline_colors: set[str],
+        recessive_parent: str,
+    ) -> CarrierScenario | None:
+        genotype_str = f"{carrier[0]}/{carrier[1]}"
+        sire_carriers = {locus: genotype_str} if open_parent == "sire" else None
+        dam_carriers = {locus: genotype_str} if open_parent == "dam" else None
+        try:
+            report = self.calculate_report(
+                sire_color, dam_color, breed, "explicit_carrier", sire_carriers, dam_carriers
+            )
+        except BreedingCalculationError:
+            return None
+        if not report.results:
+            return None
+
+        new_colors = sorted({result.color for result in report.results} - baseline_colors)
+        opened_color = dam_color if open_parent == "dam" else sire_color
+        label = f"{opened_color} が {carrier_label} と仮定 ({recessive_parent} は {locus} 劣性を発現)"
+        return CarrierScenario(
+            scenario=f"{locus}_{carrier[1]}_on_{open_parent}",
+            label=label,
+            assumed_carriers={open_parent: {locus: genotype_str}},
+            probability_basis="conditional_on_other_parent_carrier",
+            prior_probability_applied=False,
+            results=report.results,
+            new_colors=new_colors,
+        )
 
     def _resolve_parent_genotypes(
         self,

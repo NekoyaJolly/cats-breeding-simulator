@@ -6,8 +6,8 @@ from dataclasses import dataclass
 
 AUTOSOMAL_LOCI: tuple[str, ...] = ("B", "D", "A", "C", "W", "S", "Mc", "Ta", "Sp", "I", "Wb")
 
-# サポートする計算モード。carrier_exploration は Phase 2 で実装予定 (engine 側で明示エラー)。
-SUPPORTED_MODES: tuple[str, ...] = ("normal", "explicit_carrier")
+# サポートする計算モード。
+SUPPORTED_MODES: tuple[str, ...] = ("normal", "explicit_carrier", "carrier_exploration")
 
 # normal_mode で X/- 展開する座位 (優性ヘテロ未確定) と、閉じる座位 (キャリア非展開)。
 NORMAL_OPENED_LOCI: tuple[str, ...] = ("D", "I", "Mc", "Ta")

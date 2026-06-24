@@ -42,6 +42,18 @@ class ModeDiagnostics(BaseModel):
     unmatched_genotype_count: int
 
 
+class CarrierScenarioEntry(BaseModel):
+    """carrier_exploration の条件付きシナリオ (normal results とは分離)。"""
+
+    scenario: str
+    label: str
+    assumed_carriers: dict[str, dict[str, str]]
+    probability_basis: str
+    prior_probability_applied: bool
+    results: list[ResultEntry]
+    new_colors: list[str]
+
+
 class CalculationResponse(BaseModel):
     """計算APIの出力。"""
 
@@ -50,6 +62,8 @@ class CalculationResponse(BaseModel):
     parameters: CalculationRequest
     results: list[ResultEntry]
     diagnostics: ModeDiagnostics
+    # carrier_exploration_mode のときのみ非 null。normal/explicit では null。
+    carrier_exploration_results: list[CarrierScenarioEntry] | None = None
 
 
 router = APIRouter(prefix="/api/v1")
@@ -92,6 +106,25 @@ def calculate_endpoint(payload: CalculationRequest) -> CalculationResponse:
             matched_probability=report.matched_probability,
             unmatched_probability=report.unmatched_probability,
             unmatched_genotype_count=report.unmatched_genotype_count,
+        ),
+        carrier_exploration_results=(
+            [
+                CarrierScenarioEntry(
+                    scenario=scenario.scenario,
+                    label=scenario.label,
+                    assumed_carriers=scenario.assumed_carriers,
+                    probability_basis=scenario.probability_basis,
+                    prior_probability_applied=scenario.prior_probability_applied,
+                    results=[
+                        ResultEntry(sex=e.sex, color=e.color, probability_pct=e.probability_pct)
+                        for e in scenario.results
+                    ],
+                    new_colors=scenario.new_colors,
+                )
+                for scenario in report.carrier_exploration_results
+            ]
+            if report.carrier_exploration_results is not None
+            else None
         ),
     )
 
