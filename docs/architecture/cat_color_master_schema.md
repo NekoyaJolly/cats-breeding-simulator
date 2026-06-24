@@ -9,8 +9,9 @@
 - `docs/architecture/cat_color_master.csv` は、猫の遺伝学シミュレーターで使用する**色柄概念の唯一正本 (single source of truth)** である。
 - 既存の遺伝定義 [`cat_color_genetic_map.csv`](./cat_color_genetic_map.csv) と表示名定義 (`cat_color_display_alias_map.csv`) は、本マスターを基準に整合させていく。本マスターと既存CSVが矛盾する場合は、レビュー (`cat_color_master_review.md`) で差分を可視化し、人間が確定する。
 - 本マスターは [`scripts/build_cat_color_master.py`](../../scripts/build_cat_color_master.py) で生成・再生成できる。手編集する場合はスクリプトの決定テーブルにも反映し、再生成で同じ結果が得られる状態を保つ。
+- **エンジン接続 (2026-06-24)**: 計算エンジンは名前解決レイヤ [`cat_breeding_simulator/color_master.py`](../../cat_breeding_simulator/color_master.py) 経由で本マスターを使用する。**入力**色名を PrimaryName / Aliases / SourceNames から検索し canonical 概念へ解決 (alias 受理)、**出力**色名を `CanonicalColorId` 経由で canonical PrimaryName へ正規化する。`Status=breed_specific` は猫種未指定の通常モードで拒否、`excluded` / `review` は入力拒否する。
 
-> 本タスクの範囲は**名前の正本化**である。計算モード ([`01_シミュレーター正本_V9.md`](./01_シミュレーター正本_V9.md)) の挙動・`engine.py`・API は変更しない。
+> **名前の正本化に専念**する設計は維持する。遺伝計算ロジック (`engine.py` の遺伝子型計算) と計算モードの挙動 ([`01_シミュレーター正本_V9.md`](./01_シミュレーター正本_V9.md)) は変更せず、エンジンの入出力の「名前」だけを本マスターで正規化する (State-key による本格再構築は将来フェーズ)。
 
 ---
 

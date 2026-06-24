@@ -270,7 +270,8 @@ PR 作成からマージ判断・次 Phase 着手までの「AI が自走、Owne
 
 > 配置: 運用正本 §2 の構成どおり、3冊と各CSVは `docs/architecture/` 配下に置く。
 
-> **色柄概念マスター**: 色柄の名称・別名・分類・団体差(CFA/TICA)・猫種固有呼称の唯一正本は [`docs/architecture/cat_color_master.csv`](./docs/architecture/cat_color_master.csv) (仕様: [`cat_color_master_schema.md`](./docs/architecture/cat_color_master_schema.md)、差分レビュー: [`cat_color_master_review.md`](./docs/architecture/cat_color_master_review.md)、生成: [`scripts/build_cat_color_master.py`](./scripts/build_cat_color_master.py))。alias 解決は専用カラム `CanonicalColorId` を機械可読の唯一根拠とする。`cat_color_genetic_map.csv` は当面エンジンが参照する遺伝子座定義として併存し、両者は段階的に整合させる。
+> **色柄概念マスター**: 色柄の名称・別名・分類・団体差(CFA/TICA)・猫種固有呼称の唯一正本は [`docs/architecture/cat_color_master.csv`](./docs/architecture/cat_color_master.csv) (仕様: [`cat_color_master_schema.md`](./docs/architecture/cat_color_master_schema.md)、差分レビュー: [`cat_color_master_review.md`](./docs/architecture/cat_color_master_review.md)、生成: [`scripts/build_cat_color_master.py`](./scripts/build_cat_color_master.py))。alias 解決は専用カラム `CanonicalColorId` を機械可読の唯一根拠とする。
+> **エンジン接続**: 計算エンジンは名前解決レイヤ [`cat_breeding_simulator/color_master.py`](./cat_breeding_simulator/color_master.py) 経由で本マスターを使用する (入力 alias の canonical 解決 + 出力名の canonical 正規化、breed_specific/excluded/review の通常モード拒否)。遺伝子型は引き続き `cat_color_genetic_map.csv` が供給し、遺伝計算ロジックは変更しない。両者は段階的に整合させる。
 
 ### 1. 計算モードの分離 (シミュレーター正本 §2)
 
