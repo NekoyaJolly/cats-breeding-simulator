@@ -271,6 +271,23 @@ CFA/TICA 差・猫種固有呼称の扱い:
 - **一般表示での Van → -White 正規化は表示名マスタ ([`cat_color_display_alias_map.csv`](./cat_color_display_alias_map.csv)) が担う** (遺伝定義と表示名定義の分離 / データ正本 §1.2)。master の `CanonicalColorId` を表示正規化に流用しない。
 - これにより、`CanonicalColorId` は全行で一貫して「**遺伝的・概念的同一性**」を意味する (`alias` = 同じ遺伝概念の別名)。表示の寄せ (Van→-White) はそれとは独立。
 
+### 12.8 C-locus / Wb-locus と normal_mode の関係
+
+計算ロジックの正本は [`01_シミュレーター正本_V9.md`](./01_シミュレーター正本_V9.md) (§2.4 カテゴリC, §4.4 C Locus, §4.11 Wb Locus)。本節は master の Point/Mink/Sepia/Wb 分類がその方針とどう対応するかを示す。
+
+**C-locus 方針**:
+
+1. フルカラー表現型は `normal_mode` では `C/C` 相当として扱う。
+2. `C/cs`・`C/cb` は表現型から判定できないため `normal_mode` では**自動展開しない** (カテゴリC)。
+3. Point / Sepia / Mink は、入力色・猫種標準・血統/産子履歴・明示キャリアで確認される場合のみ `explicit_carrier_mode` または猫種制約 (breed constraint) で扱う。
+4. 猫種正本 ([`cat_breed_genetic_map.csv`](./cat_breed_genetic_map.csv)) で固定: Siamese / Colorpoint 系 = `cs/cs`、Burmese 系 = `cb/cb`、Tonkinese 系 = `cb/cs`。
+5. Ragdoll / Birman 等のポイント前提猫種は `cs/cs` 固定 (候補含む)。
+6. 不可逆: `cs/cs × cs/cs` から `C/-` フルカラーは出ない (§4.4)。
+
+**master での対応**: Point/Mink/Sepia 概念は `InputAllowed=true` (入力・猫種・明示キャリアで使用可) かつ `DisplayAllowed=false` (breed_unselected の `normal_mode` 一般結果には出さない)。Mink = `breed_specific(Tonkinese)`、Sepia = `breed_specific(Burmese)`、その他 Point は `general`。これらが実際に出るかはエンジンの計算モード/猫種制約に従い、master は名前の可否のみ定義する。
+
+**Wb-locus 方針**: Wb 系 (Shell / Chinchilla / Shaded / Golden) は `normal_mode` では自動展開して**閉じない** (生成しない) が、**入力・正本(canonical)・レビュー対象としては保持**する。master では canonical または alias として保持し、`InputAllowed=true`、`GeneticRuleSource=review_required` を維持する (§12.2〜12.4)。
+
 ---
 
 ## 13. 用語定義 (Any 禁止語の置換)
