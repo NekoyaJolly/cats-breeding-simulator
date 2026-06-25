@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { fetchColors, type CalculateInput } from "@/lib/api";
 import type { ColorOption } from "@/lib/schema";
@@ -91,6 +91,26 @@ export function BreedingForm({ onSubmit, loading }: Props) {
     });
   }
 
+  // female_only (パッチド/トーティ系) はオス親では遺伝的に成立しないため、
+  // 父猫欄のサジェスト候補・履歴から除外する (母猫欄は全色のまま)。
+  const femaleOnly = useMemo(
+    () =>
+      new Set(
+        colors
+          .filter((color) => color.sex_restriction === "female_only")
+          .map((color) => color.value),
+      ),
+    [colors],
+  );
+  const sireColors = useMemo(
+    () => colors.filter((color) => !femaleOnly.has(color.value)),
+    [colors, femaleOnly],
+  );
+  const sireRecent = useMemo(
+    () => recent.filter((value) => !femaleOnly.has(value)),
+    [recent, femaleOnly],
+  );
+
   // 親色は必須。breed は任意。
   const canSubmit =
     sireColor.trim().length > 0 && damColor.trim().length > 0 && !loading;
@@ -126,8 +146,8 @@ export function BreedingForm({ onSubmit, loading }: Props) {
           value={sireColor}
           onValueChange={setSireColor}
           onCommit={pushRecent}
-          colors={colors}
-          recent={recent}
+          colors={sireColors}
+          recent={sireRecent}
           placeholder="例: Silver Tabby / シルバータビー"
         />
         <ColorCombobox
