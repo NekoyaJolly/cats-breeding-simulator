@@ -134,8 +134,11 @@ function CarrierScenario({ scenario }: { scenario: CarrierScenarioEntry }) {
 }
 
 export function ResultView({ data }: { data: CalculationResponse }) {
-  const { diagnostics } = data;
+  const { diagnostics, parameters } = data;
   const carrierScenarios = data.carrier_exploration_results ?? [];
+  // 入力 (親色 / 猫種 / モード) が変わったら結果カードを remount し、
+  // 展開状態 (詳細を見る) を初期 (折りたたみ) に戻す。
+  const resultsKey = `${parameters.sire_color}|${parameters.dam_color}|${parameters.breed ?? ""}|${parameters.mode}`;
   return (
     <div className="space-y-6">
       <section>
@@ -146,7 +149,7 @@ export function ResultView({ data }: { data: CalculationResponse }) {
           </span>
         </div>
         <div className="mt-3">
-          <SexSplitResults rows={data.results} />
+          <SexSplitResults key={resultsKey} rows={data.results} />
         </div>
       </section>
 
@@ -181,7 +184,10 @@ export function ResultView({ data }: { data: CalculationResponse }) {
             全キャリア探索シナリオ (参考・通常結果とは分離)
           </h3>
           {carrierScenarios.map((scenario) => (
-            <CarrierScenario key={scenario.scenario} scenario={scenario} />
+            <CarrierScenario
+              key={`${resultsKey}-${scenario.scenario}`}
+              scenario={scenario}
+            />
           ))}
         </section>
       )}
