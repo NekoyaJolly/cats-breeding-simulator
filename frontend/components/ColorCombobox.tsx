@@ -76,10 +76,13 @@ export function ColorCombobox({
 
   const showingRecent = value.trim().length === 0;
 
-  // 外側クリックで閉じる。
+  // 外側クリックで閉じる (ハイライト状態も戻して次回フォーカス時に持ち越さない)。
   useEffect(() => {
     function onPointerDown(event: MouseEvent) {
-      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+        setActiveIndex(-1);
+      }
     }
     document.addEventListener("mousedown", onPointerDown);
     return () => document.removeEventListener("mousedown", onPointerDown);
@@ -96,21 +99,31 @@ export function ColorCombobox({
     if (event.key === "ArrowDown") {
       event.preventDefault();
       if (!open) {
+        // 開くタイミングではハイライトを持ち越さない。
         setOpen(true);
+        setActiveIndex(-1);
         return;
       }
+      if (suggestions.length === 0) return;
       setActiveIndex((prev) => Math.min(prev + 1, suggestions.length - 1));
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
-      setActiveIndex((prev) => Math.max(prev - 1, 0));
+      // 候補が無いときは -1 を維持し、不正な aria-activedescendant を作らない。
+      if (suggestions.length === 0) return;
+      setActiveIndex((prev) => (prev <= 0 ? 0 : prev - 1));
     } else if (event.key === "Enter") {
       if (open && activeIndex >= 0 && activeIndex < suggestions.length) {
         event.preventDefault();
         commitSelection(suggestions[activeIndex]);
-      } else if (value.trim().length > 0) {
-        // 自由入力をそのまま確定し履歴へ積む (送信はフォーム側で行う)。
-        onCommit(value.trim());
-        setOpen(false);
+      } else {
+        const trimmed = value.trim();
+        if (trimmed.length > 0) {
+          // 自由入力を確定: 表示値・履歴・ARIA 状態を揃える (送信はフォーム側)。
+          onValueChange(trimmed);
+          onCommit(trimmed);
+          setOpen(false);
+          setActiveIndex(-1);
+        }
       }
     } else if (event.key === "Escape") {
       setOpen(false);
@@ -135,16 +148,22 @@ export function ColorCombobox({
             setOpen(true);
             setActiveIndex(-1);
           }}
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            setOpen(true);
+            setActiveIndex(-1);
+          }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           autoComplete="off"
           role="combobox"
           aria-expanded={expanded}
-          aria-controls={listboxId}
+          // listbox は expanded のときだけ DOM に存在するため、その間だけ参照する。
+          aria-controls={expanded ? listboxId : undefined}
           aria-autocomplete="list"
           aria-activedescendant={
-            activeIndex >= 0 ? `${listboxId}-opt-${activeIndex}` : undefined
+            expanded && activeIndex >= 0
+              ? `${listboxId}-opt-${activeIndex}`
+              : undefined
           }
         />
         {expanded && (
