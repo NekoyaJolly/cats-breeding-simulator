@@ -1,7 +1,9 @@
 import {
   apiErrorSchema,
   calculationResponseSchema,
+  colorsResponseSchema,
   type CalculationResponse,
+  type ColorOption,
 } from "./schema";
 
 // 計算 API への入力。breed と carriers は任意。
@@ -25,6 +27,24 @@ function describeError(detail: string | Array<{ msg: string }>): string {
   if (typeof detail === "string") return detail;
   const joined = detail.map((item) => item.msg).join(" / ");
   return joined.length > 0 ? joined : "入力値が不正です。";
+}
+
+// GET /api/v1/colors を叩き、入力サジェスト用の色一覧を返す。
+// 失敗時 (未起動 / 非JSON / スキーマ不一致) は空配列を返し、
+// 呼び出し側のコンボボックスは自由入力にフォールバックできる (例外を投げない)。
+export async function fetchColors(): Promise<ColorOption[]> {
+  let response: Response;
+  try {
+    response = await fetch("/api/v1/colors", {
+      headers: { Accept: "application/json" },
+    });
+  } catch {
+    return [];
+  }
+  if (!response.ok) return [];
+  const body = await response.json().catch(() => null);
+  const parsed = colorsResponseSchema.safeParse(body);
+  return parsed.success ? parsed.data.colors : [];
 }
 
 // POST /api/v1/calculate を叩き、レスポンスを Zod で検証して返す。

@@ -1,7 +1,10 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import type { CalculateInput } from "@/lib/api";
+import { useEffect, useState, type FormEvent } from "react";
+import { z } from "zod";
+import { fetchColors, type CalculateInput } from "@/lib/api";
+import type { ColorOption } from "@/lib/schema";
+import { ColorCombobox } from "./ColorCombobox";
 
 // 計算モード。explicit_carrier のときのみキャリア入力欄を表示する。
 const MODES = [
@@ -9,6 +12,11 @@ const MODES = [
   { value: "explicit_carrier", label: "明示キャリア (explicit_carrier)" },
   { value: "carrier_exploration", label: "全キャリア探索 (carrier_exploration)" },
 ] as const;
+
+// 最近選んだ毛色 (履歴) の localStorage キーと保持件数。
+const RECENT_KEY = "cbs:recentColors";
+const RECENT_MAX = 8;
+const recentSchema = z.array(z.string());
 
 type Props = {
   onSubmit: (input: CalculateInput) => void;
@@ -39,6 +47,49 @@ export function BreedingForm({ onSubmit, loading }: Props) {
   const [mode, setMode] = useState<string>("normal");
   const [sireCarriers, setSireCarriers] = useState("");
   const [damCarriers, setDamCarriers] = useState("");
+  const [colors, setColors] = useState<ColorOption[]>([]);
+  const [recent, setRecent] = useState<string[]>([]);
+
+  // サジェスト候補をマウント時に 1 回取得する (失敗時は空配列 → 自由入力で動作)。
+  useEffect(() => {
+    let alive = true;
+    fetchColors().then((list) => {
+      if (alive) setColors(list);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // 履歴を localStorage から復元する。
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(RECENT_KEY);
+      if (raw === null) return;
+      const parsed = recentSchema.safeParse(JSON.parse(raw));
+      if (parsed.success) setRecent(parsed.data.slice(0, RECENT_MAX));
+    } catch {
+      // localStorage 不可 / 壊れた JSON は無視 (履歴なしで動作)。
+    }
+  }, []);
+
+  // 確定した毛色を履歴の先頭へ積む (重複排除 + 上限)。
+  function pushRecent(value: string) {
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    setRecent((prev) => {
+      const next = [trimmed, ...prev.filter((item) => item !== trimmed)].slice(
+        0,
+        RECENT_MAX,
+      );
+      try {
+        window.localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+      } catch {
+        // 保存不可でも UI 状態としては更新する。
+      }
+      return next;
+    });
+  }
 
   // 親色は必須。breed は任意。
   const canSubmit =
@@ -47,6 +98,9 @@ export function BreedingForm({ onSubmit, loading }: Props) {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!canSubmit) return;
+    // 送信した毛色も履歴へ積む (候補から選ばず直接送信したケースを拾う)。
+    pushRecent(sireColor);
+    pushRecent(damColor);
     const input: CalculateInput = {
       sire_color: sireColor.trim(),
       dam_color: damColor.trim(),
@@ -65,32 +119,28 @@ export function BreedingForm({ onSubmit, loading }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-1">
-          <label htmlFor="sire-color" className={labelClass}>
-            父猫の毛色 <span className="text-red-500">*</span>
-          </label>
-          <input
-            id="sire-color"
-            className={inputClass}
-            value={sireColor}
-            onChange={(event) => setSireColor(event.target.value)}
-            placeholder="例: Silver Tabby"
-            autoComplete="off"
-          />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="dam-color" className={labelClass}>
-            母猫の毛色 <span className="text-red-500">*</span>
-          </label>
-          <input
-            id="dam-color"
-            className={inputClass}
-            value={damColor}
-            onChange={(event) => setDamColor(event.target.value)}
-            placeholder="例: Brown Tabby"
-            autoComplete="off"
-          />
-        </div>
+        <ColorCombobox
+          id="sire-color"
+          label="父猫の毛色"
+          required
+          value={sireColor}
+          onValueChange={setSireColor}
+          onCommit={pushRecent}
+          colors={colors}
+          recent={recent}
+          placeholder="例: Silver Tabby / シルバータビー"
+        />
+        <ColorCombobox
+          id="dam-color"
+          label="母猫の毛色"
+          required
+          value={damColor}
+          onValueChange={setDamColor}
+          onCommit={pushRecent}
+          colors={colors}
+          recent={recent}
+          placeholder="例: Brown Tabby / ブラウンタビー"
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

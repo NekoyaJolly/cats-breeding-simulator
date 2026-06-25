@@ -60,3 +60,20 @@ export type CalculationResponse = z.infer<typeof calculationResponseSchema>;
 export const apiErrorSchema = z.object({
   detail: z.union([z.string(), z.array(z.object({ msg: z.string() }))]),
 });
+
+// 入力サジェスト用の 1 色エントリ (api.py ColorOption に対応)。
+export const colorOptionSchema = z.object({
+  value: z.string(),
+  reading_ja: z.string(),
+  status: z.string(),
+  breed_context: z.string(),
+  sex_restriction: z.string(),
+  keywords: z.array(z.string()),
+});
+export type ColorOption = z.infer<typeof colorOptionSchema>;
+
+// GET /api/v1/colors のレスポンス (api.py ColorsResponse に対応)。
+export const colorsResponseSchema = z.object({
+  colors: z.array(colorOptionSchema),
+});
+export type ColorsResponse = z.infer<typeof colorsResponseSchema>;
