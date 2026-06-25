@@ -46,7 +46,10 @@ export async function calculate(input: CalculateInput): Promise<CalculateOutcome
   }
 
   if (response.ok) {
-    const parsed = calculationResponseSchema.safeParse(await response.json());
+    // 成功応答でも空ボディ / 非JSON / 途中切断で json() が例外になり得るため吸収し、
+    // スキーマ不一致と同じ「形式が想定と異なります」へ落とす。
+    const body = await response.json().catch(() => null);
+    const parsed = calculationResponseSchema.safeParse(body);
     if (!parsed.success) {
       return { ok: false, message: "API レスポンスの形式が想定と異なります。" };
     }

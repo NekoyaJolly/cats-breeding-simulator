@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import type { CalculateInput } from "@/lib/api";
 
 // 計算モード。explicit_carrier のときのみキャリア入力欄を表示する。
@@ -44,7 +44,7 @@ export function BreedingForm({ onSubmit, loading }: Props) {
   const canSubmit =
     sireColor.trim().length > 0 && damColor.trim().length > 0 && !loading;
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!canSubmit) return;
     const input: CalculateInput = {
