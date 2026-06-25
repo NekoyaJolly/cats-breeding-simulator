@@ -74,6 +74,20 @@ class ResolvedColor:
     engine_candidate_names: tuple[str, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class InputColorOption:
+    """入力サジェスト用の 1 色エントリ。"""
+
+    value: str                      # 送信に用いる canonical PrimaryName
+    status: str                     # canonical / breed_specific
+    # master の BreedContext をそのまま保持する (一般色は "general"、猫種固有色は猫種名)。
+    # API 層で "general" を "" へ正規化する (api.colors_endpoint)。
+    breed_context: str
+    sex_restriction: str            # female_only / unrestricted
+    # 突合用キー群 (PrimaryName / Aliases / SourceNames / 略称 / 畳み込んだ alias 名)。
+    keywords: tuple[str, ...]
+
+
 class ColorMaster:
     """cat_color_master.csv を索引し、名前解決・正規化を提供する。"""
 
@@ -136,6 +150,59 @@ class ColorMaster:
 
         resolved = self.resolve(name)
         return resolved.primary_name if resolved is not None else name
+
+    def list_input_colors(self) -> list[InputColorOption]:
+        """入力サジェスト用の色一覧を返す。
+
+        - 対象は InputAllowed=true かつ Status が canonical / breed_specific の行
+          (alias 行は単独の選択肢にせず、対応 canonical の keywords へ畳み込む)。
+        - keywords には PrimaryName / Aliases / SourceNames に加え、その canonical を
+          指す alias 行の名前も含める (例: "Ebony" で "Black" を引けるようにする)。
+        - 略称 (SourceNames の "Pt"/"Sp" 等) もそのまま keywords に入るため、略称入力で
+          正式名を絞り込める。
+        """
+
+        # alias 行を canonical ColorId 単位で集約する。
+        alias_names: dict[str, list[str]] = {}
+        for row in self._by_id.values():
+            if row.get("Status", "") != "alias":
+                continue
+            canonical_id = row.get("CanonicalColorId") or row.get("ColorId", "")
+            names = [row.get("PrimaryName", "")]
+            names += [s for s in _split_pipe(row.get("SourceNames", "")) if not s.startswith("[")]
+            alias_names.setdefault(canonical_id, []).extend(name for name in names if name)
+
+        options: list[InputColorOption] = []
+        seen: set[str] = set()
+        for row in self._by_id.values():
+            if row.get("InputAllowed", "") != "true":
+                continue
+            if row.get("Status", "") not in ("canonical", "breed_specific"):
+                continue
+            primary = row.get("PrimaryName", "")
+            if not primary or primary in seen:
+                continue
+            seen.add(primary)
+
+            keywords: list[str] = [primary]
+            keywords += _split_pipe(row.get("Aliases", ""))
+            keywords += [s for s in _split_pipe(row.get("SourceNames", "")) if not s.startswith("[")]
+            keywords += alias_names.get(row.get("ColorId", ""), [])
+            # 重複を順序保持で除去する。
+            ordered = tuple(dict.fromkeys(keyword for keyword in keywords if keyword))
+
+            options.append(
+                InputColorOption(
+                    value=primary,
+                    status=row.get("Status", ""),
+                    breed_context=row.get("BreedContext", ""),
+                    sex_restriction=row.get("SexRestriction", ""),
+                    keywords=ordered,
+                )
+            )
+
+        options.sort(key=lambda option: option.value)
+        return options
 
 
 def _load_master_rows() -> list[dict[str, str]]:
