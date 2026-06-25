@@ -61,3 +61,12 @@ def test_female_only_flag_exposed() -> None:
     colors = _colors_by_value()
     # パッチド (トーティ系) は female_only。
     assert colors["Blue Patched Spotted Tabby"]["sex_restriction"] == "female_only"
+
+
+def test_breed_context_general_normalized_to_empty() -> None:
+    colors = _colors_by_value()
+    # 一般色は master 上 BreedContext=general だが、API は "" に正規化して返す
+    # ("general" は猫種名ではないため)。
+    assert colors["Black"]["breed_context"] == ""
+    # どの色も "general" がそのまま漏れない。非空なら実際の猫種名のみ。
+    assert all(color["breed_context"] != "general" for color in colors.values())

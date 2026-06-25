@@ -80,7 +80,9 @@ class InputColorOption:
 
     value: str                      # 送信に用いる canonical PrimaryName
     status: str                     # canonical / breed_specific
-    breed_context: str              # 猫種固有色なら猫種名 (例: Abyssinian)
+    # master の BreedContext をそのまま保持する (一般色は "general"、猫種固有色は猫種名)。
+    # API 層で "general" を "" へ正規化する (api.colors_endpoint)。
+    breed_context: str
     sex_restriction: str            # female_only / unrestricted
     # 突合用キー群 (PrimaryName / Aliases / SourceNames / 略称 / 畳み込んだ alias 名)。
     keywords: tuple[str, ...]

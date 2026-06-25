@@ -74,7 +74,9 @@ class ColorOption(BaseModel):
     value: str                  # 送信に用いる canonical 正式名
     reading_ja: str             # カタカナ読み (合成生成)
     status: str                 # canonical / breed_specific
-    breed_context: str          # 猫種固有色なら猫種名 (例: Abyssinian)
+    # 猫種固有色 (breed_specific) のときのみ猫種名 (例: Abyssinian)。
+    # 一般色 (master の BreedContext=general) は猫種名ではないため "" に正規化して返す。
+    breed_context: str
     sex_restriction: str        # female_only / unrestricted
     # 突合キー群 (英正式名 / alias / 略称 / カナ読みを含む)。フロントの絞り込みに使う。
     keywords: list[str]
@@ -158,12 +160,15 @@ def colors_endpoint() -> ColorsResponse:
         reading = reading_ja(option.value)
         # カナ読みも突合キーに含める (日本語入力での絞り込み用)。重複は順序保持で除去。
         keywords = list(dict.fromkeys([*option.keywords, reading]))
+        # 一般色の BreedContext=general は猫種名ではないため "" に正規化する。
+        # breed_specific のときだけ猫種名が入る契約に揃える。
+        breed_context = "" if option.breed_context == "general" else option.breed_context
         colors.append(
             ColorOption(
                 value=option.value,
                 reading_ja=reading,
                 status=option.status,
-                breed_context=option.breed_context,
+                breed_context=breed_context,
                 sex_restriction=option.sex_restriction,
                 keywords=keywords,
             )
