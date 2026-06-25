@@ -6,6 +6,7 @@ import type {
   CarrierScenarioEntry,
   ResultEntry,
 } from "@/lib/schema";
+import { LocusChip } from "./LocusChip";
 
 // 確率を小数1桁の % 文字列に整形する (診断値など正確さ優先の箇所で使う)。
 function formatPct(value: number): string {
@@ -211,11 +212,26 @@ export function ResultView({ data }: { data: CalculationResponse }) {
 
       <section className="rounded-md bg-slate-100 p-4 text-sm">
         <h3 className="font-semibold text-slate-700">診断情報</h3>
+        <p className="mt-0.5 text-xs text-slate-400">
+          座位（A / B / D…）をタップすると遺伝子座の解説が出ます。
+        </p>
         <dl className="mt-2 grid grid-cols-1 gap-y-1 sm:grid-cols-2">
           <dt className="text-slate-500">展開した座位</dt>
-          <dd>{diagnostics.opened_loci.join(", ") || "なし"}</dd>
+          <dd className="flex flex-wrap items-center gap-1">
+            {diagnostics.opened_loci.length > 0
+              ? diagnostics.opened_loci.map((locus) => (
+                  <LocusChip key={locus} locus={locus} />
+                ))
+              : "なし"}
+          </dd>
           <dt className="text-slate-500">固定した座位</dt>
-          <dd>{diagnostics.closed_loci.join(", ") || "なし"}</dd>
+          <dd className="flex flex-wrap items-center gap-1">
+            {diagnostics.closed_loci.length > 0
+              ? diagnostics.closed_loci.map((locus) => (
+                  <LocusChip key={locus} locus={locus} />
+                ))
+              : "なし"}
+          </dd>
           <dt className="text-slate-500">未分類の確率</dt>
           <dd className="tabular-nums">
             {formatPct(diagnostics.unmatched_probability)} (
