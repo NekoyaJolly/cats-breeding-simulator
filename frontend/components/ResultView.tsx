@@ -83,8 +83,9 @@ function SexResultGroup({
         className={`flex items-baseline justify-between px-4 py-2 ${accentClass}`}
       >
         <h3 className="text-sm font-semibold">{title}</h3>
+        {/* 各行は整数丸めのため合計が厳密一致しない。概算であることを「約」で明示する。 */}
         <span className="text-xs tabular-nums opacity-80">
-          合計 {formatPctInt(total)}
+          合計 約{formatPctInt(total)}
         </span>
       </div>
       {groups.length === 0 ? (
@@ -94,8 +95,8 @@ function SexResultGroup({
       ) : (
         <>
           <ul className="divide-y divide-slate-100">
-            {visible.map((group, index) => (
-              <li key={`${group.base}-${index}`} className="px-4 py-1.5">
+            {visible.map((group) => (
+              <li key={group.base} className="px-4 py-1.5">
                 <div className="flex items-center justify-between gap-2 text-sm">
                   <span className="min-w-0 break-words text-slate-700">
                     {group.base}
