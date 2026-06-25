@@ -49,25 +49,27 @@ export function LocusChip({ locus }: { locus: string }) {
         onBlur={() => setOpen(false)}
         className="cursor-help rounded border border-dashed border-slate-300 px-1 leading-tight text-slate-600 decoration-dotted hover:bg-slate-100"
         aria-expanded={open}
-        aria-describedby={open ? tooltipId : undefined}
+        // describedby は常時付与 (フォーカス瞬間に関連付けが無いと読み上げを取りこぼすため)。
+        aria-describedby={tooltipId}
         aria-label={`${entry.symbol} ${entry.name} の解説`}
       >
         {locus}
       </button>
-      {open && (
-        <span
-          role="tooltip"
-          id={tooltipId}
-          className="absolute left-0 top-full z-20 mt-1 block w-56 max-w-[80vw] rounded-md border border-slate-200 bg-white p-2 text-left text-xs font-normal text-slate-600 shadow-lg"
-        >
-          <span className="block font-semibold text-slate-800">
-            {entry.symbol} — {entry.name}
-          </span>
-          <span className="mt-0.5 block leading-relaxed">
-            {entry.description}
-          </span>
+      {/* tooltip は常に DOM に置き aria-describedby を常時有効化。表示だけ open で切替。 */}
+      <span
+        role="tooltip"
+        id={tooltipId}
+        className={`absolute left-0 top-full z-20 mt-1 w-56 max-w-[80vw] rounded-md border border-slate-200 bg-white p-2 text-left text-xs font-normal text-slate-600 shadow-lg ${
+          open ? "block" : "hidden"
+        }`}
+      >
+        <span className="block font-semibold text-slate-800">
+          {entry.symbol} — {entry.name}
         </span>
-      )}
+        <span className="mt-0.5 block leading-relaxed">
+          {entry.description}
+        </span>
+      </span>
     </span>
   );
 }
