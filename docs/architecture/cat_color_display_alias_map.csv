@@ -1,0 +1,37 @@
+AliasId,CanonicalPhenotype,GeneralDisplayName,Breed,BreedSpecificDisplayName,Registry,OfficialStatus,DisplayContext,Priority,Notes
+1,Brown Ticked Tabby,Brown Ticked Tabby,Abyssinian,Ruddy,,official,breed_specific,20,Abyssinian のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+2,Black Ticked Tabby,Black Ticked Tabby,Abyssinian,Ruddy,,official,breed_specific,20,Abyssinian のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+3,Blue Ticked Tabby,Blue Ticked Tabby,Abyssinian,Blue,,official,breed_specific,20,Abyssinian のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+4,Cinnamon Ticked Tabby,Cinnamon Ticked Tabby,Abyssinian,Cinnamon,,official,breed_specific,20,Abyssinian のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+5,Fawn Ticked Tabby,Fawn Ticked Tabby,Abyssinian,Fawn,,official,breed_specific,20,Abyssinian のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+6,Red Ticked Tabby,Red Ticked Tabby,Abyssinian,Red,,official,breed_specific,20,Abyssinian のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+7,Silver Ticked Tabby,Silver Ticked Tabby,Abyssinian,Silver,,official,breed_specific,20,Abyssinian のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+8,Blue Silver Ticked Tabby,Blue Silver Ticked Tabby,Abyssinian,Blue Silver,,official,breed_specific,20,Abyssinian のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+9,Chocolate Silver Ticked Tabby,Chocolate Silver Ticked Tabby,Abyssinian,Chocolate Silver,,official,breed_specific,20,Abyssinian のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+10,Lilac Silver Ticked Tabby,Lilac Silver Ticked Tabby,Abyssinian,Lilac Silver,,official,breed_specific,20,Abyssinian のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+11,Cinnamon Silver Ticked Tabby,Cinnamon Silver Ticked Tabby,Abyssinian,Cinnamon Silver,,official,breed_specific,20,Abyssinian のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+12,Fawn Silver Ticked Tabby,Fawn Silver Ticked Tabby,Abyssinian,Fawn Silver,,official,breed_specific,20,Abyssinian のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+13,Brown Ticked Tabby,Brown Ticked Tabby,Somali,Ruddy,,official,breed_specific,20,Somali のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+14,Black Ticked Tabby,Black Ticked Tabby,Somali,Ruddy,,official,breed_specific,20,Somali のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+15,Blue Ticked Tabby,Blue Ticked Tabby,Somali,Blue,,official,breed_specific,20,Somali のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+16,Cinnamon Ticked Tabby,Cinnamon Ticked Tabby,Somali,Cinnamon,,official,breed_specific,20,Somali のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+17,Fawn Ticked Tabby,Fawn Ticked Tabby,Somali,Fawn,,official,breed_specific,20,Somali のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+18,Red Ticked Tabby,Red Ticked Tabby,Somali,Red,,official,breed_specific,20,Somali のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+19,Silver Ticked Tabby,Silver Ticked Tabby,Somali,Silver,,official,breed_specific,20,Somali のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+20,Blue Silver Ticked Tabby,Blue Silver Ticked Tabby,Somali,Blue Silver,,official,breed_specific,20,Somali のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+21,Chocolate Silver Ticked Tabby,Chocolate Silver Ticked Tabby,Somali,Chocolate Silver,,official,breed_specific,20,Somali のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+22,Lilac Silver Ticked Tabby,Lilac Silver Ticked Tabby,Somali,Lilac Silver,,official,breed_specific,20,Somali のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+23,Cinnamon Silver Ticked Tabby,Cinnamon Silver Ticked Tabby,Somali,Cinnamon Silver,,official,breed_specific,20,Somali のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+24,Fawn Silver Ticked Tabby,Fawn Silver Ticked Tabby,Somali,Fawn Silver,,official,breed_specific,20,Somali のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+25,Black,Black,Oriental,Ebony,,official,breed_specific,20,Oriental 固有呼称復元。一般表示は CanonicalPhenotype のまま。
+26,Black Smoke,Black Smoke,Oriental,Ebony Smoke,,official,breed_specific,20,Oriental 固有呼称復元。一般表示は CanonicalPhenotype のまま。
+27,Brown Tabby,Brown Tabby,Oriental,Ebony Tabby,,official,breed_specific,20,Oriental 固有呼称復元。一般表示は CanonicalPhenotype のまま。
+28,Silver Tabby,Silver Tabby,Oriental,Ebony Silver Tabby,,official,breed_specific,20,Oriental 固有呼称復元。一般表示は CanonicalPhenotype のまま。
+29,Chocolate,Chocolate,Oriental,Chestnut,,official,breed_specific,20,Oriental 固有呼称復元。一般表示は CanonicalPhenotype のまま。
+30,Chocolate Smoke,Chocolate Smoke,Oriental,Chestnut Smoke,,official,breed_specific,20,Oriental 固有呼称復元。一般表示は CanonicalPhenotype のまま。
+31,Chocolate Tabby,Chocolate Tabby,Oriental,Chestnut Tabby,,official,breed_specific,20,Oriental 固有呼称復元。一般表示は CanonicalPhenotype のまま。
+32,Chocolate Silver Tabby,Chocolate Silver Tabby,Oriental,Chestnut Silver Tabby,,official,breed_specific,20,Oriental 固有呼称復元。一般表示は CanonicalPhenotype のまま。
+33,Lilac,Lilac,Oriental,Lavender,,official,breed_specific,20,Oriental 固有呼称復元。一般表示は CanonicalPhenotype のまま。
+34,Lilac Smoke,Lilac Smoke,Oriental,Lavender Smoke,,official,breed_specific,20,Oriental 固有呼称復元。一般表示は CanonicalPhenotype のまま。
+35,Lilac Tabby,Lilac Tabby,Oriental,Lavender Tabby,,official,breed_specific,20,Oriental 固有呼称復元。一般表示は CanonicalPhenotype のまま。
+36,Lilac Silver Tabby,Lilac Silver Tabby,Oriental,Lavender Silver Tabby,,official,breed_specific,20,Oriental 固有呼称復元。一般表示は CanonicalPhenotype のまま。

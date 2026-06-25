@@ -37,6 +37,7 @@
 | ファイル | 用途 | 実行コマンド | 種別 | 削除条件 |
 |---|---|---|---|---|
 | `build_cat_color_master.py` | 色柄マスター唯一正本 `docs/architecture/cat_color_master.csv` とレビュー `cat_color_master_review.md` を、元データ+遺伝子座マップから生成・再生成する | `PYTHONPATH=. python scripts/build_cat_color_master.py` | dev | `cat_color_master.csv` が手編集運用へ完全移行し再生成が不要になったとき |
+| `build_cat_color_display_alias_map.py` | 表示名マスタ唯一正本 `docs/architecture/cat_color_display_alias_map.csv` を、猫種別呼称ルール表 (Oriental の Ebony/Chestnut/Lavender 系、Abyssinian/Somali の Ruddy 系) から生成・再生成する (データ正本 V9 §4) | `PYTHONPATH=. python scripts/build_cat_color_display_alias_map.py` | dev | `cat_color_display_alias_map.csv` が手編集運用へ完全移行し再生成が不要になったとき |
 
 ## 4. one-shot スクリプトの制限
 

@@ -1,0 +1,17 @@
+# 依存・ビルド成果物
+/node_modules
+/.next
+/out
+/build
+
+# Next.js 自動生成
+next-env.d.ts
+*.tsbuildinfo
+
+# 環境変数 (実値はコミットしない)
+.env
+.env.local
+.env*.local
+
+# OS / エディタ
+.DS_Store
