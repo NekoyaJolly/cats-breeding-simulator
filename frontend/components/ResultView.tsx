@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import type {
   CalculationResponse,
   CarrierScenarioEntry,
@@ -9,35 +12,90 @@ function formatPct(value: number): string {
   return `${value.toFixed(1)}%`;
 }
 
-// 表現型の確率テーブル。results / シナリオ results で共用する。
-function ResultTable({ rows }: { rows: ResultEntry[] }) {
-  if (rows.length === 0) {
-    return <p className="text-sm text-slate-500">該当する表現型がありません。</p>;
-  }
+// 各性別グループで常時表示する上位件数。残りは「詳細を見る」で展開する。
+const TOP_N = 5;
+
+// 1 性別ぶんの結果カード。上位 TOP_N 件を常に見せ、残りは折りたたむ
+// (折りたたみすぎず、デフォルトはコンパクト)。
+function SexResultGroup({
+  title,
+  accentClass,
+  rows,
+}: {
+  title: string;
+  accentClass: string;
+  rows: ResultEntry[];
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const sorted = [...rows].sort((a, b) => b.probability_pct - a.probability_pct);
+  const total = sorted.reduce((sum, row) => sum + row.probability_pct, 0);
+  const visible = expanded ? sorted : sorted.slice(0, TOP_N);
+  const hiddenCount = sorted.length - visible.length;
+
   return (
-    <table className="w-full border-collapse text-sm">
-      <thead>
-        <tr className="border-b border-slate-300 text-left text-slate-500">
-          <th className="py-2 pr-4 font-medium">性別</th>
-          <th className="py-2 pr-4 font-medium">毛色</th>
-          <th className="py-2 text-right font-medium">確率</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((row, index) => (
-          <tr
-            key={`${row.sex}-${row.color}-${index}`}
-            className="border-b border-slate-100"
-          >
-            <td className="py-2 pr-4">{row.sex}</td>
-            <td className="py-2 pr-4">{row.color}</td>
-            <td className="py-2 text-right tabular-nums">
-              {formatPct(row.probability_pct)}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className="overflow-hidden rounded-md border border-slate-200">
+      <div
+        className={`flex items-baseline justify-between px-4 py-2 ${accentClass}`}
+      >
+        <h3 className="text-sm font-semibold">{title}</h3>
+        <span className="text-xs tabular-nums opacity-80">
+          合計 {formatPct(total)}
+        </span>
+      </div>
+      {sorted.length === 0 ? (
+        <p className="px-4 py-3 text-sm text-slate-500">
+          該当する表現型がありません。
+        </p>
+      ) : (
+        <>
+          <ul className="divide-y divide-slate-100">
+            {visible.map((row, index) => (
+              <li
+                key={`${row.color}-${index}`}
+                className="flex items-center justify-between gap-2 px-4 py-1.5 text-sm"
+              >
+                <span className="min-w-0 break-words text-slate-700">
+                  {row.color}
+                </span>
+                <span className="shrink-0 tabular-nums text-slate-600">
+                  {formatPct(row.probability_pct)}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {sorted.length > TOP_N && (
+            <button
+              type="button"
+              onClick={() => setExpanded((value) => !value)}
+              className="w-full border-t border-slate-100 px-4 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50"
+              aria-expanded={expanded}
+            >
+              {expanded ? "閉じる" : `詳細を見る (残り ${hiddenCount} 件)`}
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// 結果を ♀ / ♂ に分割して表示する。デスクトップは横並び、モバイルは縦積み。
+function SexSplitResults({ rows }: { rows: ResultEntry[] }) {
+  const female = rows.filter((row) => row.sex === "Female");
+  const male = rows.filter((row) => row.sex === "Male");
+  return (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <SexResultGroup
+        title="♀ メス"
+        accentClass="bg-pink-50 text-pink-800"
+        rows={female}
+      />
+      <SexResultGroup
+        title="♂ オス"
+        accentClass="bg-sky-50 text-sky-800"
+        rows={male}
+      />
+    </div>
   );
 }
 
@@ -69,15 +127,18 @@ function CarrierScenario({ scenario }: { scenario: CarrierScenarioEntry }) {
         </p>
       )}
       <div className="mt-3">
-        <ResultTable rows={scenario.results} />
+        <SexSplitResults rows={scenario.results} />
       </div>
     </div>
   );
 }
 
 export function ResultView({ data }: { data: CalculationResponse }) {
-  const { diagnostics } = data;
+  const { diagnostics, parameters } = data;
   const carrierScenarios = data.carrier_exploration_results ?? [];
+  // 入力 (親色 / 猫種 / モード) が変わったら結果カードを remount し、
+  // 展開状態 (詳細を見る) を初期 (折りたたみ) に戻す。
+  const resultsKey = `${parameters.sire_color}|${parameters.dam_color}|${parameters.breed ?? ""}|${parameters.mode}`;
   return (
     <div className="space-y-6">
       <section>
@@ -88,7 +149,7 @@ export function ResultView({ data }: { data: CalculationResponse }) {
           </span>
         </div>
         <div className="mt-3">
-          <ResultTable rows={data.results} />
+          <SexSplitResults key={resultsKey} rows={data.results} />
         </div>
       </section>
 
@@ -123,7 +184,10 @@ export function ResultView({ data }: { data: CalculationResponse }) {
             全キャリア探索シナリオ (参考・通常結果とは分離)
           </h3>
           {carrierScenarios.map((scenario) => (
-            <CarrierScenario key={scenario.scenario} scenario={scenario} />
+            <CarrierScenario
+              key={`${resultsKey}-${scenario.scenario}`}
+              scenario={scenario}
+            />
           ))}
         </section>
       )}
