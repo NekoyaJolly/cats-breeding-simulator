@@ -7,6 +7,8 @@ from functools import lru_cache
 from fastapi import APIRouter, FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+from cat_breeding_simulator.color_master import COLOR_MASTER
+from cat_breeding_simulator.color_reading_ja import reading_ja
 from cat_breeding_simulator.engine import BreedingCalculationError, CoatColorCalculator
 
 
@@ -64,6 +66,24 @@ class CalculationResponse(BaseModel):
     diagnostics: ModeDiagnostics
     # carrier_exploration_mode のときのみ非 null。normal/explicit では null。
     carrier_exploration_results: list[CarrierScenarioEntry] | None = None
+
+
+class ColorOption(BaseModel):
+    """入力サジェスト用の 1 色エントリ。"""
+
+    value: str                  # 送信に用いる canonical 正式名
+    reading_ja: str             # カタカナ読み (合成生成)
+    status: str                 # canonical / breed_specific
+    breed_context: str          # 猫種固有色なら猫種名 (例: Abyssinian)
+    sex_restriction: str        # female_only / unrestricted
+    # 突合キー群 (英正式名 / alias / 略称 / カナ読みを含む)。フロントの絞り込みに使う。
+    keywords: list[str]
+
+
+class ColorsResponse(BaseModel):
+    """入力サジェスト用の色一覧。"""
+
+    colors: list[ColorOption]
 
 
 router = APIRouter(prefix="/api/v1")
@@ -127,6 +147,28 @@ def calculate_endpoint(payload: CalculationRequest) -> CalculationResponse:
             else None
         ),
     )
+
+
+@router.get("/colors", response_model=ColorsResponse)
+def colors_endpoint() -> ColorsResponse:
+    """入力サジェスト用の色一覧を返す (canonical 正式名 + カナ読み + 突合キー)。"""
+
+    colors: list[ColorOption] = []
+    for option in COLOR_MASTER.list_input_colors():
+        reading = reading_ja(option.value)
+        # カナ読みも突合キーに含める (日本語入力での絞り込み用)。重複は順序保持で除去。
+        keywords = list(dict.fromkeys([*option.keywords, reading]))
+        colors.append(
+            ColorOption(
+                value=option.value,
+                reading_ja=reading,
+                status=option.status,
+                breed_context=option.breed_context,
+                sex_restriction=option.sex_restriction,
+                keywords=keywords,
+            )
+        )
+    return ColorsResponse(colors=colors)
 
 
 def create_app() -> FastAPI:
