@@ -46,7 +46,7 @@ export const LOCUS_GLOSSARY: Record<string, LocusInfo> = {
   S: {
     symbol: "S",
     name: "白斑（ホワイト）",
-    description: "白いブチを出す。Ss でバイカラー、SS でバン（白多め）。",
+    description: "白いブチを出す。S/s でバイカラー、S/S でバン（白多め）。",
   },
   W: {
     symbol: "W",
