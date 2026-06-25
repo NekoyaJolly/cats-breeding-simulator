@@ -7,16 +7,61 @@ import type {
   ResultEntry,
 } from "@/lib/schema";
 
-// 確率を小数1桁の % 文字列に整形する。
+// 確率を小数1桁の % 文字列に整形する (診断値など正確さ優先の箇所で使う)。
 function formatPct(value: number): string {
   return `${value.toFixed(1)}%`;
 }
 
-// 各性別グループで常時表示する上位件数。残りは「詳細を見る」で展開する。
+// 確率を整数 % に丸める (結果表示用)。0 超で四捨五入が 0 になる微小値は "<1%"。
+function formatPctInt(value: number): string {
+  if (value <= 0) return "0%";
+  const rounded = Math.round(value);
+  return rounded === 0 ? "<1%" : `${rounded}%`;
+}
+
+// 各性別グループで常時表示する上位件数 (ベース色グループ単位)。残りは「詳細を見る」。
 const TOP_N = 5;
 
-// 1 性別ぶんの結果カード。上位 TOP_N 件を常に見せ、残りは折りたたむ
-// (折りたたみすぎず、デフォルトはコンパクト)。
+// 白斑サフィックス。長い順に判定する ("-White Van" を "-White" より先に)。
+const WHITE_SUFFIXES = ["-White Van", "-White"] as const;
+
+type WhitePortion = { label: string; pct: number };
+type ColorGroup = { base: string; total: number; whites: WhitePortion[] };
+
+// 色名から白斑サフィックスを剥がし、ベース色と白斑ラベルに分ける。
+// 例: "Silver Patched Tabby-White" -> { base: "Silver Patched Tabby", whiteLabel: "-White" }
+function splitWhite(color: string): { base: string; whiteLabel: string | null } {
+  for (const suffix of WHITE_SUFFIXES) {
+    if (color.endsWith(suffix)) {
+      return { base: color.slice(0, color.length - suffix.length), whiteLabel: suffix };
+    }
+  }
+  return { base: color, whiteLabel: null };
+}
+
+// 結果をベース色でまとめる。白斑あり (-White / -White Van) は副次内訳として保持する。
+// グループは合計確率の降順、白斑内訳も確率降順で並べる。
+function groupByBase(rows: ResultEntry[]): ColorGroup[] {
+  const map = new Map<string, ColorGroup>();
+  for (const row of rows) {
+    const { base, whiteLabel } = splitWhite(row.color);
+    const group = map.get(base) ?? { base, total: 0, whites: [] };
+    group.total += row.probability_pct;
+    if (whiteLabel) {
+      group.whites.push({ label: whiteLabel, pct: row.probability_pct });
+    }
+    map.set(base, group);
+  }
+  const groups = [...map.values()];
+  for (const group of groups) {
+    group.whites.sort((a, b) => b.pct - a.pct);
+  }
+  groups.sort((a, b) => b.total - a.total || a.base.localeCompare(b.base));
+  return groups;
+}
+
+// 1 性別ぶんの結果カード。ベース色でまとめた上位 TOP_N グループを常に見せ、
+// 残りは「詳細を見る (残り N 件)」で展開 / 「閉じる」で折りたたむ (性別ごとに独立)。
 function SexResultGroup({
   title,
   accentClass,
@@ -27,10 +72,10 @@ function SexResultGroup({
   rows: ResultEntry[];
 }) {
   const [expanded, setExpanded] = useState(false);
-  const sorted = [...rows].sort((a, b) => b.probability_pct - a.probability_pct);
-  const total = sorted.reduce((sum, row) => sum + row.probability_pct, 0);
-  const visible = expanded ? sorted : sorted.slice(0, TOP_N);
-  const hiddenCount = sorted.length - visible.length;
+  const groups = groupByBase(rows);
+  const total = rows.reduce((sum, row) => sum + row.probability_pct, 0);
+  const visible = expanded ? groups : groups.slice(0, TOP_N);
+  const hiddenCount = groups.length - visible.length;
 
   return (
     <div className="overflow-hidden rounded-md border border-slate-200">
@@ -39,31 +84,41 @@ function SexResultGroup({
       >
         <h3 className="text-sm font-semibold">{title}</h3>
         <span className="text-xs tabular-nums opacity-80">
-          合計 {formatPct(total)}
+          合計 {formatPctInt(total)}
         </span>
       </div>
-      {sorted.length === 0 ? (
+      {groups.length === 0 ? (
         <p className="px-4 py-3 text-sm text-slate-500">
           該当する表現型がありません。
         </p>
       ) : (
         <>
           <ul className="divide-y divide-slate-100">
-            {visible.map((row, index) => (
-              <li
-                key={`${row.color}-${index}`}
-                className="flex items-center justify-between gap-2 px-4 py-1.5 text-sm"
-              >
-                <span className="min-w-0 break-words text-slate-700">
-                  {row.color}
-                </span>
-                <span className="shrink-0 tabular-nums text-slate-600">
-                  {formatPct(row.probability_pct)}
-                </span>
+            {visible.map((group, index) => (
+              <li key={`${group.base}-${index}`} className="px-4 py-1.5">
+                <div className="flex items-center justify-between gap-2 text-sm">
+                  <span className="min-w-0 break-words text-slate-700">
+                    {group.base}
+                  </span>
+                  <span className="shrink-0 tabular-nums text-slate-600">
+                    {formatPctInt(group.total)}
+                  </span>
+                </div>
+                {group.whites.map((white) => (
+                  <div
+                    key={white.label}
+                    className="flex items-center justify-between gap-2 pl-3 text-xs text-slate-400"
+                  >
+                    <span>└ {white.label}</span>
+                    <span className="shrink-0 tabular-nums">
+                      {formatPctInt(white.pct)}
+                    </span>
+                  </div>
+                ))}
               </li>
             ))}
           </ul>
-          {sorted.length > TOP_N && (
+          {groups.length > TOP_N && (
             <button
               type="button"
               onClick={() => setExpanded((value) => !value)}
