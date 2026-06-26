@@ -209,9 +209,11 @@ def test_ui_path_130x204_only_tabby_via_api() -> None:
     Tortie/Calico は出ない)。出力名は canonical 形 (Pt→Patched)。合計は 100%。
     """
 
+    # 猫種は指定しない (この経路は猫種非依存。以前は breed="Any" を黙って無視させていたが、
+    # 未対応猫種はバリデーションで弾くようになったため breed を省略する)。
     response = client.post(
         "/api/v1/calculate",
-        json={"sire_color": "Silver Tabby", "dam_color": "Blue Pt Tabby-White", "breed": "Any"},
+        json={"sire_color": "Silver Tabby", "dam_color": "Blue Pt Tabby-White"},
     )
     assert response.status_code == 200
     results = response.json()["results"]

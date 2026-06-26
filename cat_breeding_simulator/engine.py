@@ -264,6 +264,9 @@ class CoatColorCalculator:
             raise BreedingCalculationError(
                 f"未知の計算モード '{mode}'。利用可能: {', '.join(SUPPORTED_MODES)}。"
             )
+        # 猫種は任意だが、指定された場合は既知の猫種のみ受け付ける (黙って無視しない)。
+        if breed and self._normalize_breed_key(breed) not in BREED_FILTERS:
+            raise BreedingCalculationError(f"未対応の猫種です: '{breed}'")
         if mode == "carrier_exploration":
             return self._calculate_carrier_exploration(sire_color, dam_color, breed)
 
