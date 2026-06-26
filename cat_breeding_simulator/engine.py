@@ -150,8 +150,9 @@ _BLOCKING_RECESSIVE_LABELS: dict[str, dict[str, str]] = {
     "D": {"d": "希釈（ブルー/クリーム） d"},
 }
 
-# O 座位 (X 連鎖): 親が非オレンジ (O を持たない) のに、相手親が o を渡せない場合のブロッカー。
-# 相手が赤ホモ (O/O メス or O/Y オス) だと全ての子に O が渡り、非オレンジの子は出ない。
+# O 座位 (X 連鎖): 親が非オレンジ (O を持たない) のに、相手親が「全ての子に O を渡す」場合の
+# ブロッカー。全子に O が渡るのは相手が O/O メス (赤メス) のときだけ。赤オス (O/Y) は息子に Y を
+# 渡すため、非オレンジ親 (o) との間に非オレンジの息子 (o/Y) が出るのでブロッカーにならない。
 _O_NON_ORANGE_LABEL = "非オレンジ（赤以外） o"
 
 
@@ -436,10 +437,16 @@ class CoatColorCalculator:
             if pair[0] not in other_alleles.get(locus, set()):
                 factors.append(label)  # 相手が渡せない → 子に再現不可
 
-        # O 座位 (X 連鎖): 親が非オレンジ (O を持たない) のに相手が o を渡せない場合。
-        # 相手が赤ホモ (O/O / O/Y) だと全ての子に O が渡り、非オレンジの親色は出ない。
+        # O 座位 (X 連鎖): 親が非オレンジ (O を持たない) のに、相手が「全ての子に O を渡す」
+        # = 相手が O/O メス (赤メス) で o を渡せない場合のみブロッカー。赤オス (O/Y) は息子に
+        # Y を渡すため非オレンジの息子 (o/Y) が出る → ブロックしない (other_sex で限定する)。
         self_o = self_alleles.get("O", set())
-        if self_o and "O" not in self_o and "o" not in other_alleles.get("O", set()):
+        if (
+            self_o
+            and "O" not in self_o
+            and other_sex == "female"
+            and "o" not in other_alleles.get("O", set())
+        ):
             factors.append(_O_NON_ORANGE_LABEL)
 
         return factors

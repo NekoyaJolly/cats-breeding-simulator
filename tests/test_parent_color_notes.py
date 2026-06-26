@@ -72,3 +72,14 @@ def test_dilute_not_blocked_when_other_parent_is_dense() -> None:
     for note in notes:
         factors = " / ".join(str(f) for f in note["blocked_factors"])
         assert "希釈" not in factors, f"希釈 d が誤って計上された: {note}"
+
+
+def test_o_blocker_not_applied_against_red_sire() -> None:
+    # 父 Red (O/Y) × 母 Chocolate (非オレンジ o/o, b/b)。母 Chocolate が出ない原因は b のみ。
+    # 赤オス父は息子に Y を渡すため非オレンジの息子 (o/Y) は成立する → O はブロッカーにしない。
+    notes = _notes("Red", "Chocolate")
+    dam = next(n for n in notes if n["parent"] == "dam")
+    factors = " / ".join(str(f) for f in dam["blocked_factors"])
+    assert "チョコレート" in factors
+    # 相手が赤「オス」なので O ブロッカーは付かない (O/O メスのときのみ成立)。
+    assert "非オレンジ" not in factors, f"赤オス相手で O が誤計上された: {dam}"
