@@ -100,3 +100,11 @@ export const breedsResponseSchema = z.object({
   breeds: z.array(breedOptionSchema),
 });
 export type BreedsResponse = z.infer<typeof breedsResponseSchema>;
+
+// GET /api/v1/breed-colors: その猫種で使える毛色 (認定カラー案内ポップアップ用)。
+export const breedColorsResponseSchema = z.object({
+  breed: z.string(),
+  constrained: z.boolean(),
+  colors: z.array(z.string()),
+});
+export type BreedColorsResponse = z.infer<typeof breedColorsResponseSchema>;

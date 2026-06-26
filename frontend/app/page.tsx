@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { BreedingForm } from "@/components/BreedingForm";
+import { BreedColorsHint } from "@/components/BreedColorsHint";
 import { ResultView } from "@/components/ResultView";
 import { calculate, type CalculateInput } from "@/lib/api";
 import type { CalculationResponse } from "@/lib/schema";
@@ -10,10 +11,13 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CalculationResponse | null>(null);
+  // 直近の送信で指定された猫種 (認定カラー案内ポップアップの対象)。
+  const [submittedBreed, setSubmittedBreed] = useState<string | null>(null);
 
   async function handleSubmit(input: CalculateInput) {
     setLoading(true);
     setError(null);
+    setSubmittedBreed(input.breed ?? null);
     const outcome = await calculate(input);
     if (outcome.ok) {
       setResult(outcome.data);
@@ -40,6 +44,10 @@ export default function HomePage() {
       {error && (
         <div className="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           {error}
+          {/* 猫種の認定カラーに無い旨のエラーなら、使える毛色をコピペ可能に案内する。 */}
+          {submittedBreed && error.includes("認定カラー") && (
+            <BreedColorsHint breed={submittedBreed} />
+          )}
         </div>
       )}
 

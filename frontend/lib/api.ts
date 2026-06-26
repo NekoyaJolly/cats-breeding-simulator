@@ -1,5 +1,6 @@
 import {
   apiErrorSchema,
+  breedColorsResponseSchema,
   breedsResponseSchema,
   calculationResponseSchema,
   colorsResponseSchema,
@@ -119,4 +120,23 @@ export async function calculate(input: CalculateInput): Promise<CalculateOutcome
     return { ok: false, message: describeError(parsedError.data.detail) };
   }
   return { ok: false, message: `エラーが発生しました (HTTP ${response.status})。` };
+}
+
+// GET /api/v1/breed-colors: 指定猫種で使える毛色一覧 (認定カラー案内ポップアップ用)。
+// 失敗時 / 制約なし猫種は空配列を返す (呼び出し側はポップアップを出さない)。
+export async function fetchBreedColors(breed: string): Promise<string[]> {
+  let response: Response;
+  try {
+    response = await fetch(
+      `/api/v1/breed-colors?breed=${encodeURIComponent(breed)}`,
+      { headers: { Accept: "application/json" } },
+    );
+  } catch {
+    return [];
+  }
+  if (!response.ok) return [];
+  const body = await response.json().catch(() => null);
+  const parsed = breedColorsResponseSchema.safeParse(body);
+  if (!parsed.success || !parsed.data.constrained) return [];
+  return parsed.data.colors;
 }
