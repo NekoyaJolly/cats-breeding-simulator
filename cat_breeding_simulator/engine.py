@@ -138,12 +138,22 @@ class BreedingCalculationError(ValueError):
 
 # 劣性アレル → 人間向けラベル。親がこのアレルでホモ接合かつ相手親がそのアレルを
 # 持たないとき、その形質は子に出現しない (parent_color_notes の原因説明に使う)。
+# 親が劣性ホモで発現し、相手親がそのアレルを (normal 展開後も) 渡せないと子に再現できない因子。
+# 注意: D は normal_mode で必ず X/- 展開される (NORMAL_OPENED_LOCI) ため、濃色親 (D/-) も
+# 常に d を渡せる = D が単独でブロッカーになることは normal_mode では原理的に起きない。
+# それでも一覧として残すのは、判定が「相手親が実際に渡せるアレル集合」に基づくため害がなく、
+# 仮に展開規則が変わっても正しく動くようにするため。
 _BLOCKING_RECESSIVE_LABELS: dict[str, dict[str, str]] = {
     "A": {"a": "非アグーチ（ソリッド） a"},
     "B": {"b": "チョコレート b", "bl": "シナモン bl"},
     "C": {"cs": "ポイント cs", "cb": "セピア cb"},
     "D": {"d": "希釈（ブルー/クリーム） d"},
 }
+
+# O 座位 (X 連鎖): 親が非オレンジ (O を持たない) のに、相手親が「全ての子に O を渡す」場合の
+# ブロッカー。全子に O が渡るのは相手が O/O メス (赤メス) のときだけ。赤オス (O/Y) は息子に Y を
+# 渡すため、非オレンジ親 (o) との間に非オレンジの息子 (o/Y) が出るのでブロッカーにならない。
+_O_NON_ORANGE_LABEL = "非オレンジ（赤以外） o"
 
 
 class CoatColorCalculator:
@@ -373,6 +383,26 @@ class CoatColorCalculator:
             )
         return notes
 
+    def _contributable_alleles(
+        self, color: str, sex: str, breed: str | None
+    ) -> dict[str, set[str]]:
+        """親が normal_mode の交配で実際に子へ渡しうるアレル集合を座位別に返す。
+
+        CSV ベース遺伝子型ではなく X/- 展開後の全候補から集めるのが要点。例: 濃色 (D/-)
+        親は normal_mode で {D/D, D/d} に展開されるため d も渡せる (= 希釈の子が出る)。
+        ベースだけを見ると「d を持たない」と誤判定するため、ここで展開を反映する。
+        """
+
+        try:
+            genotypes = self._resolve_parent_genotypes(color, sex, breed, "normal", None)
+        except BreedingCalculationError:
+            return {}
+        alleles: dict[str, set[str]] = {}
+        for genotype in genotypes:
+            for locus, pair in genotype.loci.items():
+                alleles.setdefault(locus, set()).update(pair)
+        return alleles
+
     def _blocking_recessive_factors(
         self,
         color: str,
@@ -381,13 +411,22 @@ class CoatColorCalculator:
         other_sex: str,
         breed: str | None,
     ) -> list[str]:
-        """親が劣性ホモの座位のうち、相手親がそのアレルを出せず子に再現できない因子を返す。"""
+        """親色が子に再現できない原因の因子を返す。
+
+        相手親が「normal_mode 展開後に渡せるアレル集合」を基準に判定する (CSV ベースだけを
+        見ると D 等の X/- 展開座位を誤ってブロッカー扱いしてしまう)。
+        """
 
         base = self._resolved_base_loci(color, sex, breed)
-        other_base = self._resolved_base_loci(other_color, other_sex, breed)
-        if base is None or other_base is None:
+        if base is None:
             return []
+        other_alleles = self._contributable_alleles(other_color, other_sex, breed)
+        self_alleles = self._contributable_alleles(color, sex, breed)
+        if not other_alleles or not self_alleles:
+            return []
+
         factors: list[str] = []
+        # 常染色体劣性 (A/B/C/D): 親が劣性ホモ かつ 相手が展開後もそのアレルを渡せない。
         for locus, allele_labels in _BLOCKING_RECESSIVE_LABELS.items():
             pair = base.get(locus)
             if pair is None or pair[0] != pair[1]:
@@ -395,8 +434,21 @@ class CoatColorCalculator:
             label = allele_labels.get(pair[0])
             if label is None:
                 continue  # 追跡対象の劣性アレルでない
-            if pair[0] not in set(other_base.get(locus, ())):
-                factors.append(label)  # 相手がこのアレルを持たない → 子に再現不可
+            if pair[0] not in other_alleles.get(locus, set()):
+                factors.append(label)  # 相手が渡せない → 子に再現不可
+
+        # O 座位 (X 連鎖): 親が非オレンジ (O を持たない) のに、相手が「全ての子に O を渡す」
+        # = 相手が O/O メス (赤メス) で o を渡せない場合のみブロッカー。赤オス (O/Y) は息子に
+        # Y を渡すため非オレンジの息子 (o/Y) が出る → ブロックしない (other_sex で限定する)。
+        self_o = self_alleles.get("O", set())
+        if (
+            self_o
+            and "O" not in self_o
+            and other_sex == "female"
+            and "o" not in other_alleles.get("O", set())
+        ):
+            factors.append(_O_NON_ORANGE_LABEL)
+
         return factors
 
     # carrier_exploration の各 locus の既定値 (CSV に欠落していた場合のフォールバック)。

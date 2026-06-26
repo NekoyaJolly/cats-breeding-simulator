@@ -38,7 +38,9 @@
    },
    "parent_color_notes": [
     {
-     "blocked_factors": [],
+     "blocked_factors": [
+      "非オレンジ（赤以外） o"
+     ],
      "color": "Black Smoke",
      "parent": "sire"
     }
@@ -159,6 +161,145 @@
   },
   "status": 422
  },
+ "Blue Tabby-White|Shell Cameo|-|normal": {
+  "body": {
+   "carrier_exploration_results": null,
+   "diagnostics": {
+    "assumptions": [
+     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
+     "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
+     "Wb (ワイドバンド): 非展開",
+     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "S (白斑): 入力レベルで確定 (非展開)"
+    ],
+    "closed_loci": [
+     "A",
+     "B",
+     "C",
+     "Wb"
+    ],
+    "matched_probability": 1.0,
+    "opened_loci": [
+     "D",
+     "I",
+     "Mc",
+     "Ta"
+    ],
+    "unmatched_genotype_count": 0,
+    "unmatched_probability": 0.0
+   },
+   "mode": "normal",
+   "parameters": {
+    "breed": null,
+    "dam_carriers": null,
+    "dam_color": "Shell Cameo",
+    "mode": "normal",
+    "sire_carriers": null,
+    "sire_color": "Blue Tabby-White"
+   },
+   "parent_color_notes": [
+    {
+     "blocked_factors": [
+      "非オレンジ（赤以外） o"
+     ],
+     "color": "Blue Tabby-White",
+     "parent": "sire"
+    },
+    {
+     "blocked_factors": [
+      "非アグーチ（ソリッド） a"
+     ],
+     "color": "Shell Cameo",
+     "parent": "dam"
+    }
+   ],
+   "results": [
+    {
+     "color": "Silver Patched Tabby",
+     "probability_pct": 14.0625,
+     "sex": "Female"
+    },
+    {
+     "color": "Silver Patched Tabby-White",
+     "probability_pct": 14.0625,
+     "sex": "Female"
+    },
+    {
+     "color": "Cameo Tabby",
+     "probability_pct": 14.0625,
+     "sex": "Male"
+    },
+    {
+     "color": "Cameo Tabby-White",
+     "probability_pct": 14.0625,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Silver Patched Tabby",
+     "probability_pct": 4.6875,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Silver Patched Tabby-White",
+     "probability_pct": 4.6875,
+     "sex": "Female"
+    },
+    {
+     "color": "Brown Patched Tabby",
+     "probability_pct": 4.6875,
+     "sex": "Female"
+    },
+    {
+     "color": "Brown Patched Tabby-White",
+     "probability_pct": 4.6875,
+     "sex": "Female"
+    },
+    {
+     "color": "Cream Cameo Tabby",
+     "probability_pct": 4.6875,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream Cameo Tabby-White",
+     "probability_pct": 4.6875,
+     "sex": "Male"
+    },
+    {
+     "color": "Red Tabby",
+     "probability_pct": 4.6875,
+     "sex": "Male"
+    },
+    {
+     "color": "Red Tabby-White",
+     "probability_pct": 4.6875,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Patched Tabby",
+     "probability_pct": 1.5625,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Patched Tabby-White",
+     "probability_pct": 1.5625,
+     "sex": "Female"
+    },
+    {
+     "color": "Cream Tabby",
+     "probability_pct": 1.5625,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream Tabby-White",
+     "probability_pct": 1.5625,
+     "sex": "Male"
+    }
+   ],
+   "status": "success"
+  },
+  "status": 200
+ },
  "Blue|Cream Tabby|-|normal": {
   "body": {
    "carrier_exploration_results": null,
@@ -199,7 +340,8 @@
    "parent_color_notes": [
     {
      "blocked_factors": [
-      "非アグーチ（ソリッド） a"
+      "非アグーチ（ソリッド） a",
+      "非オレンジ（赤以外） o"
      ],
      "color": "Blue",
      "parent": "sire"
@@ -613,7 +755,8 @@
    "parent_color_notes": [
     {
      "blocked_factors": [
-      "非アグーチ（ソリッド） a"
+      "非アグーチ（ソリッド） a",
+      "非オレンジ（赤以外） o"
      ],
      "color": "Chinchilla Golden",
      "parent": "sire"
@@ -2104,8 +2247,7 @@
    "parent_color_notes": [
     {
      "blocked_factors": [
-      "非アグーチ（ソリッド） a",
-      "希釈（ブルー/クリーム） d"
+      "非アグーチ（ソリッド） a"
      ],
      "color": "Dilute Calico",
      "parent": "dam"

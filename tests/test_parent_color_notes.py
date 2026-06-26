@@ -51,3 +51,35 @@ def test_dam_color_present_no_note_for_dam() -> None:
 def test_notes_only_in_normal_mode() -> None:
     # carrier_exploration は normal とは別。注釈は normal のみ。
     assert _notes("Lilac", "Blue Patched Tabby-White", mode="carrier_exploration") == []
+
+
+def test_non_orange_parent_blocked_by_red_dam() -> None:
+    # 父 Blue Tabby-White (非オレンジ) × 母 Shell Cameo (赤 O/O) → 全子に O が渡り
+    # 非オレンジの Blue Tabby は出ない。原因は O 座位 (母が o を渡せない)。
+    notes = _notes("Blue Tabby-White", "Shell Cameo")
+    sire = next(n for n in notes if n["parent"] == "sire")
+    factors = " / ".join(str(f) for f in sire["blocked_factors"])
+    assert "非オレンジ" in factors and " o" in factors
+    # 希釈 D は normal_mode で必ず展開される (母 D/- は d を渡せる) ため、
+    # 誤って希釈 d をブロッカーに挙げてはならない。
+    assert "希釈" not in factors and " d" not in factors
+
+
+def test_dilute_not_blocked_when_other_parent_is_dense() -> None:
+    # 希釈の親色は、相手が濃色 (D/-) でも normal_mode 展開で d を渡せるため
+    # 希釈 d をブロッカーに挙げない (相手が濃色 = d を持たない、という誤判定の回帰)。
+    notes = _notes("Silver Tabby", "Dilute Calico")
+    for note in notes:
+        factors = " / ".join(str(f) for f in note["blocked_factors"])
+        assert "希釈" not in factors, f"希釈 d が誤って計上された: {note}"
+
+
+def test_o_blocker_not_applied_against_red_sire() -> None:
+    # 父 Red (O/Y) × 母 Chocolate (非オレンジ o/o, b/b)。母 Chocolate が出ない原因は b のみ。
+    # 赤オス父は息子に Y を渡すため非オレンジの息子 (o/Y) は成立する → O はブロッカーにしない。
+    notes = _notes("Red", "Chocolate")
+    dam = next(n for n in notes if n["parent"] == "dam")
+    factors = " / ".join(str(f) for f in dam["blocked_factors"])
+    assert "チョコレート" in factors
+    # 相手が赤「オス」なので O ブロッカーは付かない (O/O メスのときのみ成立)。
+    assert "非オレンジ" not in factors, f"赤オス相手で O が誤計上された: {dam}"

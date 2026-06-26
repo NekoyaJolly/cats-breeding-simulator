@@ -51,6 +51,7 @@ CROSSES: list[tuple[str, str, str | None, str]] = [
     ("Seal Point", "Seal Point", "Siamese", "normal"),            # 猫種制約 + ポイント
     ("Sable", "Sable", "Burmese", "normal"),                      # セピア cb + 猫種
     ("Natural Mink", "Natural Mink", "Tonkinese", "normal"),      # ミンク cs/cb + 猫種
+    ("Blue Tabby-White", "Shell Cameo", None, "normal"),          # 親色不在注釈: O ブロッカー (赤ダム) / D 誤検出なし
 ]
 
 
