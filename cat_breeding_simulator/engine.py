@@ -458,12 +458,14 @@ class CoatColorCalculator:
         )
         for parent, color, sex, other_color, other_sex in parents:
             name = self._resolve_input_color_name(color, breed)
-            canonical = COLOR_MASTER.canonical_name(name)
-            if canonical in offspring_colors:
+            # 子の出現色 (offspring_colors) は表示名なので、親色も同じ表示パイプラインに
+            # 通してから比較する (display_alias / Van 正規化等での誤検知を防ぐ)。
+            display = self._post_process_color_name(name, sire_color, dam_color, breed)
+            if display in offspring_colors:
                 continue  # 親色が子に出るなら注釈不要
             blocked = self._blocking_recessive_factors(color, sex, other_color, other_sex, breed)
             notes.append(
-                ParentColorNote(parent=parent, color=canonical, blocked_factors=blocked)
+                ParentColorNote(parent=parent, color=display, blocked_factors=blocked)
             )
         return notes
 

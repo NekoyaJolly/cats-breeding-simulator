@@ -76,7 +76,7 @@ class CalculationResponse(BaseModel):
     # carrier_exploration_mode のときのみ非 null。normal/explicit では null。
     carrier_exploration_results: list[CarrierScenarioEntry] | None = None
     # 入力した親色が子に出ないときの注釈 (normal モードのみ、無ければ空配列)。
-    parent_color_notes: list[ParentColorNoteEntry] = []
+    parent_color_notes: list[ParentColorNoteEntry] = Field(default_factory=list)
 
 
 class ColorOption(BaseModel):
