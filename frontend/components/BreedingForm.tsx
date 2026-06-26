@@ -26,6 +26,8 @@ const MODES = [
 const SIRE_RECENT_KEY = "cbs:recentSireColors";
 const DAM_RECENT_KEY = "cbs:recentDamColors";
 const BREED_RECENT_KEY = "cbs:recentBreeds";
+// 旧・父母共有キー。履歴分離前のユーザー履歴を引き継ぐためのフォールバック読込用。
+const LEGACY_COLOR_RECENT_KEY = "cbs:recentColors";
 const RECENT_MAX = 8;
 const recentSchema = z.array(z.string());
 
@@ -133,9 +135,14 @@ export function BreedingForm({ onSubmit, loading }: Props) {
   }, []);
 
   // 履歴を localStorage から復元する (入力欄ごと)。
+  // 新キーが空の既存ユーザーは、旧・父母共有キーをフォールバックで引き継ぐ
+  // (以後、各欄で確定すると新キーが優先される)。
   useEffect(() => {
-    setSireRecent(loadRecent(SIRE_RECENT_KEY));
-    setDamRecent(loadRecent(DAM_RECENT_KEY));
+    const legacy = loadRecent(LEGACY_COLOR_RECENT_KEY);
+    const sire = loadRecent(SIRE_RECENT_KEY);
+    const dam = loadRecent(DAM_RECENT_KEY);
+    setSireRecent(sire.length > 0 ? sire : legacy);
+    setDamRecent(dam.length > 0 ? dam : legacy);
     setBreedRecent(loadRecent(BREED_RECENT_KEY));
   }, []);
 
