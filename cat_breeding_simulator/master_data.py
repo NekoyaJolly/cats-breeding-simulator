@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 AUTOSOMAL_LOCI: tuple[str, ...] = ("B", "D", "A", "C", "W", "S", "Mc", "Ta", "Sp", "I", "Wb")
@@ -391,7 +392,43 @@ def is_real_breed(name: str) -> bool:
     return any("a" <= char.lower() <= "z" for char in name)
 
 
-# 入力として受け付ける有効な猫種 (ゴミ行を除外)。一覧 / バリデーションの正本。
-VALID_BREEDS: frozenset[str] = frozenset(
-    name for name in BREED_FILTERS if is_real_breed(name)
+# コート/物理バリアントのトークン (Short/Long Hair, ear/leg 等の登録変種コード)。
+# 括弧注記がこれらだけで構成される場合は同一猫種のバリアント違いとみなし base に集約する。
+# 色違い等 (AOC / HIMALAYAN 等) は意味が異なるため畳まず残す。
+_BREED_VARIANT_TOKENS: frozenset[str] = frozenset(
+    {"SH", "LH", "NL", "SE", "LE", "ST", "LWH", "SWH"}
 )
+_BREED_VARIANT_PAREN = re.compile(r"^(.*?)\s*\(([^)]*)\)\s*$")
+
+
+def _breed_base(name: str) -> str:
+    """コートバリアント注記 (例 "Kinkaro (SH.SE)") を base ("Kinkaro") へ畳む。"""
+
+    match = _BREED_VARIANT_PAREN.match(name)
+    if not match:
+        return name
+    tokens = [token for token in re.split(r"[.\s]+", match.group(2)) if token]
+    if tokens and all(token.upper() in _BREED_VARIANT_TOKENS for token in tokens):
+        return match.group(1).strip()
+    return name
+
+
+def _build_canonical_breeds() -> dict[str, bool]:
+    """入力候補 / バリデーション用に猫種を base 集約する (ゴミ除外 + 変種統合)。
+
+    返り値: 猫種名 -> affects_genetics (座位制約があり計算結果に影響するか)。
+    変種は制約 OR で統合する (実データ上、集約対象は全て制約なし)。
+    """
+
+    canonical: dict[str, bool] = {}
+    for name, constraints in BREED_FILTERS.items():
+        if not is_real_breed(name):
+            continue
+        base = _breed_base(name)
+        canonical[base] = canonical.get(base, False) or bool(constraints)
+    return canonical
+
+
+# 入力候補 / バリデーションの正本 (base 集約済 + ゴミ除外)。
+CANONICAL_BREEDS: dict[str, bool] = _build_canonical_breeds()
+VALID_BREEDS: frozenset[str] = frozenset(CANONICAL_BREEDS)

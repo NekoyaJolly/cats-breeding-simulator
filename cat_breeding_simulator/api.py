@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from cat_breeding_simulator.color_master import COLOR_MASTER
 from cat_breeding_simulator.color_reading_ja import reading_ja
 from cat_breeding_simulator.engine import BreedingCalculationError, CoatColorCalculator
-from cat_breeding_simulator.master_data import BREED_FILTERS, is_real_breed
+from cat_breeding_simulator.master_data import CANONICAL_BREEDS
 
 
 class CalculationRequest(BaseModel):
@@ -194,13 +194,13 @@ def colors_endpoint() -> ColorsResponse:
 def breeds_endpoint() -> BreedsResponse:
     """入力サジェスト + バリデーション用の有効な猫種一覧を返す。
 
-    制約あり (affects_genetics=true) の猫種だけが計算結果に影響する。
+    ゴミ行を除外し、コートバリアント違い (SH/LH/SE/NL 等) は base に集約済み。
+    affects_genetics=true の猫種だけが座位制約を持ち計算結果に影響する。
     """
 
     breeds = [
-        BreedOption(value=name, affects_genetics=bool(BREED_FILTERS[name]))
-        for name in sorted(BREED_FILTERS)
-        if is_real_breed(name)
+        BreedOption(value=name, affects_genetics=affects)
+        for name, affects in sorted(CANONICAL_BREEDS.items())
     ]
     return BreedsResponse(breeds=breeds)
 

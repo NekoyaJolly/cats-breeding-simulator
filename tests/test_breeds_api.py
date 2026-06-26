@@ -27,6 +27,33 @@ def test_breeds_endpoint_returns_breeds() -> None:
     assert all(any("a" <= c.lower() <= "z" for c in v) for v in values)
 
 
+def test_coat_variants_collapsed_to_base() -> None:
+    values = {b["value"] for b in client.get("/api/v1/breeds").json()["breeds"]}
+    # コートバリアント (SH/LH/SE/NL 等) は base に集約され、変種名は一覧に出ない。
+    assert "Kinkaro" in values
+    assert "Scottish Fold" in values
+    assert not any("(" in v and ")" in v and _is_coat_variant(v) for v in values)
+
+
+def _is_coat_variant(name: str) -> bool:
+    import re
+
+    match = re.match(r"^.*\(([^)]*)\)\s*$", name)
+    if not match:
+        return False
+    tokens = [t for t in re.split(r"[.\s]+", match.group(1)) if t]
+    return bool(tokens) and all(
+        t.upper() in {"SH", "LH", "NL", "SE", "LE", "ST", "LWH", "SWH"} for t in tokens
+    )
+
+
+def test_collapsed_base_breed_validates() -> None:
+    calc = CoatColorCalculator()
+    # base 集約された猫種 (BREED_FILTERS には変種名しか無い) も入力として通る。
+    report = calc.calculate_report("Black", "Black", breed="Kinkaro")
+    assert report.results
+
+
 def test_breeds_affects_genetics_flag() -> None:
     breeds = {b["value"]: b for b in client.get("/api/v1/breeds").json()["breeds"]}
     # 座位制約のある猫種は affects_genetics=true。
