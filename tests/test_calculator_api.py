@@ -86,11 +86,11 @@ def test_master_resolves_alias_to_canonical() -> None:
     assert cream.status == "canonical"
     assert cream.primary_name == "Blue Cream"
 
-    # Blue Tortie は alias として同じ概念へ解決し、表示名は Blue Cream になる。
+    # Blue Tortie は alias として同じ概念 (blue_cream) へ解決し、表示名は Blue Cream になる。
     tortie = COLOR_MASTER.resolve("Blue Tortie")
     assert tortie is not None
     assert tortie.status == "alias"
-    assert tortie.canonical_color_id == "blue_tortie"
+    assert tortie.canonical_color_id == "blue_cream"
     assert tortie.primary_name == "Blue Cream"
 
 

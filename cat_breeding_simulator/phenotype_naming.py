@@ -9,6 +9,8 @@ engine には依存しない (循環 import を避けるため共有型は maste
 
 from __future__ import annotations
 
+import re
+
 from cat_breeding_simulator.master_data import (
     COLOR_DEFINITIONS,
     PHENOTYPE_GENOTYPES,
@@ -165,15 +167,14 @@ class PhenotypeNamer:
 
         濃淡 (Shell < Shaded < Chinchilla) は多遺伝子で genotype に還元できないため、
         親が明示している語を継承する。どちらの親も明示しなければ濃淡なし (汎用 Golden/Silver)。
+
+        判定は単語境界で行う ("Tortoiseshell" の部分文字列 "shell" を誤検出しないため)。
         """
 
         text = f"{sire_color} {dam_color}".lower()
-        if "chinchilla" in text:
-            return "Chinchilla "
-        if "shaded" in text:
-            return "Shaded "
-        if "shell" in text:
-            return "Shell "
+        for word, label in (("chinchilla", "Chinchilla "), ("shaded", "Shaded "), ("shell", "Shell ")):
+            if re.search(rf"\b{word}\b", text):
+                return label
         return ""
 
     def find_matching_color(

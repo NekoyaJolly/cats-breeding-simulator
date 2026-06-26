@@ -161,20 +161,19 @@ def make_color_id(name: str) -> str:
 EXCLUDED_CONCEPTS = {"any other color", "aov", "smoke"}
 
 # 元データに直接の行は無いが、alias 解決先として必要な canonical 概念
-# (追加レビュー判断 #7)。元データ Code/Name は対応する Blue Cream Smoke 系 alias 行が保持する。
-SYNTHESIZED_CANONICALS = [
-    "Blue Tortie Smoke",
-    "Blue Tortie Smoke-White",
-    "Blue Tortie Smoke-White Van",   # Van は独立概念 (S/S)。Blue Cream Smoke-White Van の解決先
-]
+# (追加レビュー判断 #7)。現在は空: 旧 Blue Tortie Smoke 系を合成 canonical にしていたが、
+# Cream 正規化に伴い Blue Cream Smoke 系 (元データ行 74/53/280 を持つ) を canonical にしたため不要。
+SYNTHESIZED_CANONICALS: list[str] = []
 
 # 別名 → canonical 概念名。CFA/TICA/日本実務/猫種呼称差の同一概念統合。
 # resolves_to は対象概念の ColorId を後段で算出する。
 ALIAS_TARGETS: dict[str, str] = {
-    # 希釈トーティ系: CFA「Blue Cream」= TICA「Blue Tortie」
-    "blue cream": "Blue Tortie",
-    "lilac cream": "Lilac Tortie",
-    "blue cream point": "Blue Tortie Point",
+    # 希釈トーティ系は Cream を正規名にする (Blue Cream / Lilac Cream が canonical、
+    # Tortie 表記が alias)。Blue Cream(31)/Lilac Cream(455)/Blue Cream Point(87) 等は
+    # 元データに直接行があり canonical 化される。入力は Tortie 表記でも受理する。
+    "blue tortie": "Blue Cream",
+    "lilac tortie": "Lilac Cream",
+    "blue tortie point": "Blue Cream Point",
     "blue cream-white": "Dilute Calico",
     # トーティ&白 / 三毛系
     "tortoiseshell-white": "Calico",
@@ -186,19 +185,19 @@ ALIAS_TARGETS: dict[str, str] = {
     # Shell/Chinchilla 同一概念 (#1): ブルー系は Chinchilla 表記優先のため Shell Blue は寄せる
     "shell blue": "Blue Chinchilla Silver",
     # Smoke×Tortie/Calico 系の確定 (追加レビュー判断). Smoke = solid + I/-。
-    # Calico = Tortie + White, Dilute Calico = Blue Tortie + White として正規表示へ寄せる。
+    # Calico = Tortie + White, Dilute Calico = Blue Cream + White として正規表示へ寄せる。
     "smoke tortoiseshell": "Tortie Smoke",
     "calico smoke": "Tortie Smoke-White",
     "smoke calico": "Tortie Smoke-White",
-    "smoke dilute calico": "Blue Tortie Smoke-White",
-    # CFA「Blue Cream Smoke」= TICA「Blue Tortie Smoke」(Blue Cream = Blue Tortie の smoke 版)
-    "blue cream smoke": "Blue Tortie Smoke",
-    "blue cream smoke-white": "Blue Tortie Smoke-White",
+    "smoke dilute calico": "Blue Cream Smoke-White",
+    # Blue Cream Smoke 系は元データ行 (Code 74/53/280) を持つため canonical (旧: Blue Tortie
+    # Smoke を合成 canonical にして寄せていたが、Cream 正規化に伴い反転)。
     # Van は -White(S/s) とは遺伝的に別概念(S/S)。-White へは寄せず、同一 Van 概念へまとめる。
     # 一般表示の Van→-White 正規化は表示名マスタ (cat_color_display_alias_map.csv) が担う。
-    # (Tortie Smoke-White Van(279) は canonical の Van 概念。Calico Van は名称違いの同一 Van 概念へ。)
     "smoke calico van": "Tortie Smoke-White Van",
-    "blue cream smoke-white van": "Blue Tortie Smoke-White Van",
+    # 重複していた breed_specific (Ragdoll) を Cream 版へ統合 (Cream 元データ行 347/363 が存在)。
+    "blue tortie point bi-color": "Blue Cream Point Bi-Color",
+    "blue tortie point mitted": "Blue Cream Point Mitted",
     # Oriental 呼称 (一般概念へ寄せる。表示は alias map 側で Oriental 文脈に復元)
     "ebony": "Black",
     "lavender": "Lilac",
@@ -846,6 +845,9 @@ def validate(rows: list[dict[str, str]], source_codes: set[int]) -> list[str]:
 
     all_ids = {r["ColorId"] for r in rows}
     canonical_ids = {r["ColorId"] for r in rows if r["Status"] == "canonical"}
+    # breed_specific も alias の解決先になり得る (例: 重複呼称 Blue Tortie Point Bi-Color →
+    # 同一概念の breed_specific 行 Blue Cream Point Bi-Color へ統合)。
+    breed_specific_ids = {r["ColorId"] for r in rows if r["Status"] == "breed_specific"}
 
     for r in rows:
         cid = r["ColorId"]
@@ -885,9 +887,11 @@ def validate(rows: list[dict[str, str]], source_codes: set[int]) -> list[str]:
                 # V2: 実在する ColorId を参照
                 if canon not in all_ids:
                     errors.append(f"alias の CanonicalColorId が実在しない: {cid} -> {canon}")
-                # V3: 参照先は原則 canonical
-                elif canon not in canonical_ids:
-                    errors.append(f"alias の CanonicalColorId 参照先が canonical でない: {cid} -> {canon}")
+                # V3: 参照先は canonical または breed_specific (同一概念の代表行)
+                elif canon not in canonical_ids and canon not in breed_specific_ids:
+                    errors.append(
+                        f"alias の CanonicalColorId 参照先が canonical/breed_specific でない: {cid} -> {canon}"
+                    )
         elif r["Status"] == "canonical":
             # V4: canonical は自分自身
             if canon != cid:
