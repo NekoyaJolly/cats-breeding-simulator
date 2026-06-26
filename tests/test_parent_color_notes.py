@@ -97,10 +97,9 @@ def test_pure_orange_sire_blocked_by_non_orange_dam() -> None:
 
 
 def test_pure_orange_sire_not_blocked_when_dam_can_pass_O() -> None:
-    # 父 Red (純オレンジ O/Y) × 母 Tortoiseshell (O/o → O を渡せる) → Red は子に出る。
-    # 出る色は注釈されない。万一注釈があっても「オレンジ O」ブロッカーは付かない。
+    # 父 Red (純オレンジ O/Y) × 母 Tortoiseshell (O/o → O を渡せる) → Red は子に出るため
+    # sire 側の注釈自体が出ない。空の blocked_factors を持つ偽注釈も含めて検知するため、
+    # 「sire 注釈が存在しない」を直接 assert する。
     notes = _notes("Red", "Tortoiseshell")
-    sire_notes = [n for n in notes if n["parent"] == "sire"]
-    for note in sire_notes:
-        factors = " / ".join(str(f) for f in note["blocked_factors"])
-        assert "オレンジ" not in factors, f"O を渡せる相手で純オレンジ O が誤計上された: {note}"
+    sire_notes = [note for note in notes if note["parent"] == "sire"]
+    assert sire_notes == [], f"Red は子に出るのに sire 注釈が付いた: {sire_notes}"
