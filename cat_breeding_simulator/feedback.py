@@ -30,8 +30,18 @@ _RESEND_ENDPOINT = "https://api.resend.com/emails"
 # インスタンスごとの制限になる点に注意 (低トラフィックのフィードバック用途では許容)。
 _RATE_LIMIT_MAX = 5          # ウィンドウあたり最大受付数
 _RATE_LIMIT_WINDOW_SEC = 600  # 10 分
+# キー数がこれを超えたら期限切れバケットを掃除する (大量の異なる IP 流入時のメモリ肥大対策)。
+_RATE_LIMIT_MAX_KEYS = 10000
 _rate_lock = threading.Lock()
 _rate_hits: dict[str, deque[float]] = defaultdict(deque)
+
+
+def _purge_expired(now: float) -> None:
+    """最新ヒットがウィンドウ外のバケット (= 全て期限切れ) を削除する。要 _rate_lock 保持。"""
+
+    expired = [ip for ip, hits in _rate_hits.items() if not hits or now - hits[-1] > _RATE_LIMIT_WINDOW_SEC]
+    for ip in expired:
+        del _rate_hits[ip]
 
 
 def check_rate_limit(client_ip: str) -> bool:
@@ -39,6 +49,8 @@ def check_rate_limit(client_ip: str) -> bool:
 
     now = time.time()
     with _rate_lock:
+        if len(_rate_hits) > _RATE_LIMIT_MAX_KEYS:
+            _purge_expired(now)
         hits = _rate_hits[client_ip]
         while hits and now - hits[0] > _RATE_LIMIT_WINDOW_SEC:
             hits.popleft()

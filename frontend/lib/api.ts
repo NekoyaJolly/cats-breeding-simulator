@@ -155,5 +155,9 @@ export async function submitFeedback(message: string): Promise<{ sent: boolean }
   }
   const body = await response.json().catch(() => null);
   const parsed = feedbackResponseSchema.safeParse(body);
-  return { sent: parsed.success ? parsed.data.sent : false };
+  // 形式不一致は黙って成功扱いにせず例外にする (バックエンドの破損/想定外変更を UI で検知)。
+  if (!parsed.success) {
+    throw new Error("フィードバックの応答形式が想定と異なります");
+  }
+  return { sent: parsed.data.sent };
 }

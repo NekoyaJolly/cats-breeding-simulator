@@ -279,12 +279,21 @@ class FeedbackResponse(BaseModel):
     sent: bool
 
 
-def _client_ip(request: Request) -> str:
-    """レート制限用のクライアント IP。プロキシ経由は X-Forwarded-For の先頭を使う。"""
+# レート制限キーとして保持する IP 文字列の最大長 (長大ヘッダ値の dict キー化を防ぐ)。
+_MAX_IP_KEY_LENGTH = 64
 
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+
+def _client_ip(request: Request) -> str:
+    """レート制限用のクライアント IP。プロキシ経由は X-Forwarded-For の先頭要素を使う。
+
+    ヘッダは詐称・長大化され得るため、先頭要素のみ採用し、空/過長は無視して
+    request.client.host にフォールバックする。
+    """
+
+    forwarded = request.headers.get("x-forwarded-for", "")
+    candidate = forwarded.split(",")[0].strip() if forwarded else ""
+    if candidate and len(candidate) <= _MAX_IP_KEY_LENGTH:
+        return candidate
     return request.client.host if request.client else "unknown"
 
 

@@ -7,11 +7,20 @@ X-Forwarded-For を変えてバケットを分離する。
 
 from __future__ import annotations
 
+import pytest
 from fastapi.testclient import TestClient
 
 from main import app
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def _no_email_config(monkeypatch: pytest.MonkeyPatch) -> None:
+    # 開発環境に RESEND_API_KEY / ADMIN_EMAIL があっても実メール送信させない
+    # (sent=False を固定し、テストを安定させる)。
+    monkeypatch.delenv("RESEND_API_KEY", raising=False)
+    monkeypatch.delenv("ADMIN_EMAIL", raising=False)
 
 
 def _post(message: str, ip: str) -> object:
