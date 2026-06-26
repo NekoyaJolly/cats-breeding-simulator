@@ -57,6 +57,14 @@ class CarrierScenarioEntry(BaseModel):
     new_colors: list[str]
 
 
+class ParentColorNoteEntry(BaseModel):
+    """入力した親色が子に出現しないことを示す注釈。"""
+
+    parent: str                  # sire / dam
+    color: str                   # canonical な親色
+    blocked_factors: list[str]   # 子に再現できない劣性因子 (相手親が持たない)
+
+
 class CalculationResponse(BaseModel):
     """計算APIの出力。"""
 
@@ -67,6 +75,8 @@ class CalculationResponse(BaseModel):
     diagnostics: ModeDiagnostics
     # carrier_exploration_mode のときのみ非 null。normal/explicit では null。
     carrier_exploration_results: list[CarrierScenarioEntry] | None = None
+    # 入力した親色が子に出ないときの注釈 (normal モードのみ、無ければ空配列)。
+    parent_color_notes: list[ParentColorNoteEntry] = []
 
 
 class ColorOption(BaseModel):
@@ -162,6 +172,14 @@ def calculate_endpoint(payload: CalculationRequest) -> CalculationResponse:
             if report.carrier_exploration_results is not None
             else None
         ),
+        parent_color_notes=[
+            ParentColorNoteEntry(
+                parent=note.parent,
+                color=note.color,
+                blocked_factors=note.blocked_factors,
+            )
+            for note in (report.parent_color_notes or [])
+        ],
     )
 
 

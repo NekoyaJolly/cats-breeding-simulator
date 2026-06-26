@@ -191,6 +191,18 @@ class CarrierScenario:
 
 
 @dataclass(frozen=True, slots=True)
+class ParentColorNote:
+    """入力した親の毛色が、この交配では子猫に出現しないことを示す注釈。
+
+    blocked_factors は「子がその形質になれない原因の劣性因子」(相手親が持たない)。
+    """
+
+    parent: str                  # "sire" / "dam"
+    color: str                   # canonical な親色
+    blocked_factors: list[str]   # 例: ["チョコレート b", "非アグーチ（ソリッド） a"]
+
+
+@dataclass(frozen=True, slots=True)
 class CalculationReport:
     """計算結果 + 内部診断値 + モード情報。
 
@@ -208,6 +220,8 @@ class CalculationReport:
     assumptions: list[str] | None = None     # 計算前提の人間可読メモ
     # carrier_exploration_mode の条件付きシナリオ。normal results とは完全分離する。
     carrier_exploration_results: list[CarrierScenario] | None = None
+    # 入力した親色が子に出現しないときの注釈 (normal モードのみ)。
+    parent_color_notes: list[ParentColorNote] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -220,6 +234,16 @@ class KittenGenotype:
 
 class BreedingCalculationError(ValueError):
     """入力や計算前提の不整合。"""
+
+
+# 劣性アレル → 人間向けラベル。親がこのアレルでホモ接合かつ相手親がそのアレルを
+# 持たないとき、その形質は子に出現しない (parent_color_notes の原因説明に使う)。
+_BLOCKING_RECESSIVE_LABELS: dict[str, dict[str, str]] = {
+    "A": {"a": "非アグーチ（ソリッド） a"},
+    "B": {"b": "チョコレート b", "bl": "シナモン bl"},
+    "C": {"cs": "ポイント cs", "cb": "セピア cb"},
+    "D": {"d": "希釈（ブルー/クリーム） d"},
+}
 
 
 class CoatColorCalculator:
@@ -326,6 +350,13 @@ class CoatColorCalculator:
         opened_loci, closed_loci, assumptions = self._build_mode_metadata(
             mode, sire_carriers, dam_carriers
         )
+        # 入力した親色が子に出ないときの注釈 (劣性形質の理解補助)。normal モードのみ。
+        offspring_colors = {phenotype for (_sex, phenotype) in aggregate}
+        parent_color_notes = (
+            self._build_parent_color_notes(sire_color, dam_color, breed, offspring_colors)
+            if mode == "normal"
+            else None
+        )
         return CalculationReport(
             results=results,
             matched_probability=round(matched_probability, 6),
@@ -336,6 +367,7 @@ class CoatColorCalculator:
             opened_loci=opened_loci,
             closed_loci=closed_loci,
             assumptions=assumptions,
+            parent_color_notes=parent_color_notes or None,
         )
 
     @staticmethod
@@ -409,6 +441,57 @@ class CoatColorCalculator:
         if not entries:
             return None
         return dict(entries[0].autosomal)
+
+    def _build_parent_color_notes(
+        self,
+        sire_color: str,
+        dam_color: str,
+        breed: str | None,
+        offspring_colors: set[str],
+    ) -> list[ParentColorNote]:
+        """入力した親色が子に出現しないケースの注釈を作る (出現する親は注釈なし)。"""
+
+        notes: list[ParentColorNote] = []
+        parents = (
+            ("sire", sire_color, "male", dam_color, "female"),
+            ("dam", dam_color, "female", sire_color, "male"),
+        )
+        for parent, color, sex, other_color, other_sex in parents:
+            name = self._resolve_input_color_name(color, breed)
+            canonical = COLOR_MASTER.canonical_name(name)
+            if canonical in offspring_colors:
+                continue  # 親色が子に出るなら注釈不要
+            blocked = self._blocking_recessive_factors(color, sex, other_color, other_sex, breed)
+            notes.append(
+                ParentColorNote(parent=parent, color=canonical, blocked_factors=blocked)
+            )
+        return notes
+
+    def _blocking_recessive_factors(
+        self,
+        color: str,
+        sex: str,
+        other_color: str,
+        other_sex: str,
+        breed: str | None,
+    ) -> list[str]:
+        """親が劣性ホモの座位のうち、相手親がそのアレルを出せず子に再現できない因子を返す。"""
+
+        base = self._resolved_base_loci(color, sex, breed)
+        other_base = self._resolved_base_loci(other_color, other_sex, breed)
+        if base is None or other_base is None:
+            return []
+        factors: list[str] = []
+        for locus, allele_labels in _BLOCKING_RECESSIVE_LABELS.items():
+            pair = base.get(locus)
+            if pair is None or pair[0] != pair[1]:
+                continue  # 親がこの座位でホモ接合でない
+            label = allele_labels.get(pair[0])
+            if label is None:
+                continue  # 追跡対象の劣性アレルでない
+            if pair[0] not in set(other_base.get(locus, ())):
+                factors.append(label)  # 相手がこのアレルを持たない → 子に再現不可
+        return factors
 
     # carrier_exploration の各 locus の既定値 (CSV に欠落していた場合のフォールバック)。
     _CARRIER_LOCUS_DEFAULTS: dict[str, tuple[str, str]] = {
