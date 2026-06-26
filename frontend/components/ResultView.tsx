@@ -7,6 +7,7 @@ import type {
   ResultEntry,
 } from "@/lib/schema";
 import { LocusChip } from "./LocusChip";
+import { LOCUS_GLOSSARY } from "@/lib/lociGlossary";
 
 // 確率を小数1桁の % 文字列に整形する (診断値など正確さ優先の箇所で使う)。
 function formatPct(value: number): string {
@@ -196,6 +197,15 @@ export function ResultView({ data }: { data: CalculationResponse }) {
   // 入力 (親色 / 猫種 / モード) が変わったら結果カードを remount し、
   // 展開状態 (詳細を見る) を初期 (折りたたみ) に戻す。
   const resultsKey = `${parameters.sire_color}|${parameters.dam_color}|${parameters.breed ?? ""}|${parameters.mode}`;
+  // 展開/固定どちらにも出ない座位 (O=オレンジ・S=白斑・W=優性白・Sp 等) は
+  // チップが描画されないため、解説を読めるよう「その他」行で補完する。
+  const shownLoci = new Set([
+    ...diagnostics.opened_loci,
+    ...diagnostics.closed_loci,
+  ]);
+  const otherLoci = Object.keys(LOCUS_GLOSSARY).filter(
+    (locus) => !shownLoci.has(locus),
+  );
   return (
     <div className="space-y-6">
       <section>
@@ -211,7 +221,7 @@ export function ResultView({ data }: { data: CalculationResponse }) {
       </section>
 
       <section className="rounded-md bg-slate-100 p-4 text-sm">
-        <h3 className="font-semibold text-slate-700">診断情報</h3>
+        <h3 className="font-semibold text-slate-700">遺伝子情報</h3>
         <p className="mt-0.5 text-xs text-slate-400">
           座位（A / B / D…）をタップ／ホバーすると遺伝子座の解説が出ます。
         </p>
@@ -232,6 +242,16 @@ export function ResultView({ data }: { data: CalculationResponse }) {
                 ))
               : "なし"}
           </dd>
+          {otherLoci.length > 0 && (
+            <>
+              <dt className="text-slate-500">その他の座位</dt>
+              <dd className="flex flex-wrap items-center gap-1">
+                {otherLoci.map((locus) => (
+                  <LocusChip key={locus} locus={locus} />
+                ))}
+              </dd>
+            </>
+          )}
           <dt className="text-slate-500">未分類の確率</dt>
           <dd className="tabular-nums">
             {formatPct(diagnostics.unmatched_probability)} (
@@ -240,7 +260,7 @@ export function ResultView({ data }: { data: CalculationResponse }) {
         </dl>
         {diagnostics.assumptions.length > 0 && (
           <div className="mt-2">
-            <p className="text-slate-500">前提:</p>
+            <p className="text-slate-500">前提条件:</p>
             <ul className="ml-4 list-disc text-slate-600">
               {diagnostics.assumptions.map((assumption, index) => (
                 <li key={index}>{assumption}</li>
