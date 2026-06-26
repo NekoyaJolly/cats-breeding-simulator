@@ -86,7 +86,7 @@
 | Status | `CanonicalColorId` |
 |---|---|
 | `canonical` | 自分自身の `ColorId` |
-| `alias` | 解決先 canonical の `ColorId` (原則 `Status=canonical` の行を指す) |
+| `alias` | 解決先の `ColorId` (`Status=canonical`、または同一概念の代表 `breed_specific` を指す) |
 | `breed_specific` | 一般概念へ確実に解決できる場合はその canonical の `ColorId`。できない場合は自分自身 (一般概念へのマッピングは人間レビューに委ねる) |
 | `review` / `excluded` | 確定できない場合は空欄可。空欄の場合は `Notes` に理由を記録する |
 
@@ -97,7 +97,7 @@
 
 1. `Status=alias` の全行に `CanonicalColorId` が入っている。
 2. `Status=alias` の `CanonicalColorId` は実在する `ColorId` を参照する。
-3. `Status=alias` の `CanonicalColorId` 参照先は原則 `Status=canonical` である。
+3. `Status=alias` の `CanonicalColorId` 参照先は `Status=canonical`、または同一概念の代表 `breed_specific` である (重複呼称を 1 行へ統合する場合に breed_specific を指してよい。例: `Blue Tortie Point Bi-Color` → `blue_cream_point_bi_color`)。
 4. `Status=canonical` の `CanonicalColorId` は自分自身である。
 5. 元データ全 Code (407 件) が少なくとも 1 行の `SourceCodes` に保持されている (元データ行の完全喪失なし)。
 6. `breed_specific` は通常表示に混ざらない (`DisplayAllowed=false`)。
@@ -128,7 +128,7 @@
 両者は独立である。例:
 
 - `Seal Point` … `InputAllowed=true` (Point の親を入力できる) かつ `DisplayAllowed=false` (一般出力には出さない。Point は C キャリア規則によりエンジンが `normal_mode` で非表示にする)。
-- `Blue Cream` (alias) … `InputAllowed=true` (入力名として受理) かつ `DisplayAllowed=false` (出力は `Blue Tortie` に寄せる)。
+- `Blue Tortie` (alias) … `InputAllowed=true` (入力名として受理) かつ `DisplayAllowed=false` (出力は canonical の `Blue Cream` に寄せる。希釈トーティの正規名は Cream)。
 
 `DisplayAllowed=false` の主な構造:
 
@@ -148,8 +148,9 @@
 CFA/TICA 差・猫種固有呼称の扱い:
 
 - **CFA/TICA 呼称差は別カラーとして増殖させない**。同一概念の `alias` として 1 つの canonical に統合する。
-  - `Blue Cream` = `Blue Tortie` (`blue_tortie`)
-  - `Lilac Cream` = `Lilac Tortie` (`lilac_tortie`)
+  - 希釈トーティの正規名は **Cream** に統一する (CFA 呼称を canonical、TICA の Tortie 呼称を alias)。
+    - `Blue Tortie` = `Blue Cream` (`blue_cream`)
+    - `Lilac Tortie` = `Lilac Cream` (`lilac_cream`)
   - `Tortoiseshell-White` / `Mike Tri Color` = `Calico` (`calico`)
   - `Blue Tortie-White` / `Blue Cream-White` = `Dilute Calico` (`dilute_calico`)
   - `Torbie` = `Patched Tabby`
@@ -193,7 +194,7 @@ CFA/TICA 差・猫種固有呼称の扱い:
 
 ## 10. 通常計算結果に出してよい / 出してはいけない基準
 
-`breed_unselected` で実行する `normal_mode` の一般結果に**出してよい**のは、原則 `Status=canonical` かつ `DisplayAllowed=true` の汎用カラー (Black, Blue, Chocolate, Lilac, Cinnamon, Fawn, Red, Cream, 各 Tabby/Silver Tabby/Patched Tabby, Tortoiseshell, Blue Tortie, Calico, Dilute Calico, Smoke 系, Silver 系, `-White` 系 等)。
+`breed_unselected` で実行する `normal_mode` の一般結果に**出してよい**のは、原則 `Status=canonical` かつ `DisplayAllowed=true` の汎用カラー (Black, Blue, Chocolate, Lilac, Cinnamon, Fawn, Red, Cream, 各 Tabby/Silver Tabby/Patched Tabby, Tortoiseshell, Blue Cream, Calico, Dilute Calico, Smoke 系, Silver 系, `-White` 系 等)。
 
 **出してはいけない**もの (一般文脈):
 
@@ -243,12 +244,13 @@ CFA/TICA 差・猫種固有呼称の扱い:
 - **Golden は単なる `non_silver` ではなく、`non_silver` + wideband/tipping 系概念**として扱う。
 - `i/i` のみで Golden と確定しない。`Wb/-` または wideband/tipping 系の補助情報を要するが、**`Wb/-` のみでも自動生成は確定しない**。
 - master では `SilverState=non_silver`・`PatternState=shell または shaded` (chinchilla 級は `shell`、それ以外は `shaded`) として保持し、`GeneticRuleSource=review_required` を維持する (マップの `I/I`・`a/a` 誤りに引きずられない)。
+- **エンジンの命名**: 親がワイドバンドで子が非オレンジ・アグーチ・`Wb/-` になる場合、その子を `Golden` (非シルバー) として命名する (濃淡は親名から推論)。詳細は [`01_シミュレーター正本_V9.md`](./01_シミュレーター正本_V9.md) §6.4。
 
 ### 12.5 Smoke
 
 - **Smoke は Shell/Shaded/Chinchilla/Golden(Wb系) とは別系統**。
 - `Smoke = solid(a/a) + inhibitor I/-` の概念。master では `AgoutiState=solid`・`SilverState=smoke` に固定し、Wb 系とは分離する。
-- 遺伝条件: `Smoke = a/a + I/-`、`Tortie Smoke = a/a + I/- + O/o`、`Blue Tortie Smoke = a/a + I/- + O/o + d/d`。White ありは `S/-` を付与する。
+- 遺伝条件: `Smoke = a/a + I/-`、`Tortie Smoke = a/a + I/- + O/o`、`Blue Cream Smoke = a/a + I/- + O/o + d/d`。White ありは `S/-` を付与する。
 
 ### 12.6 Smoke × Tortie / Calico の確定
 
@@ -256,12 +258,13 @@ CFA/TICA 差・猫種固有呼称の扱い:
 - **トーティ系 smoke** (S/s, -White) は正規表示へ alias 解決する:
   - `Smoke Tortoiseshell` → `tortie_smoke` (Tortie Smoke)
   - `Calico Smoke` / `Smoke Calico` → `tortie_smoke_white` (Tortie Smoke-White。Calico = Tortie + White)
-  - `Smoke Dilute Calico` → `blue_tortie_smoke_white` (Blue Tortie Smoke-White。Dilute Calico = Blue Tortie + White)
-  - `Blue Cream Smoke` → `blue_tortie_smoke`、`Blue Cream Smoke-White` → `blue_tortie_smoke_white` (CFA Blue Cream = TICA Blue Tortie の smoke 版)
+  - `Smoke Dilute Calico` → `blue_cream_smoke_white` (Blue Cream Smoke-White。Dilute Calico = Blue Cream + White)
+- **希釈トーティ smoke は Cream を正規名にする** (§7 の希釈トーティ Cream 統一に従う)。`Blue Cream Smoke` 系は元データ行 (Code 74 / 53 / 280) を持つため **canonical**、`Blue Tortie Smoke` 系の表記は元データに直接行が無いため alias としても保持しない (入力は `Blue Cream Smoke` を用いる。エンジンは `Blue Tortie Smoke` を出力しない)。
+  - `Blue Cream Smoke` = canonical `blue_cream_smoke`、`Blue Cream Smoke-White` = canonical `blue_cream_smoke_white`
 - **Van (S/S)** は -White(S/s) と遺伝的に別概念なので **-White へは寄せない** (§12.7)。同一 Van 概念へまとめる:
   - `Tortie Smoke-White Van` → canonical `tortie_smoke_white_van`、`Smoke Calico Van` → alias → `tortie_smoke_white_van`
-  - `Blue Cream Smoke-White Van` → alias → `blue_tortie_smoke_white_van`
-- canonical が元データに無い `blue_tortie_smoke` / `blue_tortie_smoke_white` / `blue_tortie_smoke_white_van` は alias 解決先として**追加合成**する (由来を `Notes` に記録)。`tortie_smoke` / `tortie_smoke_white` / `tortie_smoke_white_van` は元データ由来。
+  - `Blue Cream Smoke-White Van` = canonical `blue_cream_smoke_white_van` (元データ Code 280)
+- 元データ由来の canonical: `tortie_smoke` / `tortie_smoke_white` / `tortie_smoke_white_van` (黒系トーティ smoke)、`blue_cream_smoke` / `blue_cream_smoke_white` / `blue_cream_smoke_white_van` (希釈トーティ smoke = Cream)。旧版では `Blue Tortie Smoke` 系を合成 canonical にして Cream を寄せていたが、Cream 正規化に伴い反転した。
 
 ### 12.7 Van (S/S) の扱い — 遺伝的同一性 vs 表示正規化
 
@@ -287,7 +290,7 @@ CFA/TICA 差・猫種固有呼称の扱い:
 
 **master での対応**: Point/Mink/Sepia 概念は `InputAllowed=true` (入力・猫種・明示キャリアで使用可) かつ `DisplayAllowed=false` (breed_unselected の `normal_mode` 一般結果には出さない)。Mink = `breed_specific(Tonkinese)`、Sepia = `breed_specific(Burmese)`、その他 Point は `general`。これらが実際に出るかはエンジンの計算モード/猫種制約に従い、master は名前の可否のみ定義する。
 
-**Wb-locus 方針**: Wb 系 (Shell / Chinchilla / Shaded / Golden) は `normal_mode` では自動展開して**閉じない** (生成しない) が、**入力・正本(canonical)・レビュー対象としては保持**する。master では canonical または alias として保持し、`InputAllowed=true`、`GeneticRuleSource=review_required` を維持する (§12.2〜12.4)。
+**Wb-locus 方針**: Wb 系 (Shell / Chinchilla / Shaded / Golden) は `normal_mode` で **Wb キャリアを自動展開しない** (非ワイドバンド親から wide な子を生成しない。不可逆ルール: `wb/wb × wb/wb` から tipping 系は出ない / [`01_シミュレーター正本_V9.md`](./01_シミュレーター正本_V9.md) §4.11)。ただし**親がワイドバンドで子が実際に `Wb/-` になる場合は、その子を命名する** (未分類にしない / 命名規則は 01 §6.4)。master では canonical または alias として保持し、`InputAllowed=true`、`GeneticRuleSource=review_required` を維持する (§12.2〜12.4)。
 
 ---
 
