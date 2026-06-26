@@ -4,6 +4,7 @@ import {
   breedsResponseSchema,
   calculationResponseSchema,
   colorsResponseSchema,
+  feedbackResponseSchema,
   type BreedOption,
   type CalculationResponse,
   type ColorOption,
@@ -139,4 +140,20 @@ export async function fetchBreedColors(breed: string): Promise<string[]> {
   const parsed = breedColorsResponseSchema.safeParse(body);
   if (!parsed.success || !parsed.data.constrained) return [];
   return parsed.data.colors;
+}
+
+// POST /api/v1/feedback: フィードバックを送る。sent=管理者へのメール送信に成功したか
+// (サーバーのメール設定により false の場合がある)。送信自体に失敗したら例外を投げる。
+export async function submitFeedback(message: string): Promise<{ sent: boolean }> {
+  const response = await fetch("/api/v1/feedback", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message }),
+  });
+  if (!response.ok) {
+    throw new Error("フィードバックの送信に失敗しました");
+  }
+  const body = await response.json().catch(() => null);
+  const parsed = feedbackResponseSchema.safeParse(body);
+  return { sent: parsed.success ? parsed.data.sent : false };
 }
