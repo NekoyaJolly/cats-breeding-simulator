@@ -83,3 +83,23 @@ def test_o_blocker_not_applied_against_red_sire() -> None:
     assert "チョコレート" in factors
     # 相手が赤「オス」なので O ブロッカーは付かない (O/O メスのときのみ成立)。
     assert "非オレンジ" not in factors, f"赤オス相手で O が誤計上された: {dam}"
+
+
+def test_pure_orange_sire_blocked_by_non_orange_dam() -> None:
+    # 父 Red (純オレンジ O/Y) × 母 Chocolate (非オレンジ o/o メス) → 純オレンジは子に出ない
+    # (息子 o/Y=非オレンジ / 娘 O/o=トーティ)。原因は O 座位 (母が O を渡せない)。
+    # 旧実装ではこの注釈が blocked_factors=[] (理由なし注釈) になっていた回帰。
+    notes = _notes("Red", "Chocolate")
+    sire = next(n for n in notes if n["parent"] == "sire")
+    factors = " / ".join(str(f) for f in sire["blocked_factors"])
+    assert "オレンジ" in factors and " O" in factors
+    assert sire["blocked_factors"], f"純オレンジ親の理由が空 (理由なし注釈): {sire}"
+
+
+def test_pure_orange_sire_not_blocked_when_dam_can_pass_O() -> None:
+    # 父 Red (純オレンジ O/Y) × 母 Tortoiseshell (O/o → O を渡せる) → Red は子に出るため
+    # sire 側の注釈自体が出ない。空の blocked_factors を持つ偽注釈も含めて検知するため、
+    # 「sire 注釈が存在しない」を直接 assert する。
+    notes = _notes("Red", "Tortoiseshell")
+    sire_notes = [note for note in notes if note["parent"] == "sire"]
+    assert sire_notes == [], f"Red は子に出るのに sire 注釈が付いた: {sire_notes}"

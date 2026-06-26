@@ -155,6 +155,12 @@ _BLOCKING_RECESSIVE_LABELS: dict[str, dict[str, str]] = {
 # 渡すため、非オレンジ親 (o) との間に非オレンジの息子 (o/Y) が出るのでブロッカーにならない。
 _O_NON_ORANGE_LABEL = "非オレンジ（赤以外） o"
 
+# O 座位 (X 連鎖) の対称ケース: 親が純オレンジ (O を持ち o を持たない = Red/Cream) なのに、相手親が
+# 「全ての子に o を渡す」場合のブロッカー。全子に o が渡るのは相手が o/o メス (非オレンジメス) のとき
+# だけ。このとき息子は o/Y (非オレンジ)、娘は O/o (トーティ) になり純オレンジは子に出ない。非オレンジ
+# オス (o/Y) は息子に Y を渡すため息子 O/Y (オレンジ) が出る → ブロッカーにならない (other_sex で限定)。
+_O_ORANGE_LABEL = "オレンジ（赤/クリーム） O"
+
 
 class CoatColorCalculator:
     """Split -> Cross -> Evaluate -> Aggregate を実装する計算器。"""
@@ -448,6 +454,20 @@ class CoatColorCalculator:
             and "o" not in other_alleles.get("O", set())
         ):
             factors.append(_O_NON_ORANGE_LABEL)
+
+        # O 座位 (X 連鎖) の対称ケース: 親が純オレンジ (O を持ち o を持たない) のに、相手が
+        # 「全ての子に o を渡す」= 相手が o/o メス (非オレンジメス) で O を渡せない場合のみ
+        # ブロッカー。息子 o/Y (非オレンジ) / 娘 O/o (トーティ) になり純オレンジは子に出ない。
+        # 非オレンジオス (o/Y) は息子に Y を渡すため息子 O/Y (オレンジ) が出る → ブロックしない。
+        # トーティ親 (O も o も持つ) は "o" not in self_o で自然に除外される。
+        if (
+            self_o
+            and "O" in self_o
+            and "o" not in self_o
+            and other_sex == "female"
+            and "O" not in other_alleles.get("O", set())
+        ):
+            factors.append(_O_ORANGE_LABEL)
 
         return factors
 
