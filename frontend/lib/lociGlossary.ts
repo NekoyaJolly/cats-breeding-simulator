@@ -72,6 +72,7 @@ export const LOCUS_GLOSSARY: Record<string, LocusInfo> = {
   Wb: {
     symbol: "Wb",
     name: "ワイドバンド",
-    description: "地色の明るい帯を広げる。ゴールデン系などの要因になる。",
+    description:
+      "毛の根元の明るい帯を広げる。シルバー(I)と組むとチンチラ／シェーデッド、シルバー無しではゴールデンになる要因。",
   },
 };

@@ -7,6 +7,7 @@ import type {
   ResultEntry,
 } from "@/lib/schema";
 import { LocusChip } from "./LocusChip";
+import { LOCUS_GLOSSARY } from "@/lib/lociGlossary";
 
 // 確率を小数1桁の % 文字列に整形する (診断値など正確さ優先の箇所で使う)。
 function formatPct(value: number): string {
@@ -196,6 +197,15 @@ export function ResultView({ data }: { data: CalculationResponse }) {
   // 入力 (親色 / 猫種 / モード) が変わったら結果カードを remount し、
   // 展開状態 (詳細を見る) を初期 (折りたたみ) に戻す。
   const resultsKey = `${parameters.sire_color}|${parameters.dam_color}|${parameters.breed ?? ""}|${parameters.mode}`;
+  // 展開/固定どちらにも出ない座位 (O=オレンジ・S=白斑・W=優性白・Sp 等) は
+  // チップが描画されないため、解説を読めるよう「その他」行で補完する。
+  const shownLoci = new Set([
+    ...diagnostics.opened_loci,
+    ...diagnostics.closed_loci,
+  ]);
+  const otherLoci = Object.keys(LOCUS_GLOSSARY).filter(
+    (locus) => !shownLoci.has(locus),
+  );
   return (
     <div className="space-y-6">
       <section>
@@ -232,6 +242,16 @@ export function ResultView({ data }: { data: CalculationResponse }) {
                 ))
               : "なし"}
           </dd>
+          {otherLoci.length > 0 && (
+            <>
+              <dt className="text-slate-500">その他の座位</dt>
+              <dd className="flex flex-wrap items-center gap-1">
+                {otherLoci.map((locus) => (
+                  <LocusChip key={locus} locus={locus} />
+                ))}
+              </dd>
+            </>
+          )}
           <dt className="text-slate-500">未分類の確率</dt>
           <dd className="tabular-nums">
             {formatPct(diagnostics.unmatched_probability)} (
