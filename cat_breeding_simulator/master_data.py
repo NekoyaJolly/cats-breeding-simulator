@@ -465,6 +465,63 @@ def _load_breed_filters() -> dict[str, dict[str, tuple[str, str]]]:
 BREED_FILTERS = _load_breed_filters()
 
 
+def _breed_allele_matches(actual: tuple[str, str], required: tuple[str, str]) -> bool:
+    """genotype の actual が breed 制約 required を満たすか (engine._matches_exact と同等)。
+
+    X 連鎖 (Y を含むオス) は非 Y 側アレルで判定する。
+    """
+
+    if "Y" in actual:
+        non_y = actual[0] if actual[1] == "Y" else actual[1]
+        return non_y == required[0] if required[0] == required[1] else False
+    return actual == required or actual == (required[1], required[0])
+
+
+def breed_color_group_label(breed_key: str) -> str:
+    """猫種制約を代表する「系」ラベルを返す (エラーメッセージ用)。該当なしは空文字。"""
+
+    constraints = BREED_FILTERS.get(breed_key, {})
+    c_pair = constraints.get("C")
+    if c_pair is not None:
+        c_sorted = tuple(sorted(c_pair))
+        if c_sorted == ("cb", "cb"):
+            return "セピア系"
+        if c_sorted == ("cs", "cs"):
+            return "ポイント系"
+        if c_sorted == ("cb", "cs"):
+            return "ミンク系"
+    if constraints.get("Ta") == ("Ta", "Ta"):
+        return "ティックドタビー系"
+    if constraints.get("A") == ("a", "a"):
+        return "ソリッド系"
+    return ""
+
+
+def recognized_color_keys_for_breed(breed_key: str) -> list[str] | None:
+    """その猫種の遺伝制約を満たす毛色 (PHENOTYPE_GENOTYPES のキー) 一覧を返す。
+
+    制約の無い猫種は None (= 全色が認定カラー扱い)。canonical 化は呼び出し側に委ねる。
+    """
+
+    constraints = BREED_FILTERS.get(breed_key)
+    if not constraints:
+        return None
+    result: list[str] = []
+    for color, sex_dict in PHENOTYPE_GENOTYPES.items():
+        matched = any(
+            all(
+                _breed_allele_matches(genotype.loci[locus], required)
+                for locus, required in constraints.items()
+                if locus in genotype.loci
+            )
+            for sex in ("male", "female")
+            for genotype in sex_dict[sex]
+        )
+        if matched:
+            result.append(color)
+    return result
+
+
 def is_real_breed(name: str) -> bool:
     """ASCII 英字を含む猫種名か (CSV 由来の文字化け / ゴミ行 "ｱｷ" 等を弾く)。
 

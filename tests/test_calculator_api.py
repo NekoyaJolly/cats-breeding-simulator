@@ -239,3 +239,40 @@ def test_ui_path_130x204_only_tabby_via_api() -> None:
     # 合計100%
     total = round(sum(r["probability_pct"] for r in results), 4)
     assert abs(total - 100.0) < 0.01, f"合計が100%でない: {total}"
+
+
+# --- 認定カラー (猫種で使える毛色) 関連 ---
+
+
+def test_breed_incompatible_color_names_breed_and_color() -> None:
+    """猫種の認定カラーに無い色を相手に指定 → 曖昧な汎用エラーでなく、毛色と猫種を名指す。"""
+
+    response = client.post(
+        "/api/v1/calculate",
+        json={"sire_color": "Sable", "dam_color": "Black", "breed": "Burmese"},
+    )
+    assert response.status_code == 422
+    detail = response.json()["detail"]
+    # 矛盾相手の毛色 (Black) と猫種 (Burmese)、認定カラー文言を含む。
+    assert "Black" in detail and "Burmese" in detail and "認定カラー" in detail
+
+
+def test_breed_colors_endpoint_constrained() -> None:
+    """制約を持つ猫種は使える毛色 (認定カラー) を返す。"""
+
+    response = client.get("/api/v1/breed-colors", params={"breed": "Burmese"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["constrained"] is True
+    assert "Sable" in body["colors"]
+    assert "Black" not in body["colors"]  # Black は Burmese 非対応
+
+
+def test_breed_colors_endpoint_unconstrained() -> None:
+    """遺伝制約の無い猫種は constrained=false / colors=[] (全色が使える)。"""
+
+    response = client.get("/api/v1/breed-colors", params={"breed": "American Shorthair"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["constrained"] is False
+    assert body["colors"] == []

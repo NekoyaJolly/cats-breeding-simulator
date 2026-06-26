@@ -10,7 +10,10 @@ from pydantic import BaseModel, Field
 from cat_breeding_simulator.color_master import COLOR_MASTER
 from cat_breeding_simulator.color_reading_ja import reading_ja
 from cat_breeding_simulator.engine import BreedingCalculationError, CoatColorCalculator
-from cat_breeding_simulator.master_data import CANONICAL_BREEDS
+from cat_breeding_simulator.master_data import (
+    CANONICAL_BREEDS,
+    recognized_color_keys_for_breed,
+)
 
 
 class CalculationRequest(BaseModel):
@@ -110,6 +113,15 @@ class BreedsResponse(BaseModel):
     """入力サジェスト + バリデーション用の猫種一覧。"""
 
     breeds: list[BreedOption]
+
+
+class BreedColorsResponse(BaseModel):
+    """猫種で「使える毛色」(その猫種の遺伝制約を満たす色) 一覧。"""
+
+    breed: str
+    # 遺伝制約を持つ猫種か。false の場合 colors は空で「全色が使える」を意味する。
+    constrained: bool
+    colors: list[str]
 
 
 router = APIRouter(prefix="/api/v1")
@@ -221,6 +233,27 @@ def breeds_endpoint() -> BreedsResponse:
         for name, affects in sorted(CANONICAL_BREEDS.items())
     ]
     return BreedsResponse(breeds=breeds)
+
+
+@router.get("/breed-colors", response_model=BreedColorsResponse)
+def breed_colors_endpoint(breed: str) -> BreedColorsResponse:
+    """指定猫種で使える毛色 (遺伝制約を満たす canonical 色名) を返す。
+
+    認定カラーの案内ポップアップ用。制約を持たない猫種は constrained=false / colors=[]
+    (全色が使える) を返す。
+    """
+
+    breed_key = CoatColorCalculator._normalize_breed_key(breed)
+    keys = recognized_color_keys_for_breed(breed_key)
+    if keys is None:
+        return BreedColorsResponse(breed=breed, constrained=False, colors=[])
+    # 生の遺伝マップ名を canonical 表示名へ寄せ、重複を順序保持で除去してソートする。
+    seen: list[str] = []
+    for key in keys:
+        display = COLOR_MASTER.canonical_name(key)
+        if display not in seen:
+            seen.append(display)
+    return BreedColorsResponse(breed=breed, constrained=True, colors=sorted(seen))
 
 
 def create_app() -> FastAPI:

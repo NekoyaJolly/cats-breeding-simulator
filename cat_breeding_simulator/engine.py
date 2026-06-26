@@ -9,6 +9,7 @@ from cat_breeding_simulator.master_data import (
     AUTOSOMAL_LOCI,
     BREED_FILTERS,
     COLOR_BASE_LOCI,
+    breed_color_group_label,
     NORMAL_CLOSED_LOCI,
     NORMAL_OPENED_LOCI,
     PHENOTYPE_GENOTYPES,
@@ -604,6 +605,15 @@ class CoatColorCalculator:
         for genotype in genotypes:
             if all(self._matches_exact(genotype.loci[locus], required) for locus, required in breed_constraints.items() if locus in genotype.loci):
                 filtered.append(genotype)
+        # 猫種制約で候補が全滅した = その毛色は猫種の認定カラーに無い。曖昧な「遺伝子型が残らない」
+        # ではなく、矛盾相手 (毛色) と猫種を名指しして案内する。
+        if not filtered and breed_constraints:
+            group = breed_color_group_label(breed_key)
+            group_part = f"（{group}）" if group else ""
+            raise BreedingCalculationError(
+                f"「{phenotype_key}」は「{breed}」の認定カラー{group_part}にありません。"
+                f"{breed} の認定カラーを選ぶか、猫種の指定を外してください。"
+            )
         return filtered
 
     def _build_gametes(self, genotype: ParentGenotype) -> dict[tuple[tuple[str, str], ...], float]:
