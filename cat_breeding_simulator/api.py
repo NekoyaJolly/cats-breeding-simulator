@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from cat_breeding_simulator.color_master import COLOR_MASTER
 from cat_breeding_simulator.color_reading_ja import reading_ja
 from cat_breeding_simulator.engine import BreedingCalculationError, CoatColorCalculator
+from cat_breeding_simulator.master_data import CANONICAL_BREEDS
 
 
 class CalculationRequest(BaseModel):
@@ -86,6 +87,19 @@ class ColorsResponse(BaseModel):
     """入力サジェスト用の色一覧。"""
 
     colors: list[ColorOption]
+
+
+class BreedOption(BaseModel):
+    """入力サジェスト用の 1 猫種エントリ。"""
+
+    value: str               # 送信に使う猫種名 (BREED_FILTERS のキー)
+    affects_genetics: bool   # 座位制約があり計算結果に影響するか
+
+
+class BreedsResponse(BaseModel):
+    """入力サジェスト + バリデーション用の猫種一覧。"""
+
+    breeds: list[BreedOption]
 
 
 router = APIRouter(prefix="/api/v1")
@@ -174,6 +188,21 @@ def colors_endpoint() -> ColorsResponse:
             )
         )
     return ColorsResponse(colors=colors)
+
+
+@router.get("/breeds", response_model=BreedsResponse)
+def breeds_endpoint() -> BreedsResponse:
+    """入力サジェスト + バリデーション用の有効な猫種一覧を返す。
+
+    ゴミ行を除外し、コートバリアント違い (SH/LH/SE/NL 等) は base に集約済み。
+    affects_genetics=true の猫種だけが座位制約を持ち計算結果に影響する。
+    """
+
+    breeds = [
+        BreedOption(value=name, affects_genetics=affects)
+        for name, affects in sorted(CANONICAL_BREEDS.items())
+    ]
+    return BreedsResponse(breeds=breeds)
 
 
 def create_app() -> FastAPI:
