@@ -157,7 +157,7 @@
  },
  "Blue Patched Tabby-White|Black|-|normal": {
   "body": {
-   "detail": "Color 'Blue Pt Tabby-White' is not valid for a male."
+   "detail": "「Blue Pt Tabby-White」はメス限定の毛色のため、父猫（オス）には指定できません。"
   },
   "status": 422
  },
