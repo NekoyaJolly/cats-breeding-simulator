@@ -55,7 +55,7 @@
      "sex": "Male"
     },
     {
-     "color": "Blue Tortie Smoke",
+     "color": "Blue Cream Smoke",
      "probability_pct": 9.375,
      "sex": "Female"
     },
@@ -75,7 +75,7 @@
      "sex": "Male"
     },
     {
-     "color": "Blue Tortie",
+     "color": "Blue Cream",
      "probability_pct": 3.125,
      "sex": "Female"
     },
@@ -489,6 +489,90 @@
   },
   "status": 200
  },
+ "Chinchilla Golden|Black|-|normal": {
+  "body": {
+   "carrier_exploration_results": null,
+   "diagnostics": {
+    "assumptions": [
+     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
+     "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
+     "Wb (ワイドバンド): 非展開",
+     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "S (白斑): 入力レベルで確定 (非展開)"
+    ],
+    "closed_loci": [
+     "A",
+     "B",
+     "C",
+     "Wb"
+    ],
+    "matched_probability": 1.0,
+    "opened_loci": [
+     "D",
+     "I",
+     "Mc",
+     "Ta"
+    ],
+    "unmatched_genotype_count": 0,
+    "unmatched_probability": 0.0
+   },
+   "mode": "normal",
+   "parameters": {
+    "breed": null,
+    "dam_carriers": null,
+    "dam_color": "Black",
+    "mode": "normal",
+    "sire_carriers": null,
+    "sire_color": "Chinchilla Golden"
+   },
+   "parent_color_notes": [],
+   "results": [
+    {
+     "color": "Chinchilla Golden",
+     "probability_pct": 35.1562,
+     "sex": "Female"
+    },
+    {
+     "color": "Chinchilla Golden",
+     "probability_pct": 35.1562,
+     "sex": "Male"
+    },
+    {
+     "color": "Black",
+     "probability_pct": 11.7188,
+     "sex": "Female"
+    },
+    {
+     "color": "Black",
+     "probability_pct": 11.7188,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Chinchilla Golden",
+     "probability_pct": 2.3438,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Chinchilla Golden",
+     "probability_pct": 2.3438,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue",
+     "probability_pct": 0.7812,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue",
+     "probability_pct": 0.7812,
+     "sex": "Male"
+    }
+   ],
+   "status": "success"
+  },
+  "status": 200
+ },
  "Chinchilla Golden|Cream Tabby-White|-|normal": {
   "body": {
    "carrier_exploration_results": null,
@@ -507,15 +591,15 @@
      "C",
      "Wb"
     ],
-    "matched_probability": 0.0,
+    "matched_probability": 1.0,
     "opened_loci": [
      "D",
      "I",
      "Mc",
      "Ta"
     ],
-    "unmatched_genotype_count": 16,
-    "unmatched_probability": 1.0
+    "unmatched_genotype_count": 0,
+    "unmatched_probability": 0.0
    },
    "mode": "normal",
    "parameters": {
@@ -533,16 +617,90 @@
      ],
      "color": "Chinchilla Golden",
      "parent": "sire"
-    },
-    {
-     "blocked_factors": [
-      "希釈（ブルー/クリーム） d"
-     ],
-     "color": "Cream Tabby-White",
-     "parent": "dam"
     }
    ],
-   "results": [],
+   "results": [
+    {
+     "color": "Silver Patched Tabby",
+     "probability_pct": 14.0625,
+     "sex": "Female"
+    },
+    {
+     "color": "Silver Patched Tabby-White",
+     "probability_pct": 14.0625,
+     "sex": "Female"
+    },
+    {
+     "color": "Cameo Tabby",
+     "probability_pct": 14.0625,
+     "sex": "Male"
+    },
+    {
+     "color": "Cameo Tabby-White",
+     "probability_pct": 14.0625,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Silver Patched Tabby",
+     "probability_pct": 4.6875,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Silver Patched Tabby-White",
+     "probability_pct": 4.6875,
+     "sex": "Female"
+    },
+    {
+     "color": "Brown Patched Tabby",
+     "probability_pct": 4.6875,
+     "sex": "Female"
+    },
+    {
+     "color": "Brown Patched Tabby-White",
+     "probability_pct": 4.6875,
+     "sex": "Female"
+    },
+    {
+     "color": "Cream Cameo Tabby",
+     "probability_pct": 4.6875,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream Cameo Tabby-White",
+     "probability_pct": 4.6875,
+     "sex": "Male"
+    },
+    {
+     "color": "Red Tabby",
+     "probability_pct": 4.6875,
+     "sex": "Male"
+    },
+    {
+     "color": "Red Tabby-White",
+     "probability_pct": 4.6875,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Patched Tabby",
+     "probability_pct": 1.5625,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Patched Tabby-White",
+     "probability_pct": 1.5625,
+     "sex": "Female"
+    },
+    {
+     "color": "Cream Tabby",
+     "probability_pct": 1.5625,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream Tabby-White",
+     "probability_pct": 1.5625,
+     "sex": "Male"
+    }
+   ],
    "status": "success"
   },
   "status": 200
@@ -565,15 +723,15 @@
      "C",
      "Wb"
     ],
-    "matched_probability": 0.9375,
+    "matched_probability": 1.0,
     "opened_loci": [
      "D",
      "I",
      "Mc",
      "Ta"
     ],
-    "unmatched_genotype_count": 4,
-    "unmatched_probability": 0.0625
+    "unmatched_genotype_count": 0,
+    "unmatched_probability": 0.0
    },
    "mode": "normal",
    "parameters": {
@@ -603,13 +761,33 @@
      "sex": "Male"
     },
     {
-     "color": "Blue Chinchilla Silver",
+     "color": "Black",
      "probability_pct": 2.9297,
      "sex": "Female"
     },
     {
      "color": "Blue Chinchilla Silver",
      "probability_pct": 2.9297,
+     "sex": "Female"
+    },
+    {
+     "color": "Black",
+     "probability_pct": 2.9297,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Chinchilla Silver",
+     "probability_pct": 2.9297,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue",
+     "probability_pct": 0.1953,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue",
+     "probability_pct": 0.1953,
      "sex": "Male"
     }
    ],
@@ -865,7 +1043,7 @@
      "label": "Blue Patched Tabby-White が A/a (ソリッドキャリア) と仮定 (Lilac は A 劣性を発現)",
      "new_colors": [
       "Blue",
-      "Blue Tortie",
+      "Blue Cream",
       "Blue-White",
       "Cream",
       "Cream-White",
@@ -876,6 +1054,11 @@
      "results": [
       {
        "color": "Blue",
+       "probability_pct": 6.25,
+       "sex": "Female"
+      },
+      {
+       "color": "Blue Cream",
        "probability_pct": 6.25,
        "sex": "Female"
       },
@@ -896,11 +1079,6 @@
       },
       {
        "color": "Blue Tabby-White",
-       "probability_pct": 6.25,
-       "sex": "Female"
-      },
-      {
-       "color": "Blue Tortie",
        "probability_pct": 6.25,
        "sex": "Female"
       },
@@ -1374,7 +1552,7 @@
      "sex": "Male"
     },
     {
-     "color": "Blue Tortie",
+     "color": "Blue Cream",
      "probability_pct": 1.5625,
      "sex": "Female"
     },

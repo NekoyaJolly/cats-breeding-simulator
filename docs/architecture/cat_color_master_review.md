@@ -12,23 +12,23 @@
 
 - 元データ件数 (色柄データUTF8Ver.csv, 名前あり): **407**
 - 現行正本件数 (cat_color_genetic_map.csv): **330**
-- 生成した色柄概念 (ColorId) 件数: **386**
+- 生成した色柄概念 (ColorId) 件数: **383**
 
 | Status | 件数 |
 |---|---|
 | canonical | 266 |
-| alias | 33 |
-| breed_specific | 84 |
+| alias | 32 |
+| breed_specific | 82 |
 | excluded | 3 |
 | review | 0 |
-| **合計** | **386** |
+| **合計** | **383** |
 
 - `GeneticRuleSource=review_required` (遺伝子ルール要確認): **166** 件
 - 正規化 (略称・タイポ展開) を適用した概念: **86** 件
 
 ### 1.1 CanonicalColorId と元データカバレッジ
 
-- alias 解決件数 (`Status=alias` かつ `CanonicalColorId` あり): **33 / 33**
+- alias 解決件数 (`Status=alias` かつ `CanonicalColorId` あり): **32 / 32**
 - alias 解決先が存在しない行数 (`CanonicalColorId` が空 or 実在しない): **0**
 - 元データ 407 件のカバレッジ (SourceCode が master のいずれかの行に保持): **407 / 407** (100%)
 
@@ -58,13 +58,12 @@
 
 | PrimaryName | CanonicalColorId | RegistryNotes |
 |---|---|---|
-| Blue Cream | `blue_tortie` | 同一概念: Blue Cream → Blue Tortie (blue_tortie) |
-| Blue Cream Point | `blue_tortie_point` | 同一概念: Blue Cream Point → Blue Tortie Point (blue_tortie_point) |
-| Blue Cream Smoke | `blue_tortie_smoke` | 同一概念: Blue Cream Smoke → Blue Tortie Smoke (blue_tortie_smoke) |
-| Blue Cream Smoke-White | `blue_tortie_smoke_white` | 同一概念: Blue Cream Smoke-White → Blue Tortie Smoke-White (blue_tortie_smoke_white) |
-| Blue Cream Smoke-White Van | `blue_tortie_smoke_white_van` | 同一概念: Blue Cream Smoke-White Van → Blue Tortie Smoke-White Van (blue_tortie_smoke_white_van) |
 | Blue Cream-White | `dilute_calico` | 同一概念: Blue Cream-White → Dilute Calico (dilute_calico) |
 | Blue Gray | `blue` | 同一概念: Blue Gray → Blue (blue) |
+| Blue Tortie | `blue_cream` | 同一概念: Blue Tortie → Blue Cream (blue_cream) |
+| Blue Tortie Point | `blue_cream_point` | 同一概念: Blue Tortie Point → Blue Cream Point (blue_cream_point) |
+| Blue Tortie Point Bi-Color | `blue_cream_point_bi_color` | 同一概念: Blue Tortie Point Bi-Color → Blue Cream Point Bi-Color (blue_cream_point_bi_color) |
+| Blue Tortie Point Mitted | `blue_cream_point_mitted` | 同一概念: Blue Tortie Point Mitted → Blue Cream Point Mitted (blue_cream_point_mitted) |
 | Blue Tortie-White | `dilute_calico` | 同一概念: Blue Tortie-White → Dilute Calico (dilute_calico) |
 | Bronze | `brown_tabby` | 同一概念: Bronze → Brown Tabby (brown_tabby) |
 | Brown Classic Torbie | `brown_patched_tabby` | TICA: Torbie = Patched Tabby (Brown Patched Tabby) |
@@ -76,7 +75,7 @@
 | Chestnut Tortie | `chocolate_tortie` | 同一概念: Chestnut Tortie → Chocolate Tortie (chocolate_tortie) |
 | Ebony | `black` | 同一概念: Ebony → Black (black) |
 | Lavender | `lilac` | 同一概念: Lavender → Lilac (lilac) |
-| Lilac Cream | `lilac_tortie` | 同一概念: Lilac Cream → Lilac Tortie (lilac_tortie) |
+| Lilac Tortie | `lilac_cream` | 同一概念: Lilac Tortie → Lilac Cream (lilac_cream) |
 | Mike Tri Color | `calico` | 同一概念: Mike Tri Color → Calico (calico) |
 | Peke-Face Red | `red` | Peke-Face は形態/タイプ由来語: Peke-Face Red → Red (red) |
 | Peke-Face Red Mackerel Tabby | `red_mackerel_tabby` | Peke-Face は形態/タイプ由来語: Peke-Face Red Mackerel Tabby → Red Mackerel Tabby (red_mackerel_tabby) |
@@ -88,7 +87,7 @@
 | Silver Mackerel Torbie | `silver_patched_tabby` | TICA: Torbie = Patched Tabby (Silver Patched Tabby) |
 | Smoke Calico | `tortie_smoke_white` | 同一概念: Smoke Calico → Tortie Smoke-White (tortie_smoke_white) |
 | Smoke Calico Van | `tortie_smoke_white_van` | 同一概念: Smoke Calico Van → Tortie Smoke-White Van (tortie_smoke_white_van) |
-| Smoke Dilute Calico | `blue_tortie_smoke_white` | 同一概念: Smoke Dilute Calico → Blue Tortie Smoke-White (blue_tortie_smoke_white) |
+| Smoke Dilute Calico | `blue_cream_smoke_white` | 同一概念: Smoke Dilute Calico → Blue Cream Smoke-White (blue_cream_smoke_white) |
 | Smoke Tortoiseshell | `tortie_smoke` | 同一概念: Smoke Tortoiseshell → Tortie Smoke (tortie_smoke) |
 | Tortoiseshell-White | `calico` | 同一概念: Tortoiseshell-White → Calico (calico) |
 
@@ -98,7 +97,7 @@
 - **Bengal** (7): Black Silver Marbled Tabby, Blue Marble, Brown Marbled Tabby, Leopard, Silver Marbled Tabby, Snow, Snow Spotted Tabby
 - **Burmese** (9): Champagne, Champagne Point, Champagne Solid, Platinum, Platinum Point, Platinum Solid, Sable, Sable Ticked Tabby, Sepia Agouti
 - **Oriental** (19): Chestnut Patched Tabby, Chestnut Silver Tabby, Chestnut Tabby, Chestnut Tortie Point-White, Chestnut Tortie-White, Ebony Mackerel Tabby, Ebony Patched Tabby, Ebony Silver, Ebony Silver Mackerel Tabby, Ebony Silver Spotted Tabby, Ebony Silver Tabby-White, Ebony Silver Ticked T, Ebony Silver Ticked Tabby-White, Ebony Smoke, Ebony Tabby, Ebony-White, Lavender Patched Tabby, Lavender Spotted Tabby, Lavender Tabby
-- **Ragdoll** (38): Blue Cream Point Bi-Color, Blue Cream Point Mitted, Blue Lynx Point Bi-Color, Blue Lynx Point Mitted, Blue Lynx Point Van Bi-Color, Blue Point Bi-Color, Blue Point Mitted, Blue Tortie Point Bi-Color, Blue Tortie Point Mitted, Chocolate Cream P Bi-Color, Chocolate Lynx Point Bi-Color, Chocolate Point Bi-Color, Chocolate Point Mitted, Chocolate Tortie Lynx Point Mitted, Chocolate Tortie Point Bi-Color, Chocolate Tortie Point Mitted, Cream Lynx Point Bi-Color, Cream Point Bi-Color, Cream Point Mitted, Flame Point Bi-Color, Flame Point Mitted, Lilac Point Bi-Color, Lilac Point Mitted, Lilac Tortie Lynx Point Mitted, Lilac Tortie Point Mitted, Red Point Bi-Color, Red Point Mitted, Seal Bi-Color, Seal Lynx Point Bi-Color, Seal Lynx Point Van Bi-Color, Seal Point Bi-Color, Seal Point Mitted, Seal Tortie Lynx Point Bi-Color, Seal Tortie Lynx Point Mitted, Seal Tortie Point Bi-Color, Seal Tortie Point Mitted, Tortie Point Bi-Color, Tortie Point Mitted
+- **Ragdoll** (36): Blue Cream Point Bi-Color, Blue Cream Point Mitted, Blue Lynx Point Bi-Color, Blue Lynx Point Mitted, Blue Lynx Point Van Bi-Color, Blue Point Bi-Color, Blue Point Mitted, Chocolate Cream P Bi-Color, Chocolate Lynx Point Bi-Color, Chocolate Point Bi-Color, Chocolate Point Mitted, Chocolate Tortie Lynx Point Mitted, Chocolate Tortie Point Bi-Color, Chocolate Tortie Point Mitted, Cream Lynx Point Bi-Color, Cream Point Bi-Color, Cream Point Mitted, Flame Point Bi-Color, Flame Point Mitted, Lilac Point Bi-Color, Lilac Point Mitted, Lilac Tortie Lynx Point Mitted, Lilac Tortie Point Mitted, Red Point Bi-Color, Red Point Mitted, Seal Bi-Color, Seal Lynx Point Bi-Color, Seal Lynx Point Van Bi-Color, Seal Point Bi-Color, Seal Point Mitted, Seal Tortie Lynx Point Bi-Color, Seal Tortie Lynx Point Mitted, Seal Tortie Point Bi-Color, Seal Tortie Point Mitted, Tortie Point Bi-Color, Tortie Point Mitted
 - **Tonkinese** (8): Blue Mink, Champagne Mink, Natural Mink, Natural Point, Natural Solid, Platinum Mink, Seal Mink, Seal Mink Spotted Tabby
 
 ## 5. タイポ・略称として正規化した色柄
@@ -203,7 +202,7 @@ AOV (`aov`), Any Other Color (`any_other_color`), Smoke (`smoke`)
 ## 8. 遺伝子ルールがまだ不確かな項目 (GeneticRuleSource=review_required)
 
 計 166 件。代表: 
-Golden Mackerel Tabby, Golden Tabby, Blue Chinchilla Golden, Blue Chinchilla Silver, Blue Shaded, Blue Shaded Golden, Blue Shaded Silver, Chinchilla Golden, Chinchilla Golden-White, Chinchilla Silver, Chinchilla Silver-White, Cream Shell Cameo, Shaded Cameo, Shaded Cameo-White, Shaded Chocolate, Shaded Cream, Shaded Golden, Shaded Golden-White, Shaded Silver, Shaded Silver-White, Shaded Tortie, Shaded Tortie-White, Shell Cameo, Shell Cameo-White, Shell Cream, Shell Tortoiseshell, Shell Tortoiseshell-White, Blue Cream Lynx Point, Blue Cream Lynx Point-White, Blue Cream Point-White, Blue Lynx Point, Blue Lynx Point-White, Blue Point, Blue Point-White, Blue Tortie Point, Brown Lynx Point, Chocolate Cream Lynx Point-White, Chocolate Cream Point, Chocolate Lynx Point, Chocolate Lynx Point-White, Chocolate Point, Chocolate Point-White, Chocolate Silver Lynx Point-White, Chocolate Silver Tortie Lynx Point, Chocolate Tortie Lynx Point, Chocolate Tortie Lynx Point-White, Chocolate Tortie Point, Cream Lynx Point, Cream Point, Cream Point-White, Flame Lynx Point, Flame Point, Flame Point-White, Lilac Cream Lynx Point, Lilac Cream Point, Lilac Cream Point-White, Lilac Lynx Point, Lilac Point, Lilac Point-White, Red Lynx Point ...
+Golden Mackerel Tabby, Golden Tabby, Blue Chinchilla Golden, Blue Chinchilla Silver, Blue Shaded, Blue Shaded Golden, Blue Shaded Silver, Chinchilla Golden, Chinchilla Golden-White, Chinchilla Silver, Chinchilla Silver-White, Cream Shell Cameo, Shaded Cameo, Shaded Cameo-White, Shaded Chocolate, Shaded Cream, Shaded Golden, Shaded Golden-White, Shaded Silver, Shaded Silver-White, Shaded Tortie, Shaded Tortie-White, Shell Cameo, Shell Cameo-White, Shell Cream, Shell Tortoiseshell, Shell Tortoiseshell-White, Blue Cream Lynx Point, Blue Cream Lynx Point-White, Blue Cream Point, Blue Cream Point-White, Blue Lynx Point, Blue Lynx Point-White, Blue Point, Blue Point-White, Brown Lynx Point, Chocolate Cream Lynx Point-White, Chocolate Cream Point, Chocolate Lynx Point, Chocolate Lynx Point-White, Chocolate Point, Chocolate Point-White, Chocolate Silver Lynx Point-White, Chocolate Silver Tortie Lynx Point, Chocolate Tortie Lynx Point, Chocolate Tortie Lynx Point-White, Chocolate Tortie Point, Cream Lynx Point, Cream Point, Cream Point-White, Flame Lynx Point, Flame Point, Flame Point-White, Lilac Cream Lynx Point, Lilac Cream Point, Lilac Cream Point-White, Lilac Lynx Point, Lilac Point, Lilac Point-White, Red Lynx Point ...
 
 ## 9. 判断の根拠と不確かな点
 

@@ -9,6 +9,8 @@ engine には依存しない (循環 import を避けるため共有型は maste
 
 from __future__ import annotations
 
+import re
+
 from cat_breeding_simulator.master_data import (
     COLOR_DEFINITIONS,
     PHENOTYPE_GENOTYPES,
@@ -70,14 +72,23 @@ class PhenotypeNamer:
                 return matched
         # CSV逆引きに名前が無い遺伝子型は標準表現型から構築する (V9 §6.1 step1)。
         # 構築できないもの (点紋/チョコ等の想定外) のみ None = 未分類として検出する。
-        return self.construct_fallback_name(kitten)
+        return self.construct_fallback_name(kitten, sire_color, dam_color)
 
-    def construct_fallback_name(self, kitten: KittenGenotype) -> str | None:
+    def construct_fallback_name(
+        self, kitten: KittenGenotype, sire_color: str = "", dam_color: str = ""
+    ) -> str | None:
         """CSV逆引きに無い遺伝子型を、標準表現型から構築して命名する (V9 §6.1)。
 
         通常モードでは B(チョコ系) と C(点紋系) を展開しないため、ここで扱うのは
-        黒系(B/B)・フルカラー(C/C) の組み合わせに限られる。優性白以外で base/C/Wb が
-        想定外 (点紋・チョコ・ワイドバンド等) の場合は None を返し、未分類として検出させる。
+        黒系(B/B)・フルカラー(C/C) の組み合わせに限られる。点紋・チョコ・シナモン等の
+        想定外は None を返し、未分類として検出させる。
+
+        ワイドバンド (Wb/-) は「非オレンジ・アグーチ」背景でのみ tipping (Shell/Shaded/
+        Chinchilla/Golden) として発現する。その場合はここで命名し、未分類にしない。
+        オレンジ/トーティ/ソリッドの wide は wideband が別名を持たないため通常命名へ流す
+        (ソリッドでは tipping 非発現、赤系は Cameo/Cream 等の既存名で扱う)。
+        tipping の濃淡 (Chinchilla/Shaded) は多遺伝子で1座位に還元できないため、親カラー名
+        から推論する (タビー柄を親名から推論するのと同じ方針)。
         """
 
         key = expressed_genotype_key(kitten.loci, kitten.sex)
@@ -85,13 +96,22 @@ class PhenotypeNamer:
 
         if dom_white == "white":
             return "White"
-        # 通常モードの構築対象外 (点紋/チョコ/シナモン/ワイドバンド) は未分類に回す
-        if base != "black" or c_state != "full" or wideband != "narrow":
+        # 通常モードの構築対象外 (点紋/チョコ/シナモン) は未分類に回す
+        if base != "black" or c_state != "full":
             return None
 
         is_dilute = dilute == "dilute"
         is_agouti = agouti == "agouti"
         is_silver = silver == "silver"
+
+        # ワイドバンド: 非オレンジ・アグーチでのみ tipping として命名する (それ以外は通常命名)。
+        if wideband == "wide" and is_agouti and orange == "non_orange":
+            degree = self._tipping_degree(sire_color, dam_color)
+            tipped = "Silver" if is_silver else "Golden"
+            name = f"Blue {degree}{tipped}" if is_dilute else f"{degree}{tipped}"
+            if spotting in ("white", "high_white"):
+                name = f"{name}-White"
+            return name
 
         if orange == "tortie":
             if is_agouti:
@@ -140,6 +160,22 @@ class PhenotypeNamer:
     def is_female_only_color(name: str) -> bool:
         lowered = name.lower()
         return any(marker in lowered for marker in _FEMALE_ONLY_MARKERS)
+
+    @staticmethod
+    def _tipping_degree(sire_color: str, dam_color: str) -> str:
+        """ワイドバンド tipping の濃淡語を親カラー名から推論する (末尾スペース込み)。
+
+        濃淡 (Shell < Shaded < Chinchilla) は多遺伝子で genotype に還元できないため、
+        親が明示している語を継承する。どちらの親も明示しなければ濃淡なし (汎用 Golden/Silver)。
+
+        判定は単語境界で行う ("Tortoiseshell" の部分文字列 "shell" を誤検出しないため)。
+        """
+
+        text = f"{sire_color} {dam_color}".lower()
+        for word, label in (("chinchilla", "Chinchilla "), ("shaded", "Shaded "), ("shell", "Shell ")):
+            if re.search(rf"\b{word}\b", text):
+                return label
+        return ""
 
     def find_matching_color(
         self, kitten: KittenGenotype, sire_color: str, dam_color: str
@@ -213,10 +249,10 @@ class PhenotypeNamer:
                 name = name.replace("Black Pt ", "Silver Pt ").replace(" Silver Tabby", " Tabby")
             elif name.startswith("Black "):
                 name = name.replace("Black ", "Silver ").replace(" Silver Tabby", " Tabby")
-            elif name.startswith("Blue Pt "):
+            elif name.startswith("Blue Pt ") and not name.startswith("Blue Silver Pt "):
                 name = name.replace("Blue Pt ", "Blue Silver Pt ").replace(" Silver Tabby", " Tabby")
-            elif name.startswith("Blue "):
-                name = name.replace("Blue ", "Blue Silver ").replace(" Silver Tabby", " Tabby")
+            elif name.startswith("Blue ") and not name.startswith("Blue Silver "):
+                name = name.replace("Blue ", "Blue Silver ", 1).replace(" Silver Tabby", " Tabby")
             elif name.startswith("Red "):
                 name = name.replace("Red ", "Cameo ").replace(" Silver Tabby", " Tabby")
             elif name.startswith("Cream "):

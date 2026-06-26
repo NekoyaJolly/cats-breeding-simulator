@@ -43,7 +43,8 @@ CROSSES: list[tuple[str, str, str | None, str]] = [
     ("Silver Tabby", "Dilute Calico", None, "normal"),
     # --- 追加カバレッジ ---
     ("Chinchilla Silver", "Shaded Silver", None, "normal"),       # シルバー tipping
-    ("Chinchilla Golden", "Cream Tabby-White", None, "normal"),   # Golden/ワイドバンド (未分類になる現状仕様)
+    ("Chinchilla Golden", "Black", None, "normal"),               # ワイドバンド: 非オレンジ子に Golden が出る
+    ("Chinchilla Golden", "Cream Tabby-White", None, "normal"),   # ワイドバンド: 赤ダム=純Goldenは出ないが未分類は解消
     ("Cinnamon", "Black", None, "normal"),                        # bl アレル (B座位 第3)
     ("White", "Black", None, "normal"),                           # 優性白 (W座位 上位)
     ("Black Smoke", "Cream", None, "normal"),                     # スモーク (I on solid) + 赤
