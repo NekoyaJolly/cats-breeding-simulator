@@ -78,13 +78,20 @@ def test_invalid_sex_specific_color_returns_422() -> None:
 
 
 def test_master_resolves_alias_to_canonical() -> None:
-    """alias は canonical 概念へ解決される (CFA Blue Cream = TICA Blue Tortie)。"""
+    """dilute トーティは Cream を正規名にする (Blue Cream が canonical / Blue Tortie が alias)。"""
 
-    resolved = COLOR_MASTER.resolve("Blue Cream")
-    assert resolved is not None
-    assert resolved.status == "alias"
-    assert resolved.canonical_color_id == "blue_tortie"
-    assert resolved.primary_name == "Blue Tortie"
+    # Blue Cream が canonical 概念。
+    cream = COLOR_MASTER.resolve("Blue Cream")
+    assert cream is not None
+    assert cream.status == "canonical"
+    assert cream.primary_name == "Blue Cream"
+
+    # Blue Tortie は alias として同じ概念へ解決し、表示名は Blue Cream になる。
+    tortie = COLOR_MASTER.resolve("Blue Tortie")
+    assert tortie is not None
+    assert tortie.status == "alias"
+    assert tortie.canonical_color_id == "blue_tortie"
+    assert tortie.primary_name == "Blue Cream"
 
 
 def test_output_color_names_are_canonical() -> None:
