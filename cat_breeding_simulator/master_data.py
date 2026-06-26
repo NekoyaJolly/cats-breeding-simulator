@@ -25,6 +25,88 @@ class ParentGenotype:
 
 
 @dataclass(frozen=True, slots=True)
+class KittenGenotype:
+    """子猫1個体の遺伝子型。engine (交配) と phenotype_naming (命名) で共有する。"""
+
+    sex: str
+    loci: dict[str, tuple[str, str]]
+
+
+def expressed_genotype_key(loci: dict[str, tuple[str, str]], sex: str) -> tuple:
+    """遺伝子型を「実際に発現する表現型」レベルへ還元したキーを返す。
+
+    完全一致辞書だけに頼ると、D/d のようなヘテロ接合の子猫が D/D の正規遺伝子型に
+    一致せず分類不能になる。優性・劣性を解決した発現状態でキー化することで、親
+    (CSV正規遺伝子型) と子猫 (ヘテロ接合を含む) を同じ土俵で突き合わせる。
+
+    パターン座 (Mc / Ta / Sp) は CSV 上の符号付けが不安定なためキーから除外し、
+    パターン名は親カラー名ベースの後処理 (simplify_patterns) に委ねる。
+    engine (交配) と phenotype_naming (命名) の両方が使うため共有モジュールに置く。
+    """
+
+    o_alleles = loci["O"]
+    if sex.lower() == "male":
+        orange = "orange" if "O" in o_alleles else "non_orange"
+    else:
+        if "O" in o_alleles and "o" in o_alleles:
+            orange = "tortie"
+        elif "O" in o_alleles:
+            orange = "orange"
+        else:
+            orange = "non_orange"
+
+    # B locus 優性順: B > b > bl
+    b_alleles = loci["B"]
+    if "B" in b_alleles:
+        base = "black"
+    elif "b" in b_alleles:
+        base = "chocolate"
+    else:
+        base = "cinnamon"
+
+    dilute = "dilute" if loci["D"][0] == "d" and loci["D"][1] == "d" else "dense"
+    agouti = "agouti" if "A" in loci["A"] else "solid"
+
+    # C locus: C (フルカラー) が優性。点紋系は C が無いときのみ発現
+    c_alleles = loci["C"]
+    if "C" in c_alleles:
+        c_state = "full"
+    elif "cb" in c_alleles and "cs" in c_alleles:
+        c_state = "mink"
+    elif "cs" in c_alleles:
+        c_state = "point"
+    elif "cb" in c_alleles:
+        c_state = "sepia"
+    else:
+        c_state = "full"
+
+    dominant_white = "white" if "W" in loci["W"] else "colored"
+
+    s_alleles = loci["S"]
+    if s_alleles[0] == "S" and s_alleles[1] == "S":
+        spotting = "high_white"
+    elif "S" in s_alleles:
+        spotting = "white"
+    else:
+        spotting = "none"
+
+    silver = "silver" if "I" in loci["I"] else "non_silver"
+    wideband = "wide" if "Wb" in loci["Wb"] else "narrow"
+
+    return (
+        orange,
+        base,
+        dilute,
+        agouti,
+        c_state,
+        dominant_white,
+        spotting,
+        silver,
+        wideband,
+    )
+
+
+@dataclass(frozen=True, slots=True)
 class ColorBase:
     """1カラー (CSV 1行) の基準遺伝子型。親候補生成はここから mode 別に行う。"""
 
