@@ -1,7 +1,9 @@
 import {
   apiErrorSchema,
+  breedsResponseSchema,
   calculationResponseSchema,
   colorsResponseSchema,
+  type BreedOption,
   type CalculationResponse,
   type ColorOption,
 } from "./schema";
@@ -22,9 +24,25 @@ export type CalculateOutcome =
   | { ok: true; data: CalculationResponse }
   | { ok: false; message: string };
 
+// バックエンドの冗長なエラー文を簡潔な日本語へ整形する。
+// 例: "Unsupported color 'X'. Supported colors: <全色>" の長い一覧を省く。
+function cleanErrorMessage(detail: string): string {
+  const unsupportedColor = detail.match(/Unsupported color '(.+?)'\./);
+  if (unsupportedColor) {
+    return `「${unsupportedColor[1]}」は対応していない毛色です。候補から選んでください。`;
+  }
+  const invalidForSex = detail.match(/Color '(.+?)' is not valid for a (male|female)\./);
+  if (invalidForSex) {
+    const parent =
+      invalidForSex[2] === "male" ? "オス親（♀限定の毛色）" : "メス親";
+    return `「${invalidForSex[1]}」は${parent}には指定できない毛色です。`;
+  }
+  return detail; // それ以外 (既に簡潔な日本語メッセージ等) はそのまま返す。
+}
+
 // pydantic 検証エラー (detail が配列) を 1 本の文字列にまとめる。
 function describeError(detail: string | Array<{ msg: string }>): string {
-  if (typeof detail === "string") return detail;
+  if (typeof detail === "string") return cleanErrorMessage(detail);
   const joined = detail.map((item) => item.msg).join(" / ");
   return joined.length > 0 ? joined : "入力値が不正です。";
 }
@@ -45,6 +63,23 @@ export async function fetchColors(): Promise<ColorOption[]> {
   const body = await response.json().catch(() => null);
   const parsed = colorsResponseSchema.safeParse(body);
   return parsed.success ? parsed.data.colors : [];
+}
+
+// GET /api/v1/breeds を叩き、入力サジェスト/バリデーション用の猫種一覧を返す。
+// 失敗時は空配列 (猫種は任意入力なので自由入力で継続できる)。
+export async function fetchBreeds(): Promise<BreedOption[]> {
+  let response: Response;
+  try {
+    response = await fetch("/api/v1/breeds", {
+      headers: { Accept: "application/json" },
+    });
+  } catch {
+    return [];
+  }
+  if (!response.ok) return [];
+  const body = await response.json().catch(() => null);
+  const parsed = breedsResponseSchema.safeParse(body);
+  return parsed.success ? parsed.data.breeds : [];
 }
 
 // POST /api/v1/calculate を叩き、レスポンスを Zod で検証して返す。

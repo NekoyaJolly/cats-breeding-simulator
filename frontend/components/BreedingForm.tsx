@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { z } from "zod";
-import { fetchColors, type CalculateInput } from "@/lib/api";
+import { fetchBreeds, fetchColors, type CalculateInput } from "@/lib/api";
 import type { ColorOption } from "@/lib/schema";
+import { BREED_READING_JA } from "@/lib/breedReadingJa";
 import { ColorCombobox } from "./ColorCombobox";
 
 // 計算モード。explicit_carrier のときのみキャリア入力欄を表示する。
@@ -13,10 +14,35 @@ const MODES = [
   { value: "carrier_exploration", label: "全キャリア探索 (carrier_exploration)" },
 ] as const;
 
-// 最近選んだ毛色 (履歴) の localStorage キーと保持件数。
-const RECENT_KEY = "cbs:recentColors";
+// 最近選んだ値 (履歴) の localStorage キーと保持件数。毛色と猫種で別管理。
+const COLOR_RECENT_KEY = "cbs:recentColors";
+const BREED_RECENT_KEY = "cbs:recentBreeds";
 const RECENT_MAX = 8;
 const recentSchema = z.array(z.string());
+
+// localStorage から履歴を復元する (不可 / 壊れた JSON は空配列)。
+function loadRecent(key: string): string[] {
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (raw === null) return [];
+    const parsed = recentSchema.safeParse(JSON.parse(raw));
+    return parsed.success ? parsed.data.slice(0, RECENT_MAX) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveRecent(key: string, list: string[]): void {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(list));
+  } catch {
+    // 保存不可でも UI 状態としては更新する。
+  }
+}
+
+function withRecent(prev: string[], value: string): string[] {
+  return [value, ...prev.filter((item) => item !== value)].slice(0, RECENT_MAX);
+}
 
 type Props = {
   onSubmit: (input: CalculateInput) => void;
@@ -48,13 +74,33 @@ export function BreedingForm({ onSubmit, loading }: Props) {
   const [sireCarriers, setSireCarriers] = useState("");
   const [damCarriers, setDamCarriers] = useState("");
   const [colors, setColors] = useState<ColorOption[]>([]);
+  const [breedItems, setBreedItems] = useState<ColorOption[]>([]);
   const [recent, setRecent] = useState<string[]>([]);
+  const [breedRecent, setBreedRecent] = useState<string[]>([]);
 
-  // サジェスト候補をマウント時に 1 回取得する (失敗時は空配列 → 自由入力で動作)。
+  // サジェスト候補 (毛色・猫種) をマウント時に取得する (失敗時は空 → 自由入力で動作)。
   useEffect(() => {
     let alive = true;
     fetchColors().then((list) => {
       if (alive) setColors(list);
+    });
+    // 猫種は ColorCombobox を再利用するため ColorOption 形へ写す
+    // (reading_ja=日本語名 / breed_context=遺伝影響バッジ)。
+    fetchBreeds().then((list) => {
+      if (!alive) return;
+      setBreedItems(
+        list.map((breedOption) => {
+          const reading = BREED_READING_JA[breedOption.value] ?? "";
+          return {
+            value: breedOption.value,
+            reading_ja: reading,
+            status: "",
+            breed_context: breedOption.affects_genetics ? "遺伝に影響" : "",
+            sex_restriction: "",
+            keywords: [breedOption.value, reading].filter(Boolean),
+          };
+        }),
+      );
     });
     return () => {
       alive = false;
@@ -63,30 +109,26 @@ export function BreedingForm({ onSubmit, loading }: Props) {
 
   // 履歴を localStorage から復元する。
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(RECENT_KEY);
-      if (raw === null) return;
-      const parsed = recentSchema.safeParse(JSON.parse(raw));
-      if (parsed.success) setRecent(parsed.data.slice(0, RECENT_MAX));
-    } catch {
-      // localStorage 不可 / 壊れた JSON は無視 (履歴なしで動作)。
-    }
+    setRecent(loadRecent(COLOR_RECENT_KEY));
+    setBreedRecent(loadRecent(BREED_RECENT_KEY));
   }, []);
 
-  // 確定した毛色を履歴の先頭へ積む (重複排除 + 上限)。
   function pushRecent(value: string) {
     const trimmed = value.trim();
     if (!trimmed) return;
     setRecent((prev) => {
-      const next = [trimmed, ...prev.filter((item) => item !== trimmed)].slice(
-        0,
-        RECENT_MAX,
-      );
-      try {
-        window.localStorage.setItem(RECENT_KEY, JSON.stringify(next));
-      } catch {
-        // 保存不可でも UI 状態としては更新する。
-      }
+      const next = withRecent(prev, trimmed);
+      saveRecent(COLOR_RECENT_KEY, next);
+      return next;
+    });
+  }
+
+  function pushBreedRecent(value: string) {
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    setBreedRecent((prev) => {
+      const next = withRecent(prev, trimmed);
+      saveRecent(BREED_RECENT_KEY, next);
       return next;
     });
   }
@@ -118,7 +160,6 @@ export function BreedingForm({ onSubmit, loading }: Props) {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!canSubmit) return;
-    // 送信した毛色も履歴へ積む (候補から選ばず直接送信したケースを拾う)。
     pushRecent(sireColor);
     pushRecent(damColor);
     const input: CalculateInput = {
@@ -127,7 +168,10 @@ export function BreedingForm({ onSubmit, loading }: Props) {
       mode,
     };
     const trimmedBreed = breed.trim();
-    if (trimmedBreed) input.breed = trimmedBreed;
+    if (trimmedBreed) {
+      input.breed = trimmedBreed;
+      pushBreedRecent(trimmedBreed);
+    }
     // キャリアは明示キャリアモードのときのみ送る。
     if (mode === "explicit_carrier") {
       input.sire_carriers = parseCarriers(sireCarriers);
@@ -164,19 +208,17 @@ export function BreedingForm({ onSubmit, loading }: Props) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-1">
-          <label htmlFor="breed" className={labelClass}>
-            猫種 (任意)
-          </label>
-          <input
-            id="breed"
-            className={inputClass}
-            value={breed}
-            onChange={(event) => setBreed(event.target.value)}
-            placeholder="例: Abyssinian"
-            autoComplete="off"
-          />
-        </div>
+        {/* 猫種は任意。ColorCombobox を再利用 (候補=猫種、日本語名で絞り込み可)。 */}
+        <ColorCombobox
+          id="breed"
+          label="猫種 (任意)"
+          value={breed}
+          onValueChange={setBreed}
+          onCommit={pushBreedRecent}
+          colors={breedItems}
+          recent={breedRecent}
+          placeholder="例: Abyssinian / アビシニアン"
+        />
         <div className="space-y-1">
           <label htmlFor="mode" className={labelClass}>
             計算モード
