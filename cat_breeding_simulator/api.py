@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from cat_breeding_simulator.color_master import COLOR_MASTER
 from cat_breeding_simulator.color_reading_ja import reading_ja
 from cat_breeding_simulator.engine import BreedingCalculationError, CoatColorCalculator
-from cat_breeding_simulator.master_data import BREED_FILTERS
+from cat_breeding_simulator.master_data import BREED_FILTERS, is_real_breed
 
 
 class CalculationRequest(BaseModel):
@@ -100,11 +100,6 @@ class BreedsResponse(BaseModel):
     """入力サジェスト + バリデーション用の猫種一覧。"""
 
     breeds: list[BreedOption]
-
-
-# 猫種名に ASCII 英字を含むか (CSV 由来の文字化け / ゴミ行を弾く簡易判定)。
-def _is_real_breed(name: str) -> bool:
-    return any("a" <= char.lower() <= "z" for char in name)
 
 
 router = APIRouter(prefix="/api/v1")
@@ -205,7 +200,7 @@ def breeds_endpoint() -> BreedsResponse:
     breeds = [
         BreedOption(value=name, affects_genetics=bool(BREED_FILTERS[name]))
         for name in sorted(BREED_FILTERS)
-        if _is_real_breed(name)
+        if is_real_breed(name)
     ]
     return BreedsResponse(breeds=breeds)
 

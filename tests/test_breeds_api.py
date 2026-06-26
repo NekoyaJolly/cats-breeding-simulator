@@ -48,6 +48,13 @@ def test_known_breed_ok() -> None:
     assert report.results
 
 
+def test_garbage_breed_in_filters_is_rejected() -> None:
+    # CSV 由来のゴミ行 ("ｱｷ") は BREED_FILTERS には存在するが、一覧/計算とも弾く。
+    calc = CoatColorCalculator()
+    with pytest.raises(BreedingCalculationError, match="未対応の猫種"):
+        calc.calculate_report("Black", "Black", breed="ｱｷ")
+
+
 def test_calculate_endpoint_rejects_unknown_breed() -> None:
     response = client.post(
         "/api/v1/calculate",

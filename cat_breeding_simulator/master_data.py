@@ -380,3 +380,18 @@ def _load_breed_filters() -> dict[str, dict[str, tuple[str, str]]]:
 
 
 BREED_FILTERS = _load_breed_filters()
+
+
+def is_real_breed(name: str) -> bool:
+    """ASCII 英字を含む猫種名か (CSV 由来の文字化け / ゴミ行 "ｱｷ" 等を弾く)。
+
+    /api/v1/breeds の一覧と calculate のバリデーションで同一基準を使うための共通判定。
+    """
+
+    return any("a" <= char.lower() <= "z" for char in name)
+
+
+# 入力として受け付ける有効な猫種 (ゴミ行を除外)。一覧 / バリデーションの正本。
+VALID_BREEDS: frozenset[str] = frozenset(
+    name for name in BREED_FILTERS if is_real_breed(name)
+)

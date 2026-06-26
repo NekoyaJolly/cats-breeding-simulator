@@ -14,6 +14,7 @@ from cat_breeding_simulator.master_data import (
     NORMAL_OPENED_LOCI,
     PHENOTYPE_GENOTYPES,
     SUPPORTED_MODES,
+    VALID_BREEDS,
     ParentGenotype,
     build_parent_genotypes,
 )
@@ -264,8 +265,9 @@ class CoatColorCalculator:
             raise BreedingCalculationError(
                 f"未知の計算モード '{mode}'。利用可能: {', '.join(SUPPORTED_MODES)}。"
             )
-        # 猫種は任意だが、指定された場合は既知の猫種のみ受け付ける (黙って無視しない)。
-        if breed and self._normalize_breed_key(breed) not in BREED_FILTERS:
+        # 猫種は任意だが、指定された場合は有効な猫種のみ受け付ける (黙って無視しない)。
+        # VALID_BREEDS は /api/v1/breeds と同基準 (CSV 由来のゴミ行 "ｱｷ" 等を除外)。
+        if breed and self._normalize_breed_key(breed) not in VALID_BREEDS:
             raise BreedingCalculationError(f"未対応の猫種です: '{breed}'")
         if mode == "carrier_exploration":
             return self._calculate_carrier_exploration(sire_color, dam_color, breed)
