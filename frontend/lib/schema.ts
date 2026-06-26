@@ -36,6 +36,14 @@ export const carrierScenarioEntrySchema = z.object({
 });
 export type CarrierScenarioEntry = z.infer<typeof carrierScenarioEntrySchema>;
 
+// 入力した親色が子に出現しないときの注釈 (api.py ParentColorNoteEntry に対応)。
+export const parentColorNoteSchema = z.object({
+  parent: z.string(), // "sire" / "dam"
+  color: z.string(),
+  blocked_factors: z.array(z.string()),
+});
+export type ParentColorNote = z.infer<typeof parentColorNoteSchema>;
+
 // 計算 API レスポンス全体 (api.py CalculationResponse に対応)
 export const calculationResponseSchema = z.object({
   status: z.string(),
@@ -52,6 +60,8 @@ export const calculationResponseSchema = z.object({
   diagnostics: modeDiagnosticsSchema,
   // carrier_exploration_mode のときのみ非 null。
   carrier_exploration_results: z.array(carrierScenarioEntrySchema).nullable().optional(),
+  // 入力した親色が子に出ないときの注釈 (normal モードのみ、無ければ空配列)。
+  parent_color_notes: z.array(parentColorNoteSchema).optional().default([]),
 });
 export type CalculationResponse = z.infer<typeof calculationResponseSchema>;
 

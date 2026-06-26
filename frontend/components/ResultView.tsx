@@ -4,10 +4,46 @@ import { useState } from "react";
 import type {
   CalculationResponse,
   CarrierScenarioEntry,
+  ParentColorNote,
   ResultEntry,
 } from "@/lib/schema";
 import { LocusChip } from "./LocusChip";
 import { LOCUS_GLOSSARY } from "@/lib/lociGlossary";
+
+const PARENT_LABEL: Record<string, string> = { sire: "父猫", dam: "母猫" };
+
+// 入力した親色が子に出ないときの注釈。劣性形質の理解補助 (なぜ親の色が出ないか)。
+function ParentColorNotes({ notes }: { notes: ParentColorNote[] }) {
+  if (notes.length === 0) return null;
+  return (
+    <div className="mt-3 space-y-2">
+      {notes.map((note) => {
+        const parent = PARENT_LABEL[note.parent] ?? note.parent;
+        const other = note.parent === "sire" ? "母猫" : "父猫";
+        return (
+          <div
+            key={note.parent}
+            className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"
+          >
+            <span className="font-medium">
+              {parent}の毛色「{note.color}」
+            </span>
+            はこの組み合わせでは子猫に出現しません。
+            {note.blocked_factors.length > 0 && (
+              <>
+                {other}が次の劣性因子を持たないためです:{" "}
+                <span className="font-medium">
+                  {note.blocked_factors.join(" ・ ")}
+                </span>
+                。
+              </>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 // 確率を小数1桁の % 文字列に整形する (診断値など正確さ優先の箇所で使う)。
 function formatPct(value: number): string {
@@ -218,6 +254,7 @@ export function ResultView({ data }: { data: CalculationResponse }) {
         <div className="mt-3">
           <SexSplitResults key={resultsKey} rows={data.results} />
         </div>
+        <ParentColorNotes notes={data.parent_color_notes} />
       </section>
 
       <section className="rounded-md bg-slate-100 p-4 text-sm">
