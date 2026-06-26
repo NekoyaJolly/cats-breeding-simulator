@@ -71,7 +71,9 @@ def test_invalid_sex_specific_color_returns_422() -> None:
     )
 
     assert response.status_code == 422
-    assert "not valid for a male" in response.json()["detail"]
+    detail = response.json()["detail"]
+    # メス限定色 (Calico) を父猫に指定 → 日本語で「父猫には指定できない」旨を返す。
+    assert "父猫" in detail and "指定できません" in detail
 
 
 # --- cat_color_master.csv 名前正規化レイヤの回帰テスト ---

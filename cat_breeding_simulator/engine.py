@@ -224,9 +224,13 @@ class CoatColorCalculator:
         )
 
         if not sire_genotypes:
-            raise BreedingCalculationError("No valid sire genotypes remain after filtering.")
+            raise BreedingCalculationError(
+                "この交配では父猫の有効な遺伝子型が残りませんでした。毛色と猫種の組み合わせをご確認ください。"
+            )
         if not dam_genotypes:
-            raise BreedingCalculationError("No valid dam genotypes remain after filtering.")
+            raise BreedingCalculationError(
+                "この交配では母猫の有効な遺伝子型が残りませんでした。毛色と猫種の組み合わせをご確認ください。"
+            )
 
         aggregate: ProbabilityMap = defaultdict(float)
         matched_probability = 0.0
@@ -576,13 +580,20 @@ class CoatColorCalculator:
 
         phenotype_key = self._normalize_color_key(phenotype)
         if phenotype_key not in PHENOTYPE_GENOTYPES:
-            supported = ", ".join(sorted(PHENOTYPE_GENOTYPES))
-            raise BreedingCalculationError(f"Unsupported color '{phenotype}'. Supported colors: {supported}")
+            raise BreedingCalculationError(
+                f"「{phenotype}」は対応していない毛色です。候補から選んでください。"
+            )
 
         # mode に応じた親遺伝子型候補を生成する (normal: キャリア閉鎖 / explicit_carrier: 指定座位を開放)。
         genotypes = build_parent_genotypes(phenotype_key, sex, mode, carriers)
         if not genotypes:
-            raise BreedingCalculationError(f"Color '{phenotype_key}' is not valid for a {sex}.")
+            if sex == "male":
+                raise BreedingCalculationError(
+                    f"「{phenotype_key}」はメス限定の毛色のため、父猫（オス）には指定できません。"
+                )
+            raise BreedingCalculationError(
+                f"「{phenotype_key}」はオス限定の毛色のため、母猫（メス）には指定できません。"
+            )
 
         if not breed:
             return genotypes
@@ -712,12 +723,13 @@ class CoatColorCalculator:
         if resolved is not None:
             if resolved.status in ("excluded", "review"):
                 raise BreedingCalculationError(
-                    f"'{name}' は通常計算の入力色として使用できません (status={resolved.status})。"
+                    f"「{name}」は通常の計算では入力できない色区分です。別の毛色を選んでください。"
                 )
             if resolved.status == "breed_specific" and not breed:
                 raise BreedingCalculationError(
-                    f"'{name}' は猫種固有色 ({resolved.breed_context}) のため、"
-                    "猫種を指定しない通常モードでは入力できません。"
+                    f"「{name}」は「{resolved.breed_context}」固有の毛色です。"
+                    f"この毛色を使うには猫種に「{resolved.breed_context}」を指定してください"
+                    "（猫種の指定は任意ですが、固有色を使う場合は必要です）。"
                 )
             # canonical 概念を優先して engine 認識名 (PHENOTYPE_GENOTYPES のキー) を探す
             for candidate in resolved.engine_candidate_names:

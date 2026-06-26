@@ -40,11 +40,12 @@ function cleanErrorMessage(detail: string): string {
   return detail; // それ以外 (既に簡潔な日本語メッセージ等) はそのまま返す。
 }
 
-// pydantic 検証エラー (detail が配列) を 1 本の文字列にまとめる。
+// FastAPI のエラー detail を日本語メッセージへ整形する。
+// 文字列は自前の BreedingCalculationError (日本語)。配列は pydantic の検証エラーで
+// msg が英語のため、そのまま出さず日本語の総括メッセージにする。
 function describeError(detail: string | Array<{ msg: string }>): string {
   if (typeof detail === "string") return cleanErrorMessage(detail);
-  const joined = detail.map((item) => item.msg).join(" / ");
-  return joined.length > 0 ? joined : "入力値が不正です。";
+  return "入力内容に誤りがあります。毛色が正しく入力されているか確認してください。";
 }
 
 // GET /api/v1/colors を叩き、入力サジェスト用の色一覧を返す。
