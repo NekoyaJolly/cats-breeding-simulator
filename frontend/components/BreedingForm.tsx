@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type Dispatch,
+  type FormEvent,
+  type SetStateAction,
+} from "react";
 import { z } from "zod";
 import { fetchBreeds, fetchColors, type CalculateInput } from "@/lib/api";
 import type { ColorOption } from "@/lib/schema";
@@ -14,9 +21,13 @@ const MODES = [
   { value: "carrier_exploration", label: "全キャリア探索 (carrier_exploration)" },
 ] as const;
 
-// 最近選んだ値 (履歴) の localStorage キーと保持件数。毛色と猫種で別管理。
-const COLOR_RECENT_KEY = "cbs:recentColors";
+// 最近選んだ値 (履歴) の localStorage キーと保持件数。
+// 履歴は入力欄ごとに 1 対 1 (父毛色 / 母毛色 / 猫種で別管理)。
+const SIRE_RECENT_KEY = "cbs:recentSireColors";
+const DAM_RECENT_KEY = "cbs:recentDamColors";
 const BREED_RECENT_KEY = "cbs:recentBreeds";
+// 旧・父母共有キー。履歴分離前のユーザー履歴を引き継ぐためのフォールバック読込用。
+const LEGACY_COLOR_RECENT_KEY = "cbs:recentColors";
 const RECENT_MAX = 8;
 const recentSchema = z.array(z.string());
 
@@ -40,8 +51,22 @@ function saveRecent(key: string, list: string[]): void {
   }
 }
 
-function withRecent(prev: string[], value: string): string[] {
-  return [value, ...prev.filter((item) => item !== value)].slice(0, RECENT_MAX);
+// 値を履歴の先頭へ積む (重複排除 + 上限) → state 更新 + localStorage 保存。
+function commitRecent(
+  setter: Dispatch<SetStateAction<string[]>>,
+  key: string,
+  value: string,
+): void {
+  const trimmed = value.trim();
+  if (!trimmed) return;
+  setter((prev) => {
+    const next = [trimmed, ...prev.filter((item) => item !== trimmed)].slice(
+      0,
+      RECENT_MAX,
+    );
+    saveRecent(key, next);
+    return next;
+  });
 }
 
 type Props = {
@@ -75,7 +100,9 @@ export function BreedingForm({ onSubmit, loading }: Props) {
   const [damCarriers, setDamCarriers] = useState("");
   const [colors, setColors] = useState<ColorOption[]>([]);
   const [breedItems, setBreedItems] = useState<ColorOption[]>([]);
-  const [recent, setRecent] = useState<string[]>([]);
+  // 履歴は入力欄ごとに分離 (父毛色 / 母毛色 / 猫種)。
+  const [sireRecent, setSireRecent] = useState<string[]>([]);
+  const [damRecent, setDamRecent] = useState<string[]>([]);
   const [breedRecent, setBreedRecent] = useState<string[]>([]);
 
   // サジェスト候補 (毛色・猫種) をマウント時に取得する (失敗時は空 → 自由入力で動作)。
@@ -107,30 +134,26 @@ export function BreedingForm({ onSubmit, loading }: Props) {
     };
   }, []);
 
-  // 履歴を localStorage から復元する。
+  // 履歴を localStorage から復元する (入力欄ごと)。
+  // 新キーが空の既存ユーザーは、旧・父母共有キーをフォールバックで引き継ぐ
+  // (以後、各欄で確定すると新キーが優先される)。
   useEffect(() => {
-    setRecent(loadRecent(COLOR_RECENT_KEY));
+    const legacy = loadRecent(LEGACY_COLOR_RECENT_KEY);
+    const sire = loadRecent(SIRE_RECENT_KEY);
+    const dam = loadRecent(DAM_RECENT_KEY);
+    setSireRecent(sire.length > 0 ? sire : legacy);
+    setDamRecent(dam.length > 0 ? dam : legacy);
     setBreedRecent(loadRecent(BREED_RECENT_KEY));
   }, []);
 
-  function pushRecent(value: string) {
-    const trimmed = value.trim();
-    if (!trimmed) return;
-    setRecent((prev) => {
-      const next = withRecent(prev, trimmed);
-      saveRecent(COLOR_RECENT_KEY, next);
-      return next;
-    });
+  function pushSireRecent(value: string) {
+    commitRecent(setSireRecent, SIRE_RECENT_KEY, value);
   }
-
+  function pushDamRecent(value: string) {
+    commitRecent(setDamRecent, DAM_RECENT_KEY, value);
+  }
   function pushBreedRecent(value: string) {
-    const trimmed = value.trim();
-    if (!trimmed) return;
-    setBreedRecent((prev) => {
-      const next = withRecent(prev, trimmed);
-      saveRecent(BREED_RECENT_KEY, next);
-      return next;
-    });
+    commitRecent(setBreedRecent, BREED_RECENT_KEY, value);
   }
 
   // female_only (パッチド/トーティ系) はオス親では遺伝的に成立しないため、
@@ -148,9 +171,9 @@ export function BreedingForm({ onSubmit, loading }: Props) {
     () => colors.filter((color) => !femaleOnly.has(color.value)),
     [colors, femaleOnly],
   );
-  const sireRecent = useMemo(
-    () => recent.filter((value) => !femaleOnly.has(value)),
-    [recent, femaleOnly],
+  const sireRecentShown = useMemo(
+    () => sireRecent.filter((value) => !femaleOnly.has(value)),
+    [sireRecent, femaleOnly],
   );
 
   // 親色は必須。breed は任意。
@@ -160,8 +183,8 @@ export function BreedingForm({ onSubmit, loading }: Props) {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!canSubmit) return;
-    pushRecent(sireColor);
-    pushRecent(damColor);
+    pushSireRecent(sireColor);
+    pushDamRecent(damColor);
     const input: CalculateInput = {
       sire_color: sireColor.trim(),
       dam_color: damColor.trim(),
@@ -189,9 +212,9 @@ export function BreedingForm({ onSubmit, loading }: Props) {
           required
           value={sireColor}
           onValueChange={setSireColor}
-          onCommit={pushRecent}
+          onCommit={pushSireRecent}
           colors={sireColors}
-          recent={sireRecent}
+          recent={sireRecentShown}
           placeholder="例: Silver Tabby / シルバータビー"
         />
         <ColorCombobox
@@ -200,9 +223,9 @@ export function BreedingForm({ onSubmit, loading }: Props) {
           required
           value={damColor}
           onValueChange={setDamColor}
-          onCommit={pushRecent}
+          onCommit={pushDamRecent}
           colors={colors}
-          recent={recent}
+          recent={damRecent}
           placeholder="例: Brown Tabby / ブラウンタビー"
         />
       </div>
