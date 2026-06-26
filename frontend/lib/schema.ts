@@ -77,3 +77,16 @@ export const colorsResponseSchema = z.object({
   colors: z.array(colorOptionSchema),
 });
 export type ColorsResponse = z.infer<typeof colorsResponseSchema>;
+
+// 入力サジェスト用の 1 猫種エントリ (api.py BreedOption に対応)。
+export const breedOptionSchema = z.object({
+  value: z.string(),
+  affects_genetics: z.boolean(),
+});
+export type BreedOption = z.infer<typeof breedOptionSchema>;
+
+// GET /api/v1/breeds のレスポンス (api.py BreedsResponse に対応)。
+export const breedsResponseSchema = z.object({
+  breeds: z.array(breedOptionSchema),
+});
+export type BreedsResponse = z.infer<typeof breedsResponseSchema>;
