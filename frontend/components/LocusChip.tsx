@@ -66,6 +66,9 @@ export function LocusChip({ locus }: { locus: string }) {
         <span className="block font-semibold text-slate-800">
           {entry.symbol} — {entry.name}
         </span>
+        <span className="mt-0.5 block text-[11px] text-slate-400">
+          {entry.inheritance}
+        </span>
         <span className="mt-0.5 block leading-relaxed">
           {entry.description}
         </span>

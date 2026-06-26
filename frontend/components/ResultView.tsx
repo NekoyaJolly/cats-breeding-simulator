@@ -221,7 +221,7 @@ export function ResultView({ data }: { data: CalculationResponse }) {
       </section>
 
       <section className="rounded-md bg-slate-100 p-4 text-sm">
-        <h3 className="font-semibold text-slate-700">診断情報</h3>
+        <h3 className="font-semibold text-slate-700">遺伝子情報</h3>
         <p className="mt-0.5 text-xs text-slate-400">
           座位（A / B / D…）をタップ／ホバーすると遺伝子座の解説が出ます。
         </p>
@@ -260,7 +260,7 @@ export function ResultView({ data }: { data: CalculationResponse }) {
         </dl>
         {diagnostics.assumptions.length > 0 && (
           <div className="mt-2">
-            <p className="text-slate-500">前提:</p>
+            <p className="text-slate-500">前提条件:</p>
             <ul className="ml-4 list-disc text-slate-600">
               {diagnostics.assumptions.map((assumption, index) => (
                 <li key={index}>{assumption}</li>
