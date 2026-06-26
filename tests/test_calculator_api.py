@@ -276,3 +276,11 @@ def test_breed_colors_endpoint_unconstrained() -> None:
     body = response.json()
     assert body["constrained"] is False
     assert body["colors"] == []
+
+
+def test_breed_colors_endpoint_unknown_breed_returns_422() -> None:
+    """未対応の猫種は /calculate と同様に 422 で弾く (API 間の挙動を揃える)。"""
+
+    response = client.get("/api/v1/breed-colors", params={"breed": "ドラゴン"})
+    assert response.status_code == 422
+    assert "未対応の猫種" in response.json()["detail"]

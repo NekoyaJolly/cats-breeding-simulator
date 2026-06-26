@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { fetchBreedColors } from "@/lib/api";
 
 // 猫種ミスマッチのエラー文の後ろに「その猫種で使える毛色」をコピペ可能な形で出す。
@@ -8,6 +8,9 @@ import { fetchBreedColors } from "@/lib/api";
 export function BreedColorsHint({ breed }: { breed: string }) {
   const [colors, setColors] = useState<string[] | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  // 「✓ コピー」表示を戻すタイマー。連打で多重化しないよう 1 本に保持し、
+  // 次回コピー時とアンマウント時に必ず解除する。
+  const resetTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -20,16 +23,28 @@ export function BreedColorsHint({ breed }: { breed: string }) {
     };
   }, [breed]);
 
+  useEffect(() => {
+    // アンマウント時にタイマーを解除 (解除漏れで setState が走るのを防ぐ)。
+    return () => {
+      if (resetTimerRef.current !== null) {
+        window.clearTimeout(resetTimerRef.current);
+      }
+    };
+  }, []);
+
   if (!colors || colors.length === 0) return null;
 
   async function copy(text: string, label: string) {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(label);
-      window.setTimeout(
-        () => setCopied((current) => (current === label ? null : current)),
-        1200,
-      );
+      if (resetTimerRef.current !== null) {
+        window.clearTimeout(resetTimerRef.current);
+      }
+      resetTimerRef.current = window.setTimeout(() => {
+        setCopied((current) => (current === label ? null : current));
+        resetTimerRef.current = null;
+      }, 1200);
     } catch {
       // クリップボード非対応 / 権限なしは黙って無視する。
     }

@@ -12,6 +12,7 @@ from cat_breeding_simulator.color_reading_ja import reading_ja
 from cat_breeding_simulator.engine import BreedingCalculationError, CoatColorCalculator
 from cat_breeding_simulator.master_data import (
     CANONICAL_BREEDS,
+    VALID_BREEDS,
     recognized_color_keys_for_breed,
 )
 
@@ -244,14 +245,19 @@ def breed_colors_endpoint(breed: str) -> BreedColorsResponse:
     """
 
     breed_key = CoatColorCalculator._normalize_breed_key(breed)
+    # /calculate と同じ基準 (VALID_BREEDS) で未対応の猫種は弾く (API 間で挙動を揃える)。
+    if breed_key not in VALID_BREEDS:
+        raise HTTPException(status_code=422, detail=f"未対応の猫種です: '{breed}'")
     keys = recognized_color_keys_for_breed(breed_key)
     if keys is None:
         return BreedColorsResponse(breed=breed, constrained=False, colors=[])
-    # 生の遺伝マップ名を canonical 表示名へ寄せ、重複を順序保持で除去してソートする。
+    # 生の遺伝マップ名を canonical 表示名へ寄せ、重複を除去 (set 併用で O(n)) してソートする。
+    seen_set: set[str] = set()
     seen: list[str] = []
     for key in keys:
         display = COLOR_MASTER.canonical_name(key)
-        if display not in seen:
+        if display not in seen_set:
+            seen_set.add(display)
             seen.append(display)
     return BreedColorsResponse(breed=breed, constrained=True, colors=sorted(seen))
 
