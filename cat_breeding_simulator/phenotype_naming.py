@@ -19,6 +19,12 @@ from cat_breeding_simulator.color_master import COLOR_MASTER
 from cat_breeding_simulator.display_alias_map import DISPLAY_ALIAS_MAP
 
 
+# CSV 上の正式カラー名集合 (定数。呼び出し毎の再構築を避け import 時に1回だけ構築)。
+_VALID_COLOR_NAMES: frozenset[str] = frozenset(
+    definition["CoatColor"] for definition in COLOR_DEFINITIONS
+)
+
+
 # 通常のXYオスには出してはいけない、本来メス限定のカラー名マーカー。
 # CSV側の符号ミス (例: Blue Cream を O/O で登録) に対する安全弁も兼ねる。
 _FEMALE_ONLY_MARKERS: tuple[str, ...] = (
@@ -198,8 +204,7 @@ class PhenotypeNamer:
 
     def clean_phenotype_name(self, name: str) -> str:
         # すでにCSVに存在する正式なカラー名である場合は、誤置換を防ぐためそのまま返す
-        valid_colors = {d["CoatColor"] for d in COLOR_DEFINITIONS}
-        if name in valid_colors:
+        if name in _VALID_COLOR_NAMES:
             return name
 
         is_silver = "Silver" in name and "Tabby" in name
