@@ -86,17 +86,22 @@ def _load_golden() -> dict[str, object]:
     return json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
 
 
-# 再生成: GOLDEN_REGEN=1 python -m pytest tests/test_golden_crosses.py (意図的な出力変更時のみ)
-if os.environ.get("GOLDEN_REGEN") == "1":
-    _regenerate()
-
-_GOLDEN = _load_golden()
+@pytest.fixture(scope="session")
+def golden() -> dict[str, object]:
+    # 再生成は「実行フェーズ」で1回だけ行う (収集フェーズ/--collect-only に副作用を出さない)。
+    # 再生成: GOLDEN_REGEN=1 python -m pytest tests/test_golden_crosses.py
+    if os.environ.get("GOLDEN_REGEN") == "1":
+        _regenerate()
+    return _load_golden()
 
 
 @pytest.mark.parametrize("cross", CROSSES, ids=[_key(c) for c in CROSSES])
-def test_golden_cross(cross: tuple[str, str, str | None, str]) -> None:
-    expected = _GOLDEN.get(_key(cross))
+def test_golden_cross(
+    cross: tuple[str, str, str | None, str], golden: dict[str, object]
+) -> None:
+    expected = golden.get(_key(cross))
     assert expected is not None, (
-        f"golden 未登録: {_key(cross)}。`python tests/test_golden_crosses.py` で再生成。"
+        f"golden 未登録: {_key(cross)}。"
+        "`GOLDEN_REGEN=1 python -m pytest tests/test_golden_crosses.py` で再生成。"
     )
     assert _fetch(cross) == expected
