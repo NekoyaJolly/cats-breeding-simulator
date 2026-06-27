@@ -108,3 +108,9 @@ export const breedColorsResponseSchema = z.object({
   colors: z.array(z.string()),
 });
 export type BreedColorsResponse = z.infer<typeof breedColorsResponseSchema>;
+
+// POST /api/v1/feedback: フィードバック受付結果 (sent=管理者へのメール送信成否)。
+export const feedbackResponseSchema = z.object({
+  sent: z.boolean(),
+});
+export type FeedbackResponse = z.infer<typeof feedbackResponseSchema>;

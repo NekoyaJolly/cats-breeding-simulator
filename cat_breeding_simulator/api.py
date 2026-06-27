@@ -4,12 +4,17 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from fastapi import APIRouter, FastAPI, HTTPException
+from fastapi import APIRouter, FastAPI, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from cat_breeding_simulator.color_master import COLOR_MASTER
 from cat_breeding_simulator.color_reading_ja import reading_ja
 from cat_breeding_simulator.engine import BreedingCalculationError, CoatColorCalculator
+from cat_breeding_simulator.feedback import (
+    MAX_MESSAGE_LENGTH,
+    check_rate_limit,
+    send_feedback_email,
+)
 from cat_breeding_simulator.master_data import (
     CANONICAL_BREEDS,
     VALID_BREEDS,
@@ -260,6 +265,55 @@ def breed_colors_endpoint(breed: str) -> BreedColorsResponse:
             seen_set.add(display)
             seen.append(display)
     return BreedColorsResponse(breed=breed, constrained=True, colors=sorted(seen))
+
+
+class FeedbackRequest(BaseModel):
+    """フィードバック送信の入力 (最大 200 文字)。"""
+
+    message: str = Field(min_length=1, max_length=MAX_MESSAGE_LENGTH)
+
+
+class FeedbackResponse(BaseModel):
+    """フィードバック受付結果。sent=管理者へのメール送信に成功したか。"""
+
+    sent: bool
+
+
+# レート制限キーとして保持する IP 文字列の最大長 (長大ヘッダ値の dict キー化を防ぐ)。
+_MAX_IP_KEY_LENGTH = 64
+
+
+def _client_ip(request: Request) -> str:
+    """レート制限用のクライアント IP。プロキシ経由は X-Forwarded-For の先頭要素を使う。
+
+    ヘッダは詐称・長大化され得るため、先頭要素のみ採用し、空/過長は無視して
+    request.client.host にフォールバックする。
+    """
+
+    forwarded = request.headers.get("x-forwarded-for", "")
+    candidate = forwarded.split(",")[0].strip() if forwarded else ""
+    if candidate and len(candidate) <= _MAX_IP_KEY_LENGTH:
+        return candidate
+    return request.client.host if request.client else "unknown"
+
+
+@router.post("/feedback", response_model=FeedbackResponse)
+def feedback_endpoint(payload: FeedbackRequest, request: Request) -> FeedbackResponse:
+    """常駐ウィジェットからのフィードバックを受け付け、管理者宛にメール送信する。
+
+    匿名アプリのため IP 単位の簡易レート制限をかける。メール基盤未設定の環境では
+    送信は行わず sent=false を返す (受付自体は成功扱い)。
+    """
+
+    if not check_rate_limit(_client_ip(request)):
+        raise HTTPException(
+            status_code=429,
+            detail="フィードバックの送信が多すぎます。しばらくしてからお試しください。",
+        )
+    message = payload.message.strip()
+    if not message:
+        raise HTTPException(status_code=422, detail="メッセージを入力してください。")
+    return FeedbackResponse(sent=send_feedback_email(message))
 
 
 def create_app() -> FastAPI:

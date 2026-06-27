@@ -1,0 +1,254 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
+import { submitFeedback } from "@/lib/api";
+
+const POSITION_KEY = "cbs:feedbackPosition";
+const MAX_LENGTH = 200;
+const DRAG_THRESHOLD = 5; // この距離を超えて動いたらドラッグと判定 (クリックと区別)
+const BUTTON_SIZE = 52;
+
+type Position = { x: number; y: number };
+type SendStatus = "idle" | "sending" | "sent" | "error";
+
+function clampToViewport(pos: Position): Position {
+  if (typeof window === "undefined") return pos;
+  const maxX = Math.max(0, window.innerWidth - BUTTON_SIZE);
+  const maxY = Math.max(0, window.innerHeight - BUTTON_SIZE);
+  return {
+    x: Math.min(Math.max(0, pos.x), maxX),
+    y: Math.min(Math.max(0, pos.y), maxY),
+  };
+}
+
+/**
+ * 常駐のフィードバック手紙アイコン。
+ * - ドラッグで位置を移動でき、位置は localStorage に保存される。
+ * - クリック (ドラッグでない) でフィードバックモーダルを開く。
+ * - 送信で /api/v1/feedback (管理者宛メール) に届く。
+ */
+export function FeedbackWidget() {
+  const [position, setPosition] = useState<Position | null>(null);
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState<SendStatus>("idle");
+
+  const positionRef = useRef<Position | null>(null);
+  const dragStartRef = useRef<{ px: number; py: number; x: number; y: number } | null>(null);
+  const movedRef = useRef(false);
+
+  // 初期位置 (localStorage か既定値=右下) を復元する。
+  useEffect(() => {
+    let initial: Position | null = null;
+    try {
+      const stored = localStorage.getItem(POSITION_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as Partial<Position>;
+        if (typeof parsed.x === "number" && typeof parsed.y === "number") {
+          initial = { x: parsed.x, y: parsed.y };
+        }
+      }
+    } catch {
+      // ignore
+    }
+    if (!initial) {
+      initial = {
+        x: window.innerWidth - BUTTON_SIZE - 20,
+        y: window.innerHeight - BUTTON_SIZE - 120,
+      };
+    }
+    const clamped = clampToViewport(initial);
+    positionRef.current = clamped;
+    setPosition(clamped);
+  }, []);
+
+  // リサイズ時に画面内へ収める。
+  useEffect(() => {
+    const onResize = () =>
+      setPosition((prev) => {
+        if (!prev) return prev;
+        const clamped = clampToViewport(prev);
+        positionRef.current = clamped;
+        return clamped;
+      });
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const handlePointerDown = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
+    const pos = positionRef.current;
+    if (!pos) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragStartRef.current = { px: e.clientX, py: e.clientY, x: pos.x, y: pos.y };
+    movedRef.current = false;
+  }, []);
+
+  const handlePointerMove = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
+    const start = dragStartRef.current;
+    if (!start) return;
+    const dx = e.clientX - start.px;
+    const dy = e.clientY - start.py;
+    if (!movedRef.current && Math.hypot(dx, dy) > DRAG_THRESHOLD) {
+      movedRef.current = true;
+    }
+    if (movedRef.current) {
+      const next = clampToViewport({ x: start.x + dx, y: start.y + dy });
+      positionRef.current = next;
+      setPosition(next);
+    }
+  }, []);
+
+  const handlePointerUp = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
+    const start = dragStartRef.current;
+    dragStartRef.current = null;
+    if (!start) return;
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+    if (movedRef.current) {
+      try {
+        if (positionRef.current) {
+          localStorage.setItem(POSITION_KEY, JSON.stringify(positionRef.current));
+        }
+      } catch {
+        // ignore
+      }
+    } else {
+      setStatus("idle");
+      setOpen(true);
+    }
+  }, []);
+
+  const close = useCallback(() => {
+    setStatus((current) => {
+      if (current === "sending") return current; // 送信中は閉じない
+      setOpen(false);
+      return current;
+    });
+  }, []);
+
+  const send = useCallback(async () => {
+    const trimmed = message.trim();
+    if (!trimmed) return;
+    setStatus("sending");
+    try {
+      await submitFeedback(trimmed);
+      setMessage("");
+      setStatus("sent");
+      window.setTimeout(() => setOpen(false), 1200);
+    } catch {
+      setStatus("error");
+    }
+  }, [message]);
+
+  // Escape で閉じる。
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, close]);
+
+  if (!position) return null;
+
+  return (
+    <>
+      <button
+        type="button"
+        aria-label="フィードバックを送る"
+        title="フィードバックを送る"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        className="fixed z-[150] flex items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700"
+        style={{
+          left: position.x,
+          top: position.y,
+          width: BUTTON_SIZE,
+          height: BUTTON_SIZE,
+          touchAction: "none",
+          cursor: "grab",
+        }}
+      >
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <path d="m3 7 9 6 9-6" />
+        </svg>
+      </button>
+
+      {open && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 p-4"
+          onClick={close}
+          role="presentation"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="フィードバック"
+            className="w-full max-w-md rounded-lg bg-white p-5 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-base font-bold text-slate-900">フィードバック</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              ご意見・ご要望をお聞かせください（最大{MAX_LENGTH}文字）。
+            </p>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.currentTarget.value.slice(0, MAX_LENGTH))}
+              maxLength={MAX_LENGTH}
+              rows={4}
+              autoFocus
+              placeholder="気づいたこと・改善してほしいことなど"
+              className="mt-3 w-full resize-none rounded-md border border-slate-300 p-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+            <div className="mt-1 text-right text-xs text-slate-400">
+              {message.length} / {MAX_LENGTH}
+            </div>
+            {status === "error" && (
+              <p className="mt-1 text-sm text-red-600">
+                送信に失敗しました。時間をおいて再度お試しください。
+              </p>
+            )}
+            {status === "sent" && (
+              <p className="mt-1 text-sm text-teal-600">
+                送信しました。ありがとうございます！
+              </p>
+            )}
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={close}
+                disabled={status === "sending"}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                キャンセル
+              </button>
+              <button
+                type="button"
+                onClick={send}
+                disabled={!message.trim() || status === "sending"}
+                className="rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {status === "sending" ? "送信中…" : "送信"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
