@@ -7,11 +7,14 @@ from dataclasses import dataclass
 from typing import Literal
 
 from cat_breeding_simulator.engine import BreedingCalculationError, CoatColorCalculator
-from cat_breeding_simulator.master_data import KittenGenotype, ParentGenotype
+from cat_breeding_simulator.master_data import ParentGenotype
 
 
 ObservedSex = Literal["male", "female"]
 ParentRole = Literal["sire", "dam"]
+
+# 観察子猫1候補のプロファイル: (性別, {座位: ソート済みアレル対})。無視座位は含めない。
+ObservedProfile = tuple[str, dict[str, tuple[str, str]]]
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,22 +113,13 @@ class LitterInferenceService:
             breed,
             include_unconfirmed_carriers=True,
         )
-        observed_candidates = [
-            self._observed_candidate_signatures(kitten, breed) for kitten in kittens
+        observed_kittens = [
+            self._observed_kitten_profiles(kitten, breed) for kitten in kittens
         ]
 
-        surviving_pairs: list[tuple[ParentGenotype, ParentGenotype]] = []
-        for sire_candidate in sire_candidates:
-            for dam_candidate in dam_candidates:
-                generated = self._calculator.possible_kitten_genotypes(
-                    sire_candidate,
-                    dam_candidate,
-                )
-                if all(
-                    self._can_explain_observed(generated, candidate)
-                    for candidate in observed_candidates
-                ):
-                    surviving_pairs.append((sire_candidate, dam_candidate))
+        surviving_pairs = self._surviving_pairs(
+            sire_candidates, dam_candidates, observed_kittens
+        )
 
         warnings = self._warnings(kittens)
         if not surviving_pairs:
@@ -165,11 +159,17 @@ class LitterInferenceService:
             )
         return sire.breed or dam.breed
 
-    def _observed_candidate_signatures(
+    def _observed_kitten_profiles(
         self,
         kitten: ObservedKitten,
         breed: str | None,
-    ) -> list[tuple[frozenset[str], tuple[str, tuple[tuple[str, tuple[str, str]], ...]]]]:
+    ) -> list[ObservedProfile]:
+        """観察子猫1頭の候補遺伝子型を、無視座位を除いた座位別アレル対へ展開する。
+
+        各候補は (性別, {座位: ソート済みアレル対}) で表す。後段の座位独立判定で、
+        親ペアが各座位にこの対を渡せるかを座位ごとに突き合わせる。
+        """
+
         try:
             candidates = self._calculator.parent_genotype_candidates(
                 kitten.color,
@@ -180,59 +180,79 @@ class LitterInferenceService:
         except BreedingCalculationError as error:
             raise BreedingCalculationError(_kitten_error_message(kitten, error)) from error
         ignore_loci = self._ignored_loci_for_observed(kitten.color)
-        return [
-            (
-                frozenset(ignore_loci),
-                self._signature(
-                    KittenGenotype(
-                        sex="Male" if candidate.sex == "male" else "Female",
-                        loci=candidate.loci,
-                    ),
-                    ignore_loci,
-                ),
-            )
-            for candidate in candidates
-        ]
+        profiles: list[ObservedProfile] = []
+        for candidate in candidates:
+            sex = "Male" if candidate.sex == "male" else "Female"
+            loci = {
+                locus: tuple(sorted(alleles))
+                for locus, alleles in candidate.loci.items()
+                if locus not in ignore_loci
+            }
+            profiles.append((sex, loci))
+        return profiles
 
-    @staticmethod
-    def _can_explain_observed(
-        generated: list[KittenGenotype],
-        observed_signatures: list[
-            tuple[frozenset[str], tuple[str, tuple[tuple[str, tuple[str, str]], ...]]]
-        ],
+    def _surviving_pairs(
+        self,
+        sire_candidates: list[ParentGenotype],
+        dam_candidates: list[ParentGenotype],
+        observed_kittens: list[list[ObservedProfile]],
+    ) -> list[tuple[ParentGenotype, ParentGenotype]]:
+        """観察された全子猫を同時に説明できる父母候補ペアを残す (座位独立分解)。
+
+        メンデル分離は座位ごとに独立 → 「観察署名 ∈ 親ペアから生成される子猫署名集合」は
+        「各座位で観察アレル対が親ペアから生成可能」かつ「性別×O座位が到達可能」へ厳密に分解できる。
+        結合 (joint) の子猫遺伝子型集合を物質化する従来実装 (O(候補² × 配偶子直積)) を、
+        ビットマスクの座位別照合 (O(候補² × 子猫数 × 座位数)) へ置き換える。出力は同一。
+        """
+
+        # 観察できない子猫が1頭でもあれば、どの親ペアも全頭説明できない。
+        if any(not profiles for profiles in observed_kittens):
+            return []
+
+        # 子猫ごとに「座位集合」「候補数 (=ビット幅)」「(親座位対)→満たす候補ビットマスク」のメモを持つ。
+        kitten_tables: list[tuple[list[ObservedProfile], list[str], dict[str, dict[tuple, int]]]] = []
+        for profiles in observed_kittens:
+            loci_keys = list(profiles[0][1].keys())
+            kitten_tables.append((profiles, loci_keys, {locus: {} for locus in loci_keys}))
+
+        surviving: list[tuple[ParentGenotype, ParentGenotype]] = []
+        for sire_candidate in sire_candidates:
+            sire_loci = sire_candidate.loci
+            for dam_candidate in dam_candidates:
+                dam_loci = dam_candidate.loci
+                if self._pair_explains_all(sire_loci, dam_loci, kitten_tables):
+                    surviving.append((sire_candidate, dam_candidate))
+        return surviving
+
+    def _pair_explains_all(
+        self,
+        sire_loci: dict[str, tuple[str, str]],
+        dam_loci: dict[str, tuple[str, str]],
+        kitten_tables: list[tuple[list[ObservedProfile], list[str], dict[str, dict[tuple, int]]]],
     ) -> bool:
-        generated_signatures_by_ignored_loci: dict[
-            frozenset[str],
-            set[tuple[str, tuple[tuple[str, tuple[str, str]], ...]]],
-        ] = {}
-        for ignored_loci, observed_signature in observed_signatures:
-            if ignored_loci not in generated_signatures_by_ignored_loci:
-                generated_signatures_by_ignored_loci[ignored_loci] = {
-                    LitterInferenceService._signature(kitten, set(ignored_loci))
-                    for kitten in generated
-                }
-            if observed_signature in generated_signatures_by_ignored_loci[ignored_loci]:
-                return True
-        return False
+        """この父母ペアが全観察子猫を説明できるか。
 
-    @staticmethod
-    def _signature(
-        kitten: KittenGenotype,
-        ignore_loci: set[str],
-    ) -> tuple[str, tuple[tuple[str, tuple[str, str]], ...]]:
-        return (
-            kitten.sex,
-            tuple(
-                sorted(
-                    (
-                        locus,
-                        tuple(sorted(alleles)),
+        子猫ごとに、全座位で「対を渡せる候補」のビットマスクを AND し、
+        1つでも候補が全座位を満たせば (mask != 0) その子猫は説明可能。
+        """
+
+        for profiles, loci_keys, table in kitten_tables:
+            mask = (1 << len(profiles)) - 1
+            for locus in loci_keys:
+                key = (sire_loci[locus], dam_loci[locus])
+                locus_masks = table[locus]
+                locus_mask = locus_masks.get(key)
+                if locus_mask is None:
+                    locus_mask = _locus_satisfaction_mask(
+                        locus, sire_loci[locus], dam_loci[locus], profiles
                     )
-                    for locus, alleles in kitten.loci.items()
-                    if locus not in ignore_loci
-                )
-            ),
-        )
+                    locus_masks[key] = locus_mask
+                mask &= locus_mask
+                if mask == 0:
+                    break
+            if mask == 0:
+                return False
+        return True
 
     @staticmethod
     def _ignored_loci_for_observed(color: str) -> set[str]:
@@ -375,6 +395,70 @@ class LitterInferenceService:
         order = _ALLELE_ORDER.get(locus, {})
         ordered = sorted(alleles, key=lambda allele: order.get(allele, 99))
         return "/".join(_format_allele(allele) for allele in ordered)
+
+
+def _autosomal_can_produce(
+    sire_pair: tuple[str, str],
+    dam_pair: tuple[str, str],
+    target_pair: tuple[str, str],
+) -> bool:
+    """常染色体1座位で、親ペアが子の (ソート済み) アレル対を生成できるか。
+
+    子は片方を父配偶子、もう片方を母配偶子から受け取る。配偶子に出るアレルは
+    その座位の対の集合 (ホモなら1種、ヘテロなら2種)。
+    """
+
+    first, second = target_pair
+    sire_alleles = {sire_pair[0], sire_pair[1]}
+    dam_alleles = {dam_pair[0], dam_pair[1]}
+    return (first in sire_alleles and second in dam_alleles) or (
+        second in sire_alleles and first in dam_alleles
+    )
+
+
+def _o_can_produce(
+    sire_o: tuple[str, str],
+    dam_o: tuple[str, str],
+    target_sex: str,
+    target_pair: tuple[str, str],
+) -> bool:
+    """O座位 (X連鎖) で、性別込みの子 (性別, ソート済みO対) を生成できるか。
+
+    父 (オス) の配偶子は {O または o, Y}、母 (メス) の配偶子は対の非Yアレル。
+    Y を受けると子はオス (O対 = (母アレル, Y))、それ以外はメス (O対 = (父アレル, 母アレル))。
+    """
+
+    orange = "O" if "O" in sire_o else "o"
+    sire_gametes = {orange, "Y"}
+    dam_gametes = {dam_o[0], dam_o[1]}
+    for sire_gamete in sire_gametes:
+        for dam_gamete in dam_gametes:
+            if sire_gamete == "Y":
+                if target_sex == "Male" and tuple(sorted((dam_gamete, "Y"))) == target_pair:
+                    return True
+            elif target_sex == "Female" and tuple(sorted((sire_gamete, dam_gamete))) == target_pair:
+                return True
+    return False
+
+
+def _locus_satisfaction_mask(
+    locus: str,
+    sire_pair: tuple[str, str],
+    dam_pair: tuple[str, str],
+    profiles: list[ObservedProfile],
+) -> int:
+    """この座位で、各候補プロファイルの要求対を親ペアが渡せるかをビットマスクで返す。"""
+
+    mask = 0
+    for index, (sex, loci) in enumerate(profiles):
+        target_pair = loci[locus]
+        if locus == "O":
+            satisfied = _o_can_produce(sire_pair, dam_pair, sex, target_pair)
+        else:
+            satisfied = _autosomal_can_produce(sire_pair, dam_pair, target_pair)
+        if satisfied:
+            mask |= 1 << index
+    return mask
 
 
 def _format_allele(allele: str) -> str:
