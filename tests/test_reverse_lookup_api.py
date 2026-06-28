@@ -209,3 +209,23 @@ def test_reverse_lookup_rejects_female_only_alias_for_sire() -> None:
     assert "Blue Cream" in detail
     assert "メス限定" in detail
     assert "父猫" in detail
+
+
+def test_reverse_lookup_rejects_too_many_cats() -> None:
+    """登録猫が上限 (50頭) を超えると 422 で拒否する。"""
+
+    cats = [
+        {
+            "id": f"c{i}",
+            "name": f"cat{i}",
+            "sex": "male" if i % 2 == 0 else "female",
+            "color": "Black",
+        }
+        for i in range(51)
+    ]
+    response = client.post(
+        "/api/v1/reverse-lookup",
+        json={"target_color": "Blue", "cats": cats},
+    )
+    assert response.status_code == 422
+    assert "50" in str(response.json()["detail"])

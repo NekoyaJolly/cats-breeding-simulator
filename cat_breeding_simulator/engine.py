@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
-from dataclasses import dataclass
+from collections import OrderedDict, defaultdict
+from dataclasses import dataclass, replace
 import itertools
+from typing import TypeVar
 
 from cat_breeding_simulator.mendelian import (
     allele_distribution,
@@ -168,12 +169,71 @@ _O_NON_ORANGE_LABEL = "非オレンジ（赤以外） o"
 _O_ORANGE_LABEL = "オレンジ（赤/クリーム） O"
 
 
+# プロセス内キャッシュの上限 (常駐 singleton のメモリ無制限増加を防ぐ)。
+# 入力上限 (猫50 / 子猫12) に加え、(色 × 猫種 × mode × carrier) の組み合わせ爆発に対しても
+# 常駐メモリを有界にする。超過時は最も使われていないエントリ (LRU) から退避する。
+_REPORT_CACHE_MAX = 2048
+_GENOTYPE_CACHE_MAX = 2048
+_GAMETE_CACHE_MAX = 4096
+
+_CacheValue = TypeVar("_CacheValue")
+
+
+def _lru_get(
+    cache: "OrderedDict[tuple, _CacheValue]", key: tuple
+) -> _CacheValue | None:
+    """LRUキャッシュから取得し、ヒットしたキーを最近使用へ更新する。"""
+
+    if key not in cache:
+        return None
+    cache.move_to_end(key)
+    return cache[key]
+
+
+def _lru_put(
+    cache: "OrderedDict[tuple, _CacheValue]", key: tuple, value: _CacheValue, maxsize: int
+) -> None:
+    """LRUキャッシュへ格納し、上限超過時は最古エントリを退避する。"""
+
+    cache[key] = value
+    cache.move_to_end(key)
+    if len(cache) > maxsize:
+        cache.popitem(last=False)
+
+
+def _freeze_carriers(carriers: dict[str, str] | None) -> tuple[tuple[str, str], ...] | None:
+    """キャリア指定 (dict) をキャッシュキー用にハッシュ可能なタプルへ正規化する。"""
+
+    if not carriers:
+        return None
+    return tuple(sorted(carriers.items()))
+
+
+def _gamete_cache_key(genotype: ParentGenotype) -> tuple:
+    """配偶子生成は座位アレル対の順序に依存しない (分離は集合的) ため、
+    順序非依存のキーで同一遺伝子型をまとめる。"""
+
+    return (
+        genotype.sex,
+        tuple(sorted((locus, tuple(sorted(pair))) for locus, pair in genotype.loci.items())),
+    )
+
+
 class CoatColorCalculator:
     """Split -> Cross -> Evaluate -> Aggregate を実装する計算器。"""
 
     def __init__(self) -> None:
         # 遺伝子型 → 表示色名 の命名/分類は PhenotypeNamer へ委譲する。
         self._namer = PhenotypeNamer()
+        # 純粋計算のプロセス内メモ化 (入力 + import時定数のみに依存)。
+        # 逆引き/リター推定は同一 (色, 性別, 猫種) の解決やレポートを多数回要求するため、
+        # ここでキャッシュすると O(N^2) 経路の定数項が大きく下がる。
+        # 上限付き LRU で常駐メモリを有界化する (_lru_get / _lru_put)。
+        # calculate_report は外部に露出するため、キャッシュ汚染防止に「返却時コピー」する
+        # (_copy_report)。内部専用の genotype / gamete キャッシュは読み取り専用契約とする。
+        self._report_cache: "OrderedDict[tuple, CalculationReport]" = OrderedDict()
+        self._genotype_cache: "OrderedDict[tuple, list[ParentGenotype]]" = OrderedDict()
+        self._gamete_cache: "OrderedDict[tuple, dict[tuple[tuple[str, str], ...], float]]" = OrderedDict()
 
     def calculate(
         self,
@@ -191,6 +251,66 @@ class CoatColorCalculator:
         ).results
 
     def calculate_report(
+        self,
+        sire_color: str,
+        dam_color: str,
+        breed: str | None = None,
+        mode: str = "normal",
+        sire_carriers: dict[str, str] | None = None,
+        dam_carriers: dict[str, str] | None = None,
+    ) -> CalculationReport:
+        """純粋関数 `_calculate_report_impl` の結果をプロセス内メモ化して返す。
+
+        逆引き (オス×メス総当たり) や carrier_exploration / リター推定が同一の親色組を
+        繰り返し計算するため、(色, 猫種, モード, キャリア) をキーにキャッシュする。
+        例外 (BreedingCalculationError) はキャッシュせずそのまま送出する。
+        """
+
+        key = (
+            sire_color,
+            dam_color,
+            breed,
+            mode,
+            _freeze_carriers(sire_carriers),
+            _freeze_carriers(dam_carriers),
+        )
+        cached = _lru_get(self._report_cache, key)
+        if cached is not None:
+            # 同一 singleton が横断的に共有するため、キャッシュ実体を直接渡さずコピーを返す
+            # (呼び出し側の偶発的な破壊的変更でキャッシュが汚染されるのを防ぐ)。
+            return self._copy_report(cached)
+        report = self._calculate_report_impl(
+            sire_color, dam_color, breed, mode, sire_carriers, dam_carriers
+        )
+        _lru_put(self._report_cache, key, report, _REPORT_CACHE_MAX)
+        return self._copy_report(report)
+
+    @staticmethod
+    def _copy_report(report: CalculationReport) -> CalculationReport:
+        """キャッシュ実体を保護するため、可変コレクションを浅くコピーした新レポートを返す。
+
+        要素 (KittenResult / CarrierScenario / ParentColorNote) は frozen dataclass のため、
+        リスト/辞書を作り直せば呼び出し側の append/pop/要素差し替えからキャッシュを守れる。
+        """
+
+        return replace(
+            report,
+            results=list(report.results),
+            unmatched_samples=[dict(sample) for sample in report.unmatched_samples],
+            opened_loci=list(report.opened_loci) if report.opened_loci is not None else None,
+            closed_loci=list(report.closed_loci) if report.closed_loci is not None else None,
+            assumptions=list(report.assumptions) if report.assumptions is not None else None,
+            carrier_exploration_results=(
+                list(report.carrier_exploration_results)
+                if report.carrier_exploration_results is not None
+                else None
+            ),
+            parent_color_notes=(
+                list(report.parent_color_notes) if report.parent_color_notes is not None else None
+            ),
+        )
+
+    def _calculate_report_impl(
         self,
         sire_color: str,
         dam_color: str,
@@ -743,6 +863,24 @@ class CoatColorCalculator:
         mode: str = "normal",
         carriers: dict[str, str] | None = None,
     ) -> list[ParentGenotype]:
+        """親遺伝子型候補の解決をメモ化して返す (返り値は読み取り専用扱い)。"""
+
+        key = (phenotype, sex, breed, mode, _freeze_carriers(carriers))
+        cached = _lru_get(self._genotype_cache, key)
+        if cached is not None:
+            return cached
+        result = self._resolve_parent_genotypes_impl(phenotype, sex, breed, mode, carriers)
+        _lru_put(self._genotype_cache, key, result, _GENOTYPE_CACHE_MAX)
+        return result
+
+    def _resolve_parent_genotypes_impl(
+        self,
+        phenotype: str,
+        sex: str,
+        breed: str | None,
+        mode: str = "normal",
+        carriers: dict[str, str] | None = None,
+    ) -> list[ParentGenotype]:
         if breed:
             breed_lower = breed.lower()
             if "abyssinian" in breed_lower or "somali" in breed_lower:
@@ -797,6 +935,17 @@ class CoatColorCalculator:
         return filtered
 
     def _build_gametes(self, genotype: ParentGenotype) -> dict[tuple[tuple[str, str], ...], float]:
+        """配偶子分布をメモ化して返す (同一遺伝子型が交配の各所で何度も使われる)。"""
+
+        key = _gamete_cache_key(genotype)
+        cached = _lru_get(self._gamete_cache, key)
+        if cached is not None:
+            return cached
+        result = self._build_gametes_impl(genotype)
+        _lru_put(self._gamete_cache, key, result, _GAMETE_CACHE_MAX)
+        return result
+
+    def _build_gametes_impl(self, genotype: ParentGenotype) -> dict[tuple[tuple[str, str], ...], float]:
         gametes: dict[tuple[tuple[str, str], ...], float] = {(): 1.0}
         for locus in AUTOSOMAL_LOCI:
             next_gametes: dict[tuple[tuple[str, str], ...], float] = defaultdict(float)

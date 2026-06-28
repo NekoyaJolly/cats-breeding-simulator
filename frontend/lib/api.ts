@@ -84,6 +84,15 @@ function cleanErrorMessage(detail: string): string {
 // msg が英語のため、そのまま出さず日本語の総括メッセージにする。
 function describeError(detail: string | Array<{ msg: string }>): string {
   if (typeof detail === "string") return cleanErrorMessage(detail);
+  // pydantic のフィールド検証エラー (配列形式)。msg は英語のことが多いが、
+  // サーバが日本語で投げた検証メッセージ (入力上限超過など) はそのままユーザーへ伝える。
+  // pydantic が付ける "Value error, " 接頭辞を取り除き、日本語を含む場合のみ採用する。
+  for (const item of detail) {
+    const message = item.msg.replace(/^Value error,\s*/, "");
+    if (/[ぁ-んァ-ヶ一-龠]/.test(message)) {
+      return message;
+    }
+  }
   return "入力内容に誤りがあります。毛色が正しく入力されているか確認してください。";
 }
 

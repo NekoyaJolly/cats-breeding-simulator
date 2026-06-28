@@ -1,80 +1,83 @@
 # 直近フェーズ サマリー (引き継ぎ用)
 
-最終更新: 2026-06-28
-位置づけ: **次フェーズ着手時に最初に読む唯一の引き継ぎ** (AGENTS.md §5.0 ローリング運用 / 常に1件)。  
+最終更新: 2026-06-29
+位置づけ: **次フェーズ着手時に最初に読む唯一の引き継ぎ** (AGENTS.md §5.0 ローリング運用 / 常に1件)。
 正本は `docs/architecture/` 配下 (AGENTS.md §0 / V9 正本3冊 + `cat_color_master.csv` 系 + `cat_color_display_alias_map.csv`)。本書は要約であり正本ではない。
 
 ---
 
-## 1. このフェーズで完了したこと: フロントエンド (Web UI) MVP 新設
+## 1. このフェーズで完了したこと: 計算パフォーマンス改善 (逆引き / リター推定 / エンジン)
 
-### 2026-06-28 追記: 「目標カラーから探す」逆引きMVP
-- **座位単位の純粋関数**を `cat_breeding_simulator/mendelian.py` に追加し、B/D/A/O/C/I/Wb の主要遺伝ケースを分数ベースで検証するテストを追加。
-- **逆引きAPI** `POST /api/v1/reverse-lookup` を追加。登録猫または自舎カラー構成と目標カラーから、交配候補を「確定で期待できる」「条件付きで期待できる」「現在の情報では判定が難しい」「現在の登録情報では確認できない」に分類して返す。
-- **逆引き結果**は、確定確率、条件付き最大確率、確認が必要な条件、推奨検査、座位別根拠、目標カラー以外に生まれる可能性のあるカラーを含む。候補が無い場合も、目標カラーに必要な条件と現在確認できない条件を返す。
-- **フロントエンド**は通常シミュレーターを既定タブとして維持し、別タブに「目標カラーから探す」を追加。両親猫のカラー登録は `frontend/lib/registeredCatRepository.ts` の抽象リポジトリ経由でローカル保存する。
-- **逆引き画面の入力UI**は、通常シミュレーターと同じ `GET /api/v1/colors` / `ColorCombobox` を使う。複数カラーを補完付き入力行として追加でき、登録済み父母候補の編集、父候補/母候補のアコーディオン表示、目標性別の任意指定、検索結果候補のアコーディオン表示に対応。自由入力の別名は登録時に canonical 値へ揃え、父候補のメス限定カラーはUIとAPIの両方で拒否する。
-- **リター実績から推定**タブと `POST /api/v1/litter-inference` を追加。父猫・母猫カラーと観察子猫のカラー・性別から、既存 `CoatColorCalculator` の resolver / 親候補生成 / Punnett 分離を共有して、確定・条件付き確定・推定・未確認・矛盾・警告・推奨検査を返す。
+逆引き (オス×メス総当たり) とリター推定 (親候補爆発) が大規模入力で重すぎた問題を、**出力を一切変えずに** 高速化した。設計と計測の詳細は本フェーズで一旦 `docs/design/performance_refactor_specification.md` に置き、完了に伴い V9 正本 §9.3 / §9.4 へ実装メモを統合して当該指示書は削除した。
 
-### A. スタック・配置
-- `frontend/` に Next.js 14 (App Router) / React 18 / TypeScript strict / Tailwind CSS で新設。バックエンド (FastAPI) は**無改修**。
-- 構成: `app/` (layout / page / globals.css)、`components/` (`BreedingForm` 入力 / `ResultView` 結果表示)、`lib/` (`schema.ts` Zod / `api.ts` fetch ラッパ)。
-- `npm run typecheck` / `npm run build` 成功。lint クリーン。
+### 実施内容 (チケット単位)
+- **PERF-1 入力上限**: `api.py` の `field_validator` で **逆引き登録猫 ≤ 50 / リター観察子猫 ≤ 12**。超過は理由が分かる日本語で 422。
+- **PERF-2 エンジンのメモ化**: `engine.py` で `calculate_report` / `_resolve_parent_genotypes` / `_build_gametes` をインスタンスキャッシュ化 (純粋計算 = import時定数 + 引数のみに依存)。キャッシュ返却物は **読み取り専用扱い** (破壊的変更しない) が規約。
+- **PERF-3 リター推定の座位独立分解**: `litter_inference.py` を、結合 (joint) 子猫遺伝子型集合の物質化から **座位単位のビットマスク照合** へ置換。メンデル分離が座位ごと独立である等価性に基づく。`possible_kitten_genotypes` ベースの旧経路は廃止。
+- **PERF-4 逆引きの追加最適化**: **見送り** (PERF-2 だけで目標達成のため、不要な複雑化を避けた)。さらに大規模化する場合のみ再検討。
+- **PERF-5 フロント表示**: `frontend/lib/api.ts` の `describeError` を改修し、配列形式422 の **日本語検証メッセージ (上限超過等) を表示**。英語の pydantic 検証エラーは従来どおり総括文言にフォールバック (`Value error,` 接頭辞は除去)。
 
-### B. 入出力
-- **入力**: 父色・母色 (自由入力・必須)、猫種 (任意)、モード選択 (`normal` / `explicit_carrier` / `carrier_exploration`)。`explicit_carrier` 時のみキャリア入力欄 (`座位:遺伝子型` カンマ区切り) を表示。
-- **出力**: `results` (性別×毛色×確率テーブル) / `diagnostics` (opened/closed loci・assumptions・unmatched) / `carrier_exploration_results` を表示。**carrier_exploration は通常結果と視覚的に分離**して表示 (シミュレーター正本 §2)。
+### 計測 (実測・2026-06-29)
+| 対象 | 改善前 | 改善後 |
+|------|--------|--------|
+| 逆引き 40頭 / 60頭 | 5,866ms / 12,947ms | 341ms / 193ms |
+| リター Black×Black 1子 | 1,309ms | 18.5ms |
+| リター **Silver Tabby×Silver Tabby 1子** | **113,096ms** | **341ms** (実機プロキシ経由 0.32s) |
 
-### C. API 連携 (フロント単独方針)
-- **`POST /api/v1/calculate` を Zod でランタイム検証** (`lib/schema.ts`、`api.py` の `CalculationResponse` を再宣言)。`any`/`unknown` 型は持ち込まず narrow (AGENTS 最優先5原則 §2)。
-- FastAPI の **422 を人間可読へ整形** (`lib/api.ts`): 自前 `BreedingCalculationError` の**文字列 detail** と pydantic 検証エラーの**配列 detail (`{msg}`)** の両形を処理。バックエンド未起動時の接続エラーも文言化。
-- **`next.config.mjs` の rewrite で `/api/*` を `BACKEND_ORIGIN` (既定 `http://localhost:8000`) へプロキシ**。同一オリジン扱いとし、バックエンド側 CORS 追加を回避。本番は env で差し替え。
-
-### D. 検証 (AGENTS §6.3 サーバ起動 + 実経路)
-- uvicorn (:8000) + `next start` (:3000) を起動し、**proxy 経由 (:3000→:8000)** で確認:
-  - golden path (normal): Silver Tabby × Brown Tabby → 8 行 + diagnostics。
-  - carrier_exploration: `carrier_exploration_results` フィールド処理。
-  - 未知の色 → 422 (文字列 detail)。空入力 → 422 (配列 detail)。両形ともフロントで整形表示。
+### 検証
+- `pytest -q` **151 passed** (既存148 + 新規3: リター新旧 brute-force 等価テスト・逆引き猫上限・リター子猫上限)。
+- 出力同一性は **130×204 / golden_crosses 無変更通過** + **リター新旧等価テスト** で担保。
+- フロント **typecheck / lint クリーン**。
+- **実機確認** (uvicorn:8000 + next:3000、プロキシ :3000→:8000): golden path / 逆引き / リター正常、上限超過は 422 + 日本語文言、最悪ケース 0.32s。
 
 ---
 
 ## 2. 計算機の現状 (バックエンド)
 
-- **遺伝計算**: 全座位 Punnett + モード別の親遺伝子型生成 (`engine.py` / `master_data.py`)。3モード実装済み。
+- **遺伝計算**: 全座位 Punnett + モード別の親遺伝子型生成 (`engine.py` / `master_data.py`)。3モード実装済み。**純粋計算はプロセス内メモ化** (PERF-2)。
+- **逆引き** (`reverse_lookup.py`): 登録猫から目標カラー成立候補を分類。登録猫 ≤ 50。
+- **リター推定** (`litter_inference.py`): 観察子猫群から父母遺伝子型候補を座位独立分解で絞り込み。観察子猫 ≤ 12。
 - **名前 (入力)**: `cat_color_master.csv` 経由で alias 入力受理・canonical 解決 (`color_master.py`)。
 - **名前 (出力表示)**: canonical 正規化の後段で `cat_color_display_alias_map.csv` 経由の猫種別表示名・Van 正規化 (`display_alias_map.py`)。
-- **API**: `POST /api/v1/calculate`。`mode` / `sire_carriers` / `dam_carriers` / `breed`。
-- **テスト**: pytest 42 passed。
+- **API**: `POST /api/v1/calculate` / `/reverse-lookup` / `/litter-inference` / `/colors` / `/breeds` / `/feedback`。
+
+## 3. フロントエンドの現状
+
+- `frontend/` に Next.js 14 (App Router) / React 18 / TypeScript strict / Tailwind。通常シミュレーター・逆引き・リター推定の3タブ。
+- API レスポンスは Zod で narrow (`lib/schema.ts`)。422 detail は **文字列 / 配列の2形** を `lib/api.ts` `describeError` が処理 (配列の日本語メッセージは表示、英語は総括文言)。
+- `/api/*` は `next.config.mjs` の rewrite で `BACKEND_ORIGIN` (既定 `http://localhost:8000`) へプロキシ。
 
 ---
 
-## 3. 次回以降の作業候補
+## 4. 次回以降の作業候補
 
 ### 優先度: 中〜高 (フロント続き)
-1. **逆引き入力UXのさらなる統一**: 通常シミュレーター側の最近選択した毛色・猫種履歴を、逆引き画面の両親猫カラー登録にも共有する。
-2. **フロントのテスト/CI**: コンポーネント・`lib/` のユニットテスト、`typecheck`/`build` の PR ゲート化。
-3. **デプロイ構成**: フロント (Vercel 等) とバックエンド (Cloud Run) の接続・`BACKEND_ORIGIN` 運用 (運用正本と整合のこと)。
+1. **フロントのテスト基盤**: 現状 `frontend/` にテストランナーが無い。`describeError` 等のユニットテスト、`typecheck`/`build` の PR ゲート化。
+2. **逆引き入力UXの統一**: 通常シミュレーター側の最近選択履歴を逆引きの両親猫登録へ共有。
+3. **デプロイ構成**: フロント (Vercel 等) とバックエンド (Cloud Run) 接続・`BACKEND_ORIGIN` 運用 (運用正本と整合)。
 
 ### 優先度: 中 (バックエンド継続)
-4. **表示名マスタの経路拡張**: 猫種固有パターン細分、Mitted/Bi-Color の猫種文脈表示 (§5.3/§5.4)、親入力での明示 Van 保持。
-5. **CI 整備**: GitHub Actions で `pytest -q` を PR ゲート化 (運用正本 §6)。
+4. **CI 整備**: GitHub Actions で `pytest -q` を PR ゲート化 (運用正本 §6)。パフォーマンス回帰は環境依存のため CI ゲート化せず計測ログ参考に留める方針。
+5. **表示名マスタの経路拡張**: 猫種固有パターン細分、Mitted/Bi-Color の猫種文脈表示、親入力での明示 Van 保持。
 
 ### 優先度: 設計判断が要る (将来フェーズ)
 6. **review_required 遺伝子座の確定**: Wb系 / Point/Mink/Sepia の C系 (`cat_color_master_review.md` §8)。
 7. **carrier_exploration の拡張**: I-locus の扱い、猫種文脈併用、mink シナリオ。
-8. **State-key による本格正本化**: engine 逆引き (GENOTYPE_TO_COLOR_MAP) を master 状態カラム駆動へ (影響範囲大)。
 
 ---
 
-## 4. 既知の留意点 (落とし穴)
+## 5. 既知の留意点 (落とし穴)
+
+### パフォーマンス (本フェーズ追加)
+- **エンジンのキャッシュ返却物は破壊的変更しない**。`calculate_report` / `_resolve_parent_genotypes` / `_build_gametes` は同一オブジェクトを返し得る (frozen dataclass / 読み取り専用前提)。結果リストを mutate する変更を入れる場合はキャッシュ方針ごと見直す。
+- **リター推定の座位独立分解は「メンデル分離が座位ごと独立」前提**。座位間に依存を持つルール (連鎖等) を導入する場合、ビットマスク照合の等価性が崩れる。変更時は新旧等価テスト (`test_litter_surviving_pairs_match_bruteforce`) を必ず維持・更新する。
+- **入力上限 (50 / 12)** は `api.py` 定数。引き上げる場合は最悪ケースの計算量を再計測してから。
 
 ### フロントエンド
-- **API レスポンスは必ず Zod で narrow**してから使う。`api.py` の契約を変えたら `lib/schema.ts` を同期。
-- **422 detail は2形ある** (文字列 / 配列)。`lib/api.ts` の `describeError` が両対応。新たなエラー形を足す際は注意。
-- dev/本番とも `/api/*` は rewrite 前提。バックエンド接続先は `BACKEND_ORIGIN` で制御 (ハードコードしない)。
+- **API レスポンスは必ず Zod で narrow**。`api.py` の契約を変えたら `lib/schema.ts` を同期。
+- **422 detail は2形ある** (文字列 / 配列)。`describeError` は配列の日本語メッセージのみ表示し英語は総括文言にする。サーバ側の検証メッセージは日本語で投げると UI に出る。
 
 ### バックエンド
-- **表示名解決は canonical 正規化の「後」**。順序を入れ替えると Ebony 等が Black へ戻る (回帰テストで担保)。
-- **CanonicalPhenotype 列はエンジン内部出力名と一致必須** (master の CanonicalColorId と混同しない)。
-- **A/Wb は normal で展開しない**。**carrier_exploration は通常結果に混ぜない** (事前確率を掛けない / 両親隠れキャリアの自動生成禁止)。
+- **表示名解決は canonical 正規化の「後」**。順序を入れ替えると Ebony 等が Black へ戻る。
+- **A/Wb は normal で展開しない**。**carrier_exploration は通常結果に混ぜない**。
 - 計算ロジック修正タスクで `Dockerfile`/`.github/workflows/`/Cloud Run 等の運用系を触らない (運用正本 §3.3)。

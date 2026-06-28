@@ -52,6 +52,24 @@ def test_dilute_parents_never_produce_dense_offspring(sire_color: str, dam_color
     assert report.unmatched_probability == 0
 
 
+def test_calculate_report_cache_not_poisoned_by_caller_mutation() -> None:
+    """メモ化レポートを呼び出し側が破壊的変更しても、後続呼び出しが汚染されない。
+
+    singleton 共有の calculator でキャッシュ実体を直接返すと、results 等の可変リストへの
+    偶発的変更が以降のリクエストに波及する。返却時コピー (_copy_report) でこれを防ぐ。
+    """
+
+    calculator = CoatColorCalculator()
+    first = calculator.calculate_report("Black", "Black")
+    original_len = len(first.results)
+    assert original_len > 0
+
+    first.results.clear()  # 呼び出し側の偶発的な破壊的変更を模す
+
+    second = calculator.calculate_report("Black", "Black")
+    assert len(second.results) == original_len
+
+
 def test_breed_filter_enforces_siamese_point_genotypes() -> None:
     response = client.post(
         "/api/v1/calculate",
