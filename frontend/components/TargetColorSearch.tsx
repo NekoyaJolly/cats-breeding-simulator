@@ -24,6 +24,10 @@ import type {
 import { ColorCombobox } from "./ColorCombobox";
 
 type TargetSex = "any" | RegisteredCat["sex"];
+type AdditionalColorInput = {
+  id: string;
+  value: string;
+};
 
 const CATEGORIES = [
   "確定で期待できる",
@@ -43,6 +47,10 @@ function createRegisteredCatId(): string {
     return crypto.randomUUID();
   }
   return `${Date.now()}-${Math.round(Math.random() * 100000)}`;
+}
+
+function createAdditionalColorInputId(): string {
+  return `color-${createRegisteredCatId()}`;
 }
 
 function repository(): RegisteredCatRepository {
@@ -95,8 +103,11 @@ function carriersText(carriers: RegisteredCat["carriers"]): string {
     .join(", ");
 }
 
-function splitColorEntries(primaryColor: string, bulkColors: string): string[] {
-  const entries = [primaryColor, ...bulkColors.split(/[\n,、]+/)]
+function splitColorEntries(
+  primaryColor: string,
+  additionalColors: AdditionalColorInput[],
+): string[] {
+  const entries = [primaryColor, ...additionalColors.map((entry) => entry.value)]
     .map((entry) => entry.trim())
     .filter((entry) => entry.length > 0);
   return [...new Set(entries)];
@@ -292,7 +303,7 @@ export function TargetColorSearch() {
   const [name, setName] = useState("");
   const [sex, setSex] = useState<RegisteredCat["sex"]>("female");
   const [color, setColor] = useState("");
-  const [bulkColors, setBulkColors] = useState("");
+  const [additionalColors, setAdditionalColors] = useState<AdditionalColorInput[]>([]);
   const [breed, setBreed] = useState("");
   const [carriers, setCarriers] = useState("");
   const [targetColor, setTargetColor] = useState("");
@@ -350,7 +361,7 @@ export function TargetColorSearch() {
   const editColors = editSex === "male" ? maleColors : colors;
   const sires = useMemo(() => cats.filter((cat) => cat.sex === "male"), [cats]);
   const dams = useMemo(() => cats.filter((cat) => cat.sex === "female"), [cats]);
-  const colorsToRegister = splitColorEntries(color, bulkColors);
+  const colorsToRegister = splitColorEntries(color, additionalColors);
 
   function saveCats(nextCats: RegisteredCat[]) {
     setCats(nextCats);
@@ -404,9 +415,28 @@ export function TargetColorSearch() {
     saveCats([...nextCats, ...cats]);
     setName("");
     setColor("");
-    setBulkColors("");
+    setAdditionalColors([]);
     setBreed("");
     setCarriers("");
+  }
+
+  function addColorInput() {
+    setAdditionalColors((entries) => [
+      ...entries,
+      { id: createAdditionalColorInputId(), value: "" },
+    ]);
+  }
+
+  function updateAdditionalColor(id: string, value: string) {
+    setAdditionalColors((entries) =>
+      entries.map((entry) => (entry.id === id ? { ...entry, value } : entry)),
+    );
+  }
+
+  function removeAdditionalColor(id: string) {
+    setAdditionalColors((entries) =>
+      entries.filter((entry) => entry.id !== id),
+    );
   }
 
   function removeCat(id: string) {
@@ -522,6 +552,7 @@ export function TargetColorSearch() {
                   onCommit={setEditColor}
                   colors={editColors}
                   recent={[]}
+                  suggestionLayout="inline"
                 />
                 <ColorCombobox
                   id={`edit-breed-${cat.id}`}
@@ -616,39 +647,64 @@ export function TargetColorSearch() {
               <option value="male">♂ 父猫候補</option>
             </select>
           </div>
-          <ColorCombobox
-            id="registered-cat-color"
-            label="毛色"
-            value={color}
-            onValueChange={setColor}
-            onCommit={setColor}
-            colors={registrationColors}
-            recent={[]}
-            placeholder="例: Blue / Chocolate"
-          />
-          <ColorCombobox
-            id="registered-cat-breed"
-            label="猫種 (任意)"
-            value={breed}
-            onValueChange={setBreed}
-            onCommit={setBreed}
-            colors={breedItems}
-            recent={[]}
-            placeholder="例: British Shorthair"
-          />
-          <div className="space-y-1 md:col-span-2">
-            <label htmlFor="registered-cat-bulk-colors" className={labelClass}>
-              まとめて登録するカラー (任意)
-            </label>
-            <textarea
-              id="registered-cat-bulk-colors"
-              className={`${inputClass} min-h-24`}
-              value={bulkColors}
-              onChange={(event) => setBulkColors(event.target.value)}
-              placeholder={`例: Blue
-Chocolate
-Lilac`}
-            />
+          <div className="space-y-3 md:col-span-2">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+                <ColorCombobox
+                  id="registered-cat-color"
+                  label="毛色"
+                  value={color}
+                  onValueChange={setColor}
+                  onCommit={setColor}
+                  colors={registrationColors}
+                  recent={[]}
+                  placeholder="例: Blue / Chocolate"
+                  suggestionLayout="inline"
+                />
+                <button
+                  type="button"
+                  className={`${secondaryButtonClass} mt-6 whitespace-nowrap`}
+                  onClick={addColorInput}
+                >
+                  ＋ カラー追加
+                </button>
+              </div>
+              <ColorCombobox
+                id="registered-cat-breed"
+                label="猫種 (任意)"
+                value={breed}
+                onValueChange={setBreed}
+                onCommit={setBreed}
+                colors={breedItems}
+                recent={[]}
+                placeholder="例: British Shorthair"
+              />
+            </div>
+            {additionalColors.map((entryColor, index) => (
+              <div
+                key={entryColor.id}
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2"
+              >
+                <ColorCombobox
+                  id={`registered-cat-additional-color-${entryColor.id}`}
+                  label={`追加カラー ${index + 1}`}
+                  value={entryColor.value}
+                  onValueChange={(value) => updateAdditionalColor(entryColor.id, value)}
+                  onCommit={(value) => updateAdditionalColor(entryColor.id, value)}
+                  colors={registrationColors}
+                  recent={[]}
+                  placeholder="例: Lilac"
+                  suggestionLayout="inline"
+                />
+                <button
+                  type="button"
+                  className={`${secondaryButtonClass} mt-6 whitespace-nowrap`}
+                  onClick={() => removeAdditionalColor(entryColor.id)}
+                >
+                  削除
+                </button>
+              </div>
+            ))}
           </div>
           <div className="space-y-1 md:col-span-2">
             <label htmlFor="registered-cat-carriers" className={labelClass}>

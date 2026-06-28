@@ -23,6 +23,8 @@ type Props = {
   // 履歴 (最近選んだ canonical 名)。query が空のとき優先表示する。
   recent: string[];
   placeholder?: string;
+  // 登録フォームでは候補が下の操作ボタンを覆わないよう、行内表示を選べる。
+  suggestionLayout?: "overlay" | "inline";
 };
 
 const MAX_SUGGESTIONS = 20;
@@ -56,6 +58,7 @@ export function ColorCombobox({
   colors,
   recent,
   placeholder,
+  suggestionLayout = "overlay",
 }: Props) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -76,16 +79,17 @@ export function ColorCombobox({
 
   const showingRecent = value.trim().length === 0;
 
-  // 外側クリックで閉じる (ハイライト状態も戻して次回フォーカス時に持ち越さない)。
+  // 外側クリックで閉じる。click で閉じることで、行内候補表示時に mousedown で
+  // レイアウトが縮み、フォームボタンの click が外れるのを避ける。
   useEffect(() => {
-    function onPointerDown(event: MouseEvent) {
+    function onDocumentClick(event: MouseEvent) {
       if (!containerRef.current?.contains(event.target as Node)) {
         setOpen(false);
         setActiveIndex(-1);
       }
     }
-    document.addEventListener("mousedown", onPointerDown);
-    return () => document.removeEventListener("mousedown", onPointerDown);
+    document.addEventListener("click", onDocumentClick);
+    return () => document.removeEventListener("click", onDocumentClick);
   }, []);
 
   function commitSelection(color: ColorOption) {
@@ -132,6 +136,10 @@ export function ColorCombobox({
   }
 
   const expanded = open && suggestions.length > 0;
+  const listboxClass =
+    suggestionLayout === "inline"
+      ? "mt-1 max-h-64 w-full overflow-auto rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg"
+      : "absolute z-10 mt-1 max-h-64 w-full overflow-auto rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg";
 
   return (
     <div className="space-y-1" ref={containerRef}>
@@ -170,7 +178,7 @@ export function ColorCombobox({
           <ul
             id={listboxId}
             role="listbox"
-            className="absolute z-10 mt-1 max-h-64 w-full overflow-auto rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg"
+            className={listboxClass}
           >
             {showingRecent && (
               <li className="px-3 py-1 text-xs font-medium text-slate-400">
