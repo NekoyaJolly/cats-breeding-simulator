@@ -5,9 +5,12 @@ import {
   calculationResponseSchema,
   colorsResponseSchema,
   feedbackResponseSchema,
+  reverseLookupResponseSchema,
   type BreedOption,
   type CalculationResponse,
   type ColorOption,
+  type RegisteredCat,
+  type ReverseLookupResponse,
 } from "./schema";
 
 // 計算 API への入力。breed と carriers は任意。
@@ -24,6 +27,16 @@ export type CalculateInput = {
 // 例外を投げず呼び出し側で分岐できるようにする。
 export type CalculateOutcome =
   | { ok: true; data: CalculationResponse }
+  | { ok: false; message: string };
+
+export type ReverseLookupInput = {
+  target_color: string;
+  cats: RegisteredCat[];
+  limit?: number;
+};
+
+export type ReverseLookupOutcome =
+  | { ok: true; data: ReverseLookupResponse }
   | { ok: false; message: string };
 
 // バックエンドの冗長なエラー文を簡潔な日本語へ整形する。
@@ -115,6 +128,42 @@ export async function calculate(input: CalculateInput): Promise<CalculateOutcome
   }
 
   // エラー応答: FastAPI の detail を人間可読に整形する。
+  const errorBody = await response.json().catch(() => null);
+  const parsedError = apiErrorSchema.safeParse(errorBody);
+  if (parsedError.success) {
+    return { ok: false, message: describeError(parsedError.data.detail) };
+  }
+  return { ok: false, message: `エラーが発生しました (HTTP ${response.status})。` };
+}
+
+// POST /api/v1/reverse-lookup を叩き、登録猫から目標カラーの交配候補を検索する。
+export async function searchTargetColor(
+  input: ReverseLookupInput,
+): Promise<ReverseLookupOutcome> {
+  let response: Response;
+  try {
+    response = await fetch("/api/v1/reverse-lookup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+  } catch {
+    return {
+      ok: false,
+      message:
+        "バックエンドに接続できませんでした。API サーバ (uvicorn) が起動しているか確認してください。",
+    };
+  }
+
+  if (response.ok) {
+    const body = await response.json().catch(() => null);
+    const parsed = reverseLookupResponseSchema.safeParse(body);
+    if (!parsed.success) {
+      return { ok: false, message: "逆引きAPIレスポンスの形式が想定と異なります。" };
+    }
+    return { ok: true, data: parsed.data };
+  }
+
   const errorBody = await response.json().catch(() => null);
   const parsedError = apiErrorSchema.safeParse(errorBody);
   if (parsedError.success) {

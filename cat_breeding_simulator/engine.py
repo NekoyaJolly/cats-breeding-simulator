@@ -5,6 +5,10 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass
 
+from cat_breeding_simulator.mendelian import (
+    allele_distribution,
+    o_locus_gamete_distribution,
+)
 from cat_breeding_simulator.master_data import (
     AUTOSOMAL_LOCI,
     BREED_FILTERS,
@@ -404,8 +408,24 @@ class CoatColorCalculator:
         ベースだけを見ると「d を持たない」と誤判定するため、ここで展開を反映する。
         """
 
+        return self.contributable_alleles(color, sex, breed, "normal", None)
+
+    def contributable_alleles(
+        self,
+        color: str,
+        sex: str,
+        breed: str | None,
+        mode: str = "normal",
+        carriers: dict[str, str] | None = None,
+    ) -> dict[str, set[str]]:
+        """指定条件の親が子へ渡し得るアレル集合を座位別に返す。
+
+        逆引きでは「確定で渡せる」「未確認条件が必要」を座位別に説明するため、
+        CSV代表値ではなく mode 展開後の親候補を基準に集計する。
+        """
+
         try:
-            genotypes = self._resolve_parent_genotypes(color, sex, breed, "normal", None)
+            genotypes = self._resolve_parent_genotypes(color, sex, breed, mode, carriers)
         except BreedingCalculationError:
             return {}
         alleles: dict[str, set[str]] = {}
@@ -413,6 +433,38 @@ class CoatColorCalculator:
             for locus, pair in genotype.loci.items():
                 alleles.setdefault(locus, set()).update(pair)
         return alleles
+
+    def resolved_base_loci(
+        self, color: str, sex: str, breed: str | None
+    ) -> dict[str, tuple[str, str]] | None:
+        """入力色の基準遺伝子型を返す。逆引きの座位別根拠表示に使う。"""
+
+        return self._resolved_base_loci(color, sex, breed)
+
+    def resolved_color_loci(
+        self, color: str, sex: str, breed: str | None
+    ) -> dict[str, tuple[str, str]] | None:
+        """入力色をO座位込みの基準遺伝子型へ解決する。"""
+
+        name = self._resolve_input_color_name(color, breed)
+        key = self._normalize_color_key(name)
+        entries = COLOR_BASE_LOCI.get(key)
+        if not entries:
+            return None
+        loci = dict(entries[0].autosomal)
+        if sex == "male":
+            if "O" in entries[0].o and "o" in entries[0].o:
+                return None
+            loci["O"] = ("O", "Y") if "O" in entries[0].o else ("o", "Y")
+        else:
+            loci["O"] = entries[0].o
+        return loci
+
+    def display_color_name(self, color: str, breed: str | None) -> str:
+        """入力色を計算結果と同じ表示名正規化へ通す。"""
+
+        resolved = self._resolve_input_color_name(color, breed)
+        return self._namer.post_process_color_name(resolved, color, color, breed)
 
     def _blocking_recessive_factors(
         self,
@@ -703,19 +755,15 @@ class CoatColorCalculator:
 
     @staticmethod
     def _allele_probabilities(alleles: tuple[str, str]) -> dict[str, float]:
-        first, second = alleles
-        if first == second:
-            return {first: 1.0}
-        return {first: 0.5, second: 0.5}
+        return {allele: float(probability) for allele, probability in allele_distribution(alleles).items()}
 
     @staticmethod
     def _orange_gametes(genotype: ParentGenotype) -> dict[str, float]:
-        first, second = genotype.loci["O"]
-        if genotype.sex == "male":
-            return {first: 0.5, "Y": 0.5}
-        if first == second:
-            return {first: 1.0}
-        return {first: 0.5, second: 0.5}
+        sex = "male" if genotype.sex == "male" else "female"
+        return {
+            allele: float(probability)
+            for allele, probability in o_locus_gamete_distribution(sex, genotype.loci["O"]).items()
+        }
 
 
     def _resolve_input_color_name(self, name: str, breed: str | None) -> str:
@@ -765,5 +813,3 @@ class CoatColorCalculator:
             if known_breed.casefold() == normalized.casefold():
                 return known_breed
         return breed
-
-

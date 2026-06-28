@@ -12,6 +12,7 @@ import { z } from "zod";
 import { fetchBreeds, fetchColors, type CalculateInput } from "@/lib/api";
 import type { ColorOption } from "@/lib/schema";
 import { BREED_READING_JA } from "@/lib/breedReadingJa";
+import { parseCarriers } from "@/lib/carriers";
 import { ColorCombobox } from "./ColorCombobox";
 
 // 計算モード。explicit_carrier のときのみキャリア入力欄を表示する。
@@ -73,19 +74,6 @@ type Props = {
   onSubmit: (input: CalculateInput) => void;
   loading: boolean;
 };
-
-// "C:C/cs, B:B/b" 形式のテキストを座位→遺伝子型の辞書へ変換する。
-// 入力が空、または有効なペアが無い場合は undefined を返す。
-function parseCarriers(text: string): Record<string, string> | undefined {
-  const trimmed = text.trim();
-  if (!trimmed) return undefined;
-  const entries: Record<string, string> = {};
-  for (const part of trimmed.split(",")) {
-    const [locus, genotype] = part.split(":").map((token) => token.trim());
-    if (locus && genotype) entries[locus] = genotype;
-  }
-  return Object.keys(entries).length > 0 ? entries : undefined;
-}
 
 const inputClass =
   "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500";
