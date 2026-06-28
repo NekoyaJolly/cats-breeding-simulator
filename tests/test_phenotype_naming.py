@@ -90,7 +90,7 @@ def test_construct_fallback_name_black() -> None:
     assert namer.construct_fallback_name(kitten) == "Brown Tabby"
 
 
-def test_construct_fallback_returns_none_for_dominant_white() -> None:
+def test_construct_fallback_dominant_white_is_white() -> None:
     """優性白 (W/-) は遺伝背景に依らず "White"。"""
 
     namer = PhenotypeNamer()
