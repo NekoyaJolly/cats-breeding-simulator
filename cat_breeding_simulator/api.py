@@ -6,7 +6,7 @@ from functools import lru_cache
 from typing import Literal
 
 from fastapi import APIRouter, FastAPI, HTTPException, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from cat_breeding_simulator.color_master import COLOR_MASTER
 from cat_breeding_simulator.color_reading_ja import reading_ja
@@ -150,6 +150,13 @@ class RegisteredCatInput(BaseModel):
     carriers: dict[str, str] | None = Field(default=None)
 
 
+# 逆引きはオス×メスの総当たりで計算量が頭数の二次で増えるため、暴走防止に上限を設ける
+# (中規模キャッテリー想定。上限拡大は計算高速化を前提とする)。
+MAX_REVERSE_LOOKUP_CATS = 50
+# リター推定は子猫1頭ごとに候補ペアの照合が増えるため、観察子猫数に上限を設ける。
+MAX_LITTER_KITTENS = 12
+
+
 class ReverseLookupRequest(BaseModel):
     """目標カラーから探す逆引きAPIの入力。"""
 
@@ -157,6 +164,17 @@ class ReverseLookupRequest(BaseModel):
     target_sex: Literal["male", "female"] | None = None
     cats: list[RegisteredCatInput] = Field(min_length=2)
     limit: int = Field(default=20, ge=1, le=100)
+
+    @field_validator("cats")
+    @classmethod
+    def _limit_cats(cls, value: list[RegisteredCatInput]) -> list[RegisteredCatInput]:
+        """登録猫数の上限を超えた入力を、理由が分かる日本語で拒否する。"""
+
+        if len(value) > MAX_REVERSE_LOOKUP_CATS:
+            raise ValueError(
+                f"登録猫は最大{MAX_REVERSE_LOOKUP_CATS}頭までです。頭数を減らしてください。"
+            )
+        return value
 
 
 class RegisteredCatSummaryEntry(BaseModel):
@@ -230,6 +248,15 @@ class LitterInferenceRequest(BaseModel):
     sire: LitterParentInput
     dam: LitterParentInput
     kittens: list[ObservedKittenInput] = Field(min_length=1)
+
+    @field_validator("kittens")
+    @classmethod
+    def _limit_kittens(cls, value: list[ObservedKittenInput]) -> list[ObservedKittenInput]:
+        """観察子猫数の上限を超えた入力を、理由が分かる日本語で拒否する。"""
+
+        if len(value) > MAX_LITTER_KITTENS:
+            raise ValueError(f"観察できる子猫は最大{MAX_LITTER_KITTENS}頭までです。")
+        return value
 
 
 class InferenceFindingEntry(BaseModel):
