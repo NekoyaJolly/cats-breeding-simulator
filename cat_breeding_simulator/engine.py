@@ -168,12 +168,38 @@ _O_NON_ORANGE_LABEL = "非オレンジ（赤以外） o"
 _O_ORANGE_LABEL = "オレンジ（赤/クリーム） O"
 
 
+def _freeze_carriers(carriers: dict[str, str] | None) -> tuple[tuple[str, str], ...] | None:
+    """キャリア指定 (dict) をキャッシュキー用にハッシュ可能なタプルへ正規化する。"""
+
+    if not carriers:
+        return None
+    return tuple(sorted(carriers.items()))
+
+
+def _gamete_cache_key(genotype: ParentGenotype) -> tuple:
+    """配偶子生成は座位アレル対の順序に依存しない (分離は集合的) ため、
+    順序非依存のキーで同一遺伝子型をまとめる。"""
+
+    return (
+        genotype.sex,
+        tuple(sorted((locus, tuple(sorted(pair))) for locus, pair in genotype.loci.items())),
+    )
+
+
 class CoatColorCalculator:
     """Split -> Cross -> Evaluate -> Aggregate を実装する計算器。"""
 
     def __init__(self) -> None:
         # 遺伝子型 → 表示色名 の命名/分類は PhenotypeNamer へ委譲する。
         self._namer = PhenotypeNamer()
+        # 純粋計算のプロセス内メモ化 (入力 + import時定数のみに依存)。
+        # 逆引き/リター推定は同一 (色, 性別, 猫種) の解決やレポートを多数回要求するため、
+        # ここでキャッシュすると O(N^2) 経路の定数項が大きく下がる。
+        # 注意: キャッシュが返すオブジェクトは frozen dataclass / 読み取り専用として扱い、
+        #       呼び出し側で破壊的変更しない (本クラス内外ともこの規約を守る)。
+        self._report_cache: dict[tuple, CalculationReport] = {}
+        self._genotype_cache: dict[tuple, list[ParentGenotype]] = {}
+        self._gamete_cache: dict[tuple, dict[tuple[tuple[str, str], ...], float]] = {}
 
     def calculate(
         self,
@@ -191,6 +217,39 @@ class CoatColorCalculator:
         ).results
 
     def calculate_report(
+        self,
+        sire_color: str,
+        dam_color: str,
+        breed: str | None = None,
+        mode: str = "normal",
+        sire_carriers: dict[str, str] | None = None,
+        dam_carriers: dict[str, str] | None = None,
+    ) -> CalculationReport:
+        """純粋関数 `_calculate_report_impl` の結果をプロセス内メモ化して返す。
+
+        逆引き (オス×メス総当たり) や carrier_exploration / リター推定が同一の親色組を
+        繰り返し計算するため、(色, 猫種, モード, キャリア) をキーにキャッシュする。
+        例外 (BreedingCalculationError) はキャッシュせずそのまま送出する。
+        """
+
+        key = (
+            sire_color,
+            dam_color,
+            breed,
+            mode,
+            _freeze_carriers(sire_carriers),
+            _freeze_carriers(dam_carriers),
+        )
+        cached = self._report_cache.get(key)
+        if cached is not None:
+            return cached
+        report = self._calculate_report_impl(
+            sire_color, dam_color, breed, mode, sire_carriers, dam_carriers
+        )
+        self._report_cache[key] = report
+        return report
+
+    def _calculate_report_impl(
         self,
         sire_color: str,
         dam_color: str,
@@ -743,6 +802,24 @@ class CoatColorCalculator:
         mode: str = "normal",
         carriers: dict[str, str] | None = None,
     ) -> list[ParentGenotype]:
+        """親遺伝子型候補の解決をメモ化して返す (返り値は読み取り専用扱い)。"""
+
+        key = (phenotype, sex, breed, mode, _freeze_carriers(carriers))
+        cached = self._genotype_cache.get(key)
+        if cached is not None:
+            return cached
+        result = self._resolve_parent_genotypes_impl(phenotype, sex, breed, mode, carriers)
+        self._genotype_cache[key] = result
+        return result
+
+    def _resolve_parent_genotypes_impl(
+        self,
+        phenotype: str,
+        sex: str,
+        breed: str | None,
+        mode: str = "normal",
+        carriers: dict[str, str] | None = None,
+    ) -> list[ParentGenotype]:
         if breed:
             breed_lower = breed.lower()
             if "abyssinian" in breed_lower or "somali" in breed_lower:
@@ -797,6 +874,17 @@ class CoatColorCalculator:
         return filtered
 
     def _build_gametes(self, genotype: ParentGenotype) -> dict[tuple[tuple[str, str], ...], float]:
+        """配偶子分布をメモ化して返す (同一遺伝子型が交配の各所で何度も使われる)。"""
+
+        key = _gamete_cache_key(genotype)
+        cached = self._gamete_cache.get(key)
+        if cached is not None:
+            return cached
+        result = self._build_gametes_impl(genotype)
+        self._gamete_cache[key] = result
+        return result
+
+    def _build_gametes_impl(self, genotype: ParentGenotype) -> dict[tuple[tuple[str, str], ...], float]:
         gametes: dict[tuple[tuple[str, str], ...], float] = {(): 1.0}
         for locus in AUTOSOMAL_LOCI:
             next_gametes: dict[tuple[tuple[str, str], ...], float] = defaultdict(float)
