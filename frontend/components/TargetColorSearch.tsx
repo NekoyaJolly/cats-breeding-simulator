@@ -24,6 +24,10 @@ import type {
 import { ColorCombobox } from "./ColorCombobox";
 
 type TargetSex = "any" | RegisteredCat["sex"];
+type AdditionalColorInput = {
+  id: string;
+  value: string;
+};
 
 const CATEGORIES = [
   "確定で期待できる",
@@ -43,6 +47,10 @@ function createRegisteredCatId(): string {
     return crypto.randomUUID();
   }
   return `${Date.now()}-${Math.round(Math.random() * 100000)}`;
+}
+
+function createAdditionalColorInputId(): string {
+  return `color-${createRegisteredCatId()}`;
 }
 
 function repository(): RegisteredCatRepository {
@@ -95,8 +103,11 @@ function carriersText(carriers: RegisteredCat["carriers"]): string {
     .join(", ");
 }
 
-function splitColorEntries(primaryColor: string, additionalColors: string[]): string[] {
-  const entries = [primaryColor, ...additionalColors]
+function splitColorEntries(
+  primaryColor: string,
+  additionalColors: AdditionalColorInput[],
+): string[] {
+  const entries = [primaryColor, ...additionalColors.map((entry) => entry.value)]
     .map((entry) => entry.trim())
     .filter((entry) => entry.length > 0);
   return [...new Set(entries)];
@@ -292,7 +303,7 @@ export function TargetColorSearch() {
   const [name, setName] = useState("");
   const [sex, setSex] = useState<RegisteredCat["sex"]>("female");
   const [color, setColor] = useState("");
-  const [additionalColors, setAdditionalColors] = useState<string[]>([]);
+  const [additionalColors, setAdditionalColors] = useState<AdditionalColorInput[]>([]);
   const [breed, setBreed] = useState("");
   const [carriers, setCarriers] = useState("");
   const [targetColor, setTargetColor] = useState("");
@@ -410,18 +421,21 @@ export function TargetColorSearch() {
   }
 
   function addColorInput() {
-    setAdditionalColors((entries) => [...entries, ""]);
+    setAdditionalColors((entries) => [
+      ...entries,
+      { id: createAdditionalColorInputId(), value: "" },
+    ]);
   }
 
-  function updateAdditionalColor(index: number, value: string) {
+  function updateAdditionalColor(id: string, value: string) {
     setAdditionalColors((entries) =>
-      entries.map((entry, entryIndex) => (entryIndex === index ? value : entry)),
+      entries.map((entry) => (entry.id === id ? { ...entry, value } : entry)),
     );
   }
 
-  function removeAdditionalColor(index: number) {
+  function removeAdditionalColor(id: string) {
     setAdditionalColors((entries) =>
-      entries.filter((_, entryIndex) => entryIndex !== index),
+      entries.filter((entry) => entry.id !== id),
     );
   }
 
@@ -668,15 +682,15 @@ export function TargetColorSearch() {
             </div>
             {additionalColors.map((entryColor, index) => (
               <div
-                key={`additional-color-${index}`}
+                key={entryColor.id}
                 className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2"
               >
                 <ColorCombobox
-                  id={`registered-cat-additional-color-${index}`}
+                  id={`registered-cat-additional-color-${entryColor.id}`}
                   label={`追加カラー ${index + 1}`}
-                  value={entryColor}
-                  onValueChange={(value) => updateAdditionalColor(index, value)}
-                  onCommit={(value) => updateAdditionalColor(index, value)}
+                  value={entryColor.value}
+                  onValueChange={(value) => updateAdditionalColor(entryColor.id, value)}
+                  onCommit={(value) => updateAdditionalColor(entryColor.id, value)}
                   colors={registrationColors}
                   recent={[]}
                   placeholder="例: Lilac"
@@ -685,7 +699,7 @@ export function TargetColorSearch() {
                 <button
                   type="button"
                   className={`${secondaryButtonClass} mt-6 whitespace-nowrap`}
-                  onClick={() => removeAdditionalColor(index)}
+                  onClick={() => removeAdditionalColor(entryColor.id)}
                 >
                   削除
                 </button>
