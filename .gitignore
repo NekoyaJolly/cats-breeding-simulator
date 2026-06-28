@@ -13,6 +13,11 @@ __pycache__/
 .venv/
 *.egg-info/
 
+# テストカバレッジ生成物
+.coverage
+coverage/
+htmlcov/
+
 # 環境変数
 .env
 .env.local

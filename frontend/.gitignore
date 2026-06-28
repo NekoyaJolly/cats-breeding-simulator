@@ -4,6 +4,9 @@
 /out
 /build
 
+# テストカバレッジ生成物
+/coverage
+
 # Next.js 自動生成
 next-env.d.ts
 *.tsbuildinfo
