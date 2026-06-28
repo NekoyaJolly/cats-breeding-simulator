@@ -170,12 +170,15 @@ class LitterInferenceService:
         kitten: ObservedKitten,
         breed: str | None,
     ) -> list[tuple[frozenset[str], tuple[str, tuple[tuple[str, tuple[str, str]], ...]]]]:
-        candidates = self._calculator.parent_genotype_candidates(
-            kitten.color,
-            kitten.sex,
-            breed,
-            include_unconfirmed_carriers=True,
-        )
+        try:
+            candidates = self._calculator.parent_genotype_candidates(
+                kitten.color,
+                kitten.sex,
+                breed,
+                include_unconfirmed_carriers=True,
+            )
+        except BreedingCalculationError as error:
+            raise BreedingCalculationError(_kitten_error_message(kitten, error)) from error
         ignore_loci = self._ignored_loci_for_observed(kitten.color)
         return [
             (
@@ -343,9 +346,9 @@ class LitterInferenceService:
             warnings.append(
                 "Red / Cream 系はA座位の見た目判定が難しいため、タビー/ソリッド判定は参考扱いです。"
             )
-        if any("calico" in kitten.color.lower() for kitten in kittens):
+        if any(_needs_tortie_white_spotting_warning(kitten.color) for kitten in kittens):
             warnings.append(
-                "Calico / Dilute Calico は白斑を含む呼称として扱われる場合があります。S座位と白斑有無を写真・登録名で確認してください。"
+                "Calico / Tortie 系は白斑を含む呼称として扱われる場合があります。S座位と白斑有無を写真・登録名で確認してください。"
             )
         return warnings
 
@@ -383,3 +386,24 @@ def _format_allele(allele: str) -> str:
 def _is_red_or_cream(color: str) -> bool:
     color_lower = color.lower()
     return "red" in color_lower or "cream" in color_lower
+
+
+def _needs_tortie_white_spotting_warning(color: str) -> bool:
+    color_lower = color.lower()
+    return (
+        "calico" in color_lower
+        or "tortie" in color_lower
+        or "tortoiseshell" in color_lower
+    )
+
+
+def _kitten_error_message(kitten: ObservedKitten, error: BreedingCalculationError) -> str:
+    message = str(error)
+    message = message.replace("父猫（オス）には指定できません", "オスの子猫には指定できません")
+    message = message.replace("母猫（メス）には指定できません", "メスの子猫には指定できません")
+    sex_label = "オス" if kitten.sex == "male" else "メス"
+    display_name = kitten.name or kitten.id
+    return (
+        f"子猫「{display_name}」（ID: {kitten.id}、{sex_label}）の観察カラーを確認してください。"
+        f"{message}"
+    )

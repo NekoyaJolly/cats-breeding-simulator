@@ -77,3 +77,49 @@ def test_litter_inference_warns_for_calico_white_spotting() -> None:
     body = response.json()
     assert any("白斑" in warning for warning in body["warnings"])
     assert any("S座位" in test for test in body["recommended_tests"])
+
+
+def test_litter_inference_warns_for_tortie_white_spotting_review() -> None:
+    """Tortie系の観察色も、白斑確認の警告を返す。"""
+
+    response = client.post(
+        "/api/v1/litter-inference",
+        json={
+            "sire": {"color": "Black"},
+            "dam": {"color": "Red"},
+            "kittens": [
+                {"id": "k1", "sex": "female", "color": "Tortoiseshell"},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert any(
+        "Calico / Tortie" in warning and "白斑" in warning
+        for warning in body["warnings"]
+    )
+    assert any("S座位" in test for test in body["recommended_tests"])
+
+
+def test_litter_inference_kitten_sex_restriction_error_has_kitten_context() -> None:
+    """子猫の性別制約エラーは、親入力ではなく観察子猫の文脈で返す。"""
+
+    response = client.post(
+        "/api/v1/litter-inference",
+        json={
+            "sire": {"color": "Black"},
+            "dam": {"color": "Red"},
+            "kittens": [
+                {"id": "kitten-sex", "sex": "male", "color": "Blue Tortie"},
+            ],
+        },
+    )
+
+    assert response.status_code == 422
+    detail = response.json()["detail"]
+    assert "子猫" in detail
+    assert "kitten-sex" in detail
+    assert "オス" in detail
+    assert "父猫" not in detail
+    assert "母猫" not in detail
