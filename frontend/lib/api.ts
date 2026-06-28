@@ -82,7 +82,8 @@ function cleanErrorMessage(detail: string): string {
 // FastAPI のエラー detail を日本語メッセージへ整形する。
 // 文字列は自前の BreedingCalculationError (日本語)。配列は pydantic の検証エラーで
 // msg が英語のため、そのまま出さず日本語の総括メッセージにする。
-function describeError(detail: string | Array<{ msg: string }>): string {
+// テスト可能にするため export する (UI からは各 fetch ラッパ経由で利用)。
+export function describeError(detail: string | Array<{ msg: string }>): string {
   if (typeof detail === "string") return cleanErrorMessage(detail);
   // pydantic のフィールド検証エラー (配列形式)。msg は英語のことが多いが、
   // サーバが日本語で投げた検証メッセージ (入力上限超過など) はそのままユーザーへ伝える。
