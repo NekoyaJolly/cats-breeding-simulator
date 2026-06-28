@@ -21,6 +21,12 @@ from cat_breeding_simulator.master_data import (
     VALID_BREEDS,
     recognized_color_keys_for_breed,
 )
+from cat_breeding_simulator.litter_inference import (
+    InferenceFinding,
+    LitterInferenceService,
+    LitterParent,
+    ObservedKitten,
+)
 from cat_breeding_simulator.reverse_lookup import RegisteredCat, ReverseLookupService
 
 
@@ -202,6 +208,56 @@ class ReverseLookupResponse(BaseModel):
     candidates: list[ReverseLookupCandidateEntry]
 
 
+class LitterParentInput(BaseModel):
+    """リター実績から推定する親猫入力。"""
+
+    color: str = Field(min_length=1)
+    breed: str | None = Field(default=None, min_length=1)
+
+
+class ObservedKittenInput(BaseModel):
+    """リター実績として観察された子猫入力。"""
+
+    id: str = Field(min_length=1)
+    sex: Literal["male", "female"]
+    color: str = Field(min_length=1)
+    name: str | None = Field(default=None, min_length=1)
+
+
+class LitterInferenceRequest(BaseModel):
+    """リター実績から推定APIの入力。"""
+
+    sire: LitterParentInput
+    dam: LitterParentInput
+    kittens: list[ObservedKittenInput] = Field(min_length=1)
+
+
+class InferenceFindingEntry(BaseModel):
+    """リター推定の座位別結果。"""
+
+    category: str
+    parent: str
+    locus: str
+    genotype: str
+    note: str
+    support_pct: float
+
+
+class LitterInferenceResponse(BaseModel):
+    """リター実績から推定APIの出力。"""
+
+    status: str
+    response_category: str
+    candidate_pair_count: int
+    confirmed: list[InferenceFindingEntry]
+    conditional: list[InferenceFindingEntry]
+    inferred: list[InferenceFindingEntry]
+    unconfirmed: list[InferenceFindingEntry]
+    contradictions: list[str]
+    warnings: list[str]
+    recommended_tests: list[str]
+
+
 router = APIRouter(prefix="/api/v1")
 
 
@@ -217,6 +273,13 @@ def get_reverse_lookup_service() -> ReverseLookupService:
     """起動後に共有する逆引きサービスを返す。"""
 
     return ReverseLookupService(get_calculator())
+
+
+@lru_cache(maxsize=1)
+def get_litter_inference_service() -> LitterInferenceService:
+    """起動後に共有するリター推定サービスを返す。"""
+
+    return LitterInferenceService(get_calculator())
 
 
 @router.post("/calculate", response_model=CalculationResponse)
@@ -356,6 +419,54 @@ def reverse_lookup_endpoint(payload: ReverseLookupRequest) -> ReverseLookupRespo
             )
             for candidate in report.candidates
         ],
+    )
+
+
+@router.post("/litter-inference", response_model=LitterInferenceResponse)
+def litter_inference_endpoint(payload: LitterInferenceRequest) -> LitterInferenceResponse:
+    """実際に生まれた子猫群から、両親の遺伝子型候補を絞り込む。"""
+
+    try:
+        report = get_litter_inference_service().infer(
+            sire=LitterParent(color=payload.sire.color, breed=payload.sire.breed),
+            dam=LitterParent(color=payload.dam.color, breed=payload.dam.breed),
+            kittens=[
+                ObservedKitten(
+                    id=kitten.id,
+                    sex=kitten.sex,
+                    color=kitten.color,
+                    name=kitten.name,
+                )
+                for kitten in payload.kittens
+            ],
+        )
+    except BreedingCalculationError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+    def entries(findings: list[InferenceFinding]) -> list[InferenceFindingEntry]:
+        return [
+            InferenceFindingEntry(
+                category=finding.category,
+                parent=finding.parent,
+                locus=finding.locus,
+                genotype=finding.genotype,
+                note=finding.note,
+                support_pct=finding.support_pct,
+            )
+            for finding in findings
+        ]
+
+    return LitterInferenceResponse(
+        status="success",
+        response_category=report.response_category,
+        candidate_pair_count=report.candidate_pair_count,
+        confirmed=entries(report.confirmed),
+        conditional=entries(report.conditional),
+        inferred=entries(report.inferred),
+        unconfirmed=entries(report.unconfirmed),
+        contradictions=report.contradictions,
+        warnings=report.warnings,
+        recommended_tests=report.recommended_tests,
     )
 
 

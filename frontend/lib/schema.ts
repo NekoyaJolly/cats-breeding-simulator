@@ -170,6 +170,32 @@ export const reverseLookupResponseSchema = z.object({
 });
 export type ReverseLookupResponse = z.infer<typeof reverseLookupResponseSchema>;
 
+// リター実績から推定: 座位別結果。
+export const inferenceFindingSchema = z.object({
+  category: z.string(),
+  parent: z.string(),
+  locus: z.string(),
+  genotype: z.string(),
+  note: z.string(),
+  support_pct: z.number(),
+});
+export type InferenceFinding = z.infer<typeof inferenceFindingSchema>;
+
+// リター実績から推定: APIレスポンス。
+export const litterInferenceResponseSchema = z.object({
+  status: z.string(),
+  response_category: z.string(),
+  candidate_pair_count: z.number(),
+  confirmed: z.array(inferenceFindingSchema),
+  conditional: z.array(inferenceFindingSchema),
+  inferred: z.array(inferenceFindingSchema),
+  unconfirmed: z.array(inferenceFindingSchema),
+  contradictions: z.array(z.string()),
+  warnings: z.array(z.string()),
+  recommended_tests: z.array(z.string()),
+});
+export type LitterInferenceResponse = z.infer<typeof litterInferenceResponseSchema>;
+
 // POST /api/v1/feedback: フィードバック受付結果 (sent=管理者へのメール送信成否)。
 export const feedbackResponseSchema = z.object({
   sent: z.boolean(),
