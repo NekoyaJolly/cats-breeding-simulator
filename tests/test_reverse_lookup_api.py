@@ -188,3 +188,24 @@ def test_reverse_lookup_can_filter_target_by_kitten_sex() -> None:
         not (entry["sex"] == "Male" and entry["color"] == "Red")
         for entry in candidate["other_possible_colors"]
     )
+
+
+def test_reverse_lookup_rejects_female_only_alias_for_sire() -> None:
+    """逆引きAPIでも通常シミュレーター同様、別名解決後のメス限定色を父猫に指定できない。"""
+
+    response = client.post(
+        "/api/v1/reverse-lookup",
+        json={
+            "target_color": "Lilac",
+            "cats": [
+                {"id": "sire-1", "name": "別名入力の父", "sex": "male", "color": "Blue Tortie"},
+                {"id": "dam-1", "name": "黒の母", "sex": "female", "color": "Black"},
+            ],
+        },
+    )
+
+    assert response.status_code == 422
+    detail = response.json()["detail"]
+    assert "Blue Cream" in detail
+    assert "メス限定" in detail
+    assert "父猫" in detail

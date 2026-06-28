@@ -13,6 +13,7 @@ import {
   createLocalRegisteredCatRepository,
   type RegisteredCatRepository,
 } from "@/lib/registeredCatRepository";
+import { canonicalColorValue, resolveExactColorOption } from "@/lib/colorMatch";
 import type {
   ColorOption,
   RegisteredCat,
@@ -99,6 +100,10 @@ function splitColorEntries(primaryColor: string, bulkColors: string): string[] {
     .map((entry) => entry.trim())
     .filter((entry) => entry.length > 0);
   return [...new Set(entries)];
+}
+
+function canonicalColorEntries(entries: string[], colors: ColorOption[]): string[] {
+  return [...new Set(entries.map((entry) => canonicalColorValue(colors, entry)))];
 }
 
 function CandidateCard({
@@ -337,18 +342,9 @@ export function TargetColorSearch() {
     };
   }, []);
 
-  const femaleOnly = useMemo(
-    () =>
-      new Set(
-        colors
-          .filter((colorOption) => colorOption.sex_restriction === "female_only")
-          .map((colorOption) => colorOption.value),
-      ),
-    [colors],
-  );
   const maleColors = useMemo(
-    () => colors.filter((colorOption) => !femaleOnly.has(colorOption.value)),
-    [colors, femaleOnly],
+    () => colors.filter((colorOption) => colorOption.sex_restriction !== "female_only"),
+    [colors],
   );
   const registrationColors = sex === "male" ? maleColors : colors;
   const editColors = editSex === "male" ? maleColors : colors;
@@ -368,15 +364,22 @@ export function TargetColorSearch() {
     entries: string[],
   ): string | null {
     if (selectedSex !== "male") return null;
-    const invalidColors = entries.filter((entry) => femaleOnly.has(entry));
+    const invalidColors: string[] = [];
+    for (const entry of entries) {
+      const resolvedColor = resolveExactColorOption(colors, entry);
+      if (resolvedColor?.sex_restriction === "female_only") {
+        invalidColors.push(resolvedColor.value);
+      }
+    }
     if (invalidColors.length === 0) return null;
-    return `父候補には指定できないメス限定カラーがあります: ${invalidColors.join(", ")}`;
+    return `父候補には指定できないメス限定カラーがあります: ${[...new Set(invalidColors)].join(", ")}`;
   }
 
   function handleAddCat(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (colorsToRegister.length === 0) return;
-    const restrictedMessage = maleRestrictedMessage(sex, colorsToRegister);
+    const canonicalColors = canonicalColorEntries(colorsToRegister, colors);
+    const restrictedMessage = maleRestrictedMessage(sex, canonicalColors);
     if (restrictedMessage) {
       setRegistrationError(restrictedMessage);
       return;
@@ -386,8 +389,8 @@ export function TargetColorSearch() {
     const parsedCarriers = parseCarriers(carriers);
     const usedNames = new Set(cats.map((cat) => cat.name));
     const trimmedName = name.trim();
-    const nextCats = colorsToRegister.map((entryColor) => {
-      const shouldUseManualName = colorsToRegister.length === 1 && trimmedName.length > 0;
+    const nextCats = canonicalColors.map((entryColor) => {
+      const shouldUseManualName = canonicalColors.length === 1 && trimmedName.length > 0;
       const nextCat: RegisteredCat = {
         id: createRegisteredCatId(),
         name: shouldUseManualName ? trimmedName : autoRegisteredName(entryColor, sex, usedNames),
@@ -434,7 +437,8 @@ export function TargetColorSearch() {
     const trimmedName = editName.trim();
     const trimmedColor = editColor.trim();
     if (!trimmedName || !trimmedColor) return;
-    const restrictedMessage = maleRestrictedMessage(editSex, [trimmedColor]);
+    const canonicalColor = canonicalColorValue(colors, trimmedColor);
+    const restrictedMessage = maleRestrictedMessage(editSex, [canonicalColor]);
     if (restrictedMessage) {
       setRegistrationError(restrictedMessage);
       return;
@@ -444,7 +448,7 @@ export function TargetColorSearch() {
       id: editingId,
       name: trimmedName,
       sex: editSex,
-      color: trimmedColor,
+      color: canonicalColor,
     };
     const trimmedBreed = editBreed.trim();
     if (trimmedBreed) updatedCat.breed = trimmedBreed;

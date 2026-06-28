@@ -466,6 +466,28 @@ class CoatColorCalculator:
         resolved = self._resolve_input_color_name(color, breed)
         return self._namer.post_process_color_name(resolved, color, color, breed)
 
+    def validate_parent_color(
+        self,
+        color: str,
+        sex: str,
+        breed: str | None,
+        mode: str = "normal",
+        carriers: dict[str, str] | None = None,
+    ) -> None:
+        """親猫入力として有効かを、通常計算と同じ名前解決・性別制約で検証する。"""
+
+        resolved = COLOR_MASTER.resolve(color)
+        if resolved is not None:
+            if sex == "male" and resolved.sex_restriction == "female_only":
+                raise BreedingCalculationError(
+                    f"「{resolved.primary_name}」はメス限定の毛色のため、父猫（オス）には指定できません。"
+                )
+            if sex == "female" and resolved.sex_restriction == "male_only":
+                raise BreedingCalculationError(
+                    f"「{resolved.primary_name}」はオス限定の毛色のため、母猫（メス）には指定できません。"
+                )
+        self._resolve_parent_genotypes(color, sex, breed, mode, carriers)
+
     def _blocking_recessive_factors(
         self,
         color: str,

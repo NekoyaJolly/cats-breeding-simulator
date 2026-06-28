@@ -148,6 +148,7 @@ class ReverseLookupService:
     ) -> ReverseLookupReport:
         """登録猫の父母候補を総当たりし、目標カラーに届く候補と分析を返す。"""
 
+        self._validate_registered_cats(cats)
         target_resolution = self._target_resolution(target_color, cats, target_sex)
         display_target = self._display_target_color(
             target_color,
@@ -210,6 +211,19 @@ class ReverseLookupService:
         if any(candidate.category == _CATEGORY_CONDITIONAL for candidate in candidates):
             return _CATEGORY_CONDITIONAL
         return _CATEGORY_NOT_CONFIRMED
+
+    def _validate_registered_cats(self, cats: list[RegisteredCat]) -> None:
+        """保存済み・API直送の登録猫も通常シミュレーターと同じ親入力条件で検証する。"""
+
+        for cat in cats:
+            mode = "explicit_carrier" if cat.carriers else "normal"
+            self._calculator.validate_parent_color(
+                color=cat.color,
+                sex=cat.sex,
+                breed=cat.breed,
+                mode=mode,
+                carriers=cat.carriers,
+            )
 
     def _evaluate_pair(
         self,
