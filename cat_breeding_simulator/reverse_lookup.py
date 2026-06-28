@@ -87,6 +87,14 @@ class ReverseLookupReport:
     recommended_checks: list[str]
 
 
+@dataclass(frozen=True, slots=True)
+class TargetResolution:
+    """目標カラーを内部座位へ解決できた猫種文脈。"""
+
+    breed: str | None
+    loci: dict[str, tuple[str, str]]
+
+
 _LOCUS_ORDER: tuple[str, ...] = ("B", "D", "A", "O", "C", "W", "I", "Wb", "S")
 _PARENT_LABELS: dict[ParentRole, str] = {"sire": "父猫", "dam": "母猫"}
 _CATEGORY_CONFIRMED = "確定で期待できる"
@@ -138,9 +146,12 @@ class ReverseLookupService:
     ) -> ReverseLookupReport:
         """登録猫の父母候補を総当たりし、目標カラーに届く候補と分析を返す。"""
 
-        display_target = self._display_target_color(target_color, None)
-        target_loci = self._target_loci(target_color, None)
-        if target_loci is None:
+        target_resolution = self._target_resolution(target_color, cats)
+        display_target = self._display_target_color(
+            target_color,
+            target_resolution.breed if target_resolution else None,
+        )
+        if target_resolution is None:
             return ReverseLookupReport(
                 target_color=display_target,
                 response_category=_CATEGORY_DIFFICULT,
@@ -149,6 +160,7 @@ class ReverseLookupService:
                 unchecked_conditions=["目標カラーを内部遺伝子条件へ解決できませんでした。"],
                 recommended_checks=["対応済みカラー名、猫種固有名、または別名の表記を確認してください。"],
             )
+        target_loci = target_resolution.loci
 
         sires = [cat for cat in cats if cat.sex == "male"]
         dams = [cat for cat in cats if cat.sex == "female"]
@@ -286,10 +298,35 @@ class ReverseLookupService:
         target_color: str,
         breed: str | None,
     ) -> dict[str, tuple[str, str]] | None:
-        return (
-            self._calculator.resolved_color_loci(target_color, "female", breed)
-            or self._calculator.resolved_color_loci(target_color, "male", breed)
-        )
+        try:
+            return (
+                self._calculator.resolved_color_loci(target_color, "female", breed)
+                or self._calculator.resolved_color_loci(target_color, "male", breed)
+            )
+        except BreedingCalculationError:
+            return None
+
+    def _target_resolution(
+        self,
+        target_color: str,
+        cats: list[RegisteredCat],
+    ) -> TargetResolution | None:
+        for breed in self._target_breed_candidates(cats):
+            loci = self._target_loci(target_color, breed)
+            if loci is not None:
+                return TargetResolution(breed=breed, loci=loci)
+        return None
+
+    @staticmethod
+    def _target_breed_candidates(cats: list[RegisteredCat]) -> list[str | None]:
+        breeds: list[str | None] = [None]
+        seen: set[str] = set()
+        for cat in cats:
+            if cat.breed is None or cat.breed in seen:
+                continue
+            seen.add(cat.breed)
+            breeds.append(cat.breed)
+        return breeds
 
     def _target_names(self, target_color: str, breed: str | None) -> set[str]:
         names = {target_color, COLOR_MASTER.canonical_name(target_color)}
@@ -597,11 +634,15 @@ class ReverseLookupService:
         dams: list[RegisteredCat],
     ) -> bool:
         for sire in sires:
-            sire_loci = self._calculator.resolved_color_loci(sire.color, "male", None)
-            if sire_loci is None or locus not in sire_loci:
-                continue
             for dam in dams:
-                dam_loci = self._calculator.resolved_color_loci(dam.color, "female", None)
+                breed = self._pair_breed(sire, dam)
+                try:
+                    sire_loci = self._calculator.resolved_color_loci(sire.color, "male", breed)
+                    dam_loci = self._calculator.resolved_color_loci(dam.color, "female", breed)
+                except BreedingCalculationError:
+                    continue
+                if sire_loci is None or locus not in sire_loci:
+                    continue
                 if dam_loci is None or locus not in dam_loci:
                     continue
                 first, second = target_pair

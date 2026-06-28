@@ -125,3 +125,39 @@ def test_reverse_lookup_no_candidate_includes_unchecked_loci() -> None:
     assert body["response_category"] == "現在の登録情報では確認できない"
     assert any(condition.startswith("W座位") for condition in body["target_conditions"])
     assert any("W座位" in condition for condition in body["unchecked_conditions"])
+
+
+def test_reverse_lookup_resolves_target_with_registered_breed_context() -> None:
+    """猫種固有名の目標カラーは、登録猫の猫種文脈で解決して探索する。"""
+
+    response = client.post(
+        "/api/v1/reverse-lookup",
+        json={
+            "target_color": "Sable",
+            "cats": [
+                {
+                    "id": "sire-1",
+                    "name": "セーブルの父",
+                    "sex": "male",
+                    "color": "Sable",
+                    "breed": "Burmese",
+                },
+                {
+                    "id": "dam-1",
+                    "name": "セーブルの母",
+                    "sex": "female",
+                    "color": "Sable",
+                    "breed": "Burmese",
+                },
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "success"
+    assert body["target_color"] == "Sable"
+    assert len(body["candidates"]) == 1
+    candidate = body["candidates"][0]
+    assert candidate["category"] == "確定で期待できる"
+    assert candidate["confirmed_probability_pct"] > 0
