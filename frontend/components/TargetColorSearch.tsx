@@ -301,6 +301,7 @@ export function TargetColorSearch() {
   const [colors, setColors] = useState<ColorOption[]>([]);
   const [breedItems, setBreedItems] = useState<ColorOption[]>([]);
   const [loading, setLoading] = useState(false);
+  const [registrationError, setRegistrationError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ReverseLookupResponse | null>(null);
 
@@ -358,12 +359,28 @@ export function TargetColorSearch() {
   function saveCats(nextCats: RegisteredCat[]) {
     setCats(nextCats);
     catRepository.save(nextCats);
+    setRegistrationError(null);
     setResult(null);
+  }
+
+  function maleRestrictedMessage(
+    selectedSex: RegisteredCat["sex"],
+    entries: string[],
+  ): string | null {
+    if (selectedSex !== "male") return null;
+    const invalidColors = entries.filter((entry) => femaleOnly.has(entry));
+    if (invalidColors.length === 0) return null;
+    return `父候補には指定できないメス限定カラーがあります: ${invalidColors.join(", ")}`;
   }
 
   function handleAddCat(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (colorsToRegister.length === 0) return;
+    const restrictedMessage = maleRestrictedMessage(sex, colorsToRegister);
+    if (restrictedMessage) {
+      setRegistrationError(restrictedMessage);
+      return;
+    }
 
     const trimmedBreed = breed.trim();
     const parsedCarriers = parseCarriers(carriers);
@@ -417,6 +434,11 @@ export function TargetColorSearch() {
     const trimmedName = editName.trim();
     const trimmedColor = editColor.trim();
     if (!trimmedName || !trimmedColor) return;
+    const restrictedMessage = maleRestrictedMessage(editSex, [trimmedColor]);
+    if (restrictedMessage) {
+      setRegistrationError(restrictedMessage);
+      return;
+    }
 
     const updatedCat: RegisteredCat = {
       id: editingId,
@@ -646,6 +668,11 @@ Lilac`}
             </button>
           </div>
         </form>
+        {registrationError && (
+          <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            {registrationError}
+          </div>
+        )}
 
         <div className="mt-5 space-y-2">
           <h3 className="text-sm font-semibold text-slate-700">自舎カラー構成</h3>
