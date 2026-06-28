@@ -96,8 +96,8 @@ class PhenotypeNamer:
 
         if dom_white == "white":
             return "White"
-        # 通常モードの構築対象外 (点紋/チョコ/シナモン) は未分類に回す
-        if base != "black" or c_state != "full":
+        # 通常モードの構築対象外 (点紋系) は未分類に回す
+        if c_state != "full":
             return None
 
         is_dilute = dilute == "dilute"
@@ -108,10 +108,15 @@ class PhenotypeNamer:
         if wideband == "wide" and is_agouti and orange == "non_orange":
             degree = self._tipping_degree(sire_color, dam_color)
             tipped = "Silver" if is_silver else "Golden"
-            name = f"Blue {degree}{tipped}" if is_dilute else f"{degree}{tipped}"
+            base_prefix = self._wideband_base_prefix(base, is_dilute)
+            name = f"{base_prefix}{degree}{tipped}"
             if spotting in ("white", "high_white"):
                 name = f"{name}-White"
             return name
+
+        # 通常モードの構築対象外 (チョコ/シナモン) は、Wb の命名を済ませた後に未分類へ回す。
+        if base != "black":
+            return None
 
         if orange == "tortie":
             if is_agouti:
@@ -160,6 +165,18 @@ class PhenotypeNamer:
     def is_female_only_color(name: str) -> bool:
         lowered = name.lower()
         return any(marker in lowered for marker in _FEMALE_ONLY_MARKERS)
+
+    @staticmethod
+    def _wideband_base_prefix(base: str, is_dilute: bool) -> str:
+        """Wb系の表示でB/D座位の基底カラーを残す接頭辞を返す。"""
+
+        if base == "black":
+            return "Blue " if is_dilute else ""
+        if base == "chocolate":
+            return "Lilac " if is_dilute else "Chocolate "
+        if base == "cinnamon":
+            return "Fawn " if is_dilute else "Cinnamon "
+        return ""
 
     @staticmethod
     def _tipping_degree(sire_color: str, dam_color: str) -> str:

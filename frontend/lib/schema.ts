@@ -109,6 +109,66 @@ export const breedColorsResponseSchema = z.object({
 });
 export type BreedColorsResponse = z.infer<typeof breedColorsResponseSchema>;
 
+// 目標カラーから探す: 登録猫入力。
+export const registeredCatSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  sex: z.enum(["male", "female"]),
+  color: z.string(),
+  breed: z.string().optional(),
+  carriers: z.record(z.string()).optional(),
+});
+export type RegisteredCat = z.infer<typeof registeredCatSchema>;
+
+// 目標カラーから探す: 座位別根拠。
+export const locusEvidenceSchema = z.object({
+  locus: z.string(),
+  target: z.string(),
+  sire: z.string(),
+  dam: z.string(),
+  status: z.string(),
+  note: z.string(),
+});
+export type LocusEvidence = z.infer<typeof locusEvidenceSchema>;
+
+// 目標カラーから探す: 交配候補。
+export const reverseLookupCandidateSchema = z.object({
+  category: z.string(),
+  sire: z.object({
+    id: z.string(),
+    name: z.string(),
+    color: z.string(),
+    breed: z.string().nullable(),
+  }),
+  dam: z.object({
+    id: z.string(),
+    name: z.string(),
+    color: z.string(),
+    breed: z.string().nullable(),
+  }),
+  target_color: z.string(),
+  confirmed_probability_pct: z.number(),
+  conditional_max_probability_pct: z.number(),
+  establishment_conditions: z.array(z.string()),
+  confirmation_needed: z.array(z.string()),
+  recommended_tests: z.array(z.string()),
+  locus_evidence: z.array(locusEvidenceSchema),
+  other_possible_colors: z.array(resultEntrySchema),
+});
+export type ReverseLookupCandidate = z.infer<typeof reverseLookupCandidateSchema>;
+
+// 目標カラーから探す: APIレスポンス。
+export const reverseLookupResponseSchema = z.object({
+  status: z.string(),
+  target_color: z.string(),
+  response_category: z.string(),
+  target_conditions: z.array(z.string()),
+  unchecked_conditions: z.array(z.string()),
+  recommended_checks: z.array(z.string()),
+  candidates: z.array(reverseLookupCandidateSchema),
+});
+export type ReverseLookupResponse = z.infer<typeof reverseLookupResponseSchema>;
+
 // POST /api/v1/feedback: フィードバック受付結果 (sent=管理者へのメール送信成否)。
 export const feedbackResponseSchema = z.object({
   sent: z.boolean(),

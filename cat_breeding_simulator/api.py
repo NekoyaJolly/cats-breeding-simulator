@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from typing import Literal
 
 from fastapi import APIRouter, FastAPI, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -20,6 +21,7 @@ from cat_breeding_simulator.master_data import (
     VALID_BREEDS,
     recognized_color_keys_for_breed,
 )
+from cat_breeding_simulator.reverse_lookup import RegisteredCat, ReverseLookupService
 
 
 class CalculationRequest(BaseModel):
@@ -130,6 +132,74 @@ class BreedColorsResponse(BaseModel):
     colors: list[str]
 
 
+class RegisteredCatInput(BaseModel):
+    """逆引き対象として登録された猫。"""
+
+    id: str = Field(min_length=1)
+    name: str = Field(min_length=1)
+    sex: Literal["male", "female"]
+    color: str = Field(min_length=1)
+    breed: str | None = Field(default=None, min_length=1)
+    # 確認済み因子。例: {"B": "B/b", "C": "C/cs"}。
+    carriers: dict[str, str] | None = Field(default=None)
+
+
+class ReverseLookupRequest(BaseModel):
+    """目標カラーから探す逆引きAPIの入力。"""
+
+    target_color: str = Field(min_length=1)
+    cats: list[RegisteredCatInput] = Field(min_length=2)
+    limit: int = Field(default=20, ge=1, le=100)
+
+
+class RegisteredCatSummaryEntry(BaseModel):
+    """逆引き結果に表示する登録猫概要。"""
+
+    id: str
+    name: str
+    color: str
+    breed: str | None
+
+
+class LocusEvidenceEntry(BaseModel):
+    """座位別根拠の返却形式。"""
+
+    locus: str
+    target: str
+    sire: str
+    dam: str
+    status: str
+    note: str
+
+
+class ReverseLookupCandidateEntry(BaseModel):
+    """目標カラーが生まれる可能性のある交配候補。"""
+
+    category: str
+    sire: RegisteredCatSummaryEntry
+    dam: RegisteredCatSummaryEntry
+    target_color: str
+    confirmed_probability_pct: float
+    conditional_max_probability_pct: float
+    establishment_conditions: list[str]
+    confirmation_needed: list[str]
+    recommended_tests: list[str]
+    locus_evidence: list[LocusEvidenceEntry]
+    other_possible_colors: list[ResultEntry]
+
+
+class ReverseLookupResponse(BaseModel):
+    """目標カラーから探す逆引きAPIの出力。"""
+
+    status: str
+    target_color: str
+    response_category: str
+    target_conditions: list[str]
+    unchecked_conditions: list[str]
+    recommended_checks: list[str]
+    candidates: list[ReverseLookupCandidateEntry]
+
+
 router = APIRouter(prefix="/api/v1")
 
 
@@ -138,6 +208,13 @@ def get_calculator() -> CoatColorCalculator:
     """起動後に共有する計算器を返す。"""
 
     return CoatColorCalculator()
+
+
+@lru_cache(maxsize=1)
+def get_reverse_lookup_service() -> ReverseLookupService:
+    """起動後に共有する逆引きサービスを返す。"""
+
+    return ReverseLookupService(get_calculator())
 
 
 @router.post("/calculate", response_model=CalculationResponse)
@@ -197,6 +274,83 @@ def calculate_endpoint(payload: CalculationRequest) -> CalculationResponse:
                 blocked_factors=note.blocked_factors,
             )
             for note in (report.parent_color_notes or [])
+        ],
+    )
+
+
+@router.post("/reverse-lookup", response_model=ReverseLookupResponse)
+def reverse_lookup_endpoint(payload: ReverseLookupRequest) -> ReverseLookupResponse:
+    """登録猫リストから目標カラーが成立し得る交配候補を返す。"""
+
+    cats = [
+        RegisteredCat(
+            id=cat.id,
+            name=cat.name,
+            sex=cat.sex,
+            color=cat.color,
+            breed=cat.breed,
+            carriers=cat.carriers,
+        )
+        for cat in payload.cats
+    ]
+    try:
+        report = get_reverse_lookup_service().find_candidates(
+            target_color=payload.target_color,
+            cats=cats,
+            limit=payload.limit,
+        )
+    except BreedingCalculationError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+    return ReverseLookupResponse(
+        status="success",
+        target_color=report.target_color,
+        response_category=report.response_category,
+        target_conditions=report.target_conditions,
+        unchecked_conditions=report.unchecked_conditions,
+        recommended_checks=report.recommended_checks,
+        candidates=[
+            ReverseLookupCandidateEntry(
+                category=candidate.category,
+                sire=RegisteredCatSummaryEntry(
+                    id=candidate.sire.id,
+                    name=candidate.sire.name,
+                    color=candidate.sire.color,
+                    breed=candidate.sire.breed,
+                ),
+                dam=RegisteredCatSummaryEntry(
+                    id=candidate.dam.id,
+                    name=candidate.dam.name,
+                    color=candidate.dam.color,
+                    breed=candidate.dam.breed,
+                ),
+                target_color=candidate.target_color,
+                confirmed_probability_pct=candidate.confirmed_probability_pct,
+                conditional_max_probability_pct=candidate.conditional_max_probability_pct,
+                establishment_conditions=candidate.establishment_conditions,
+                confirmation_needed=candidate.confirmation_needed,
+                recommended_tests=candidate.recommended_tests,
+                locus_evidence=[
+                    LocusEvidenceEntry(
+                        locus=evidence.locus,
+                        target=evidence.target,
+                        sire=evidence.sire,
+                        dam=evidence.dam,
+                        status=evidence.status,
+                        note=evidence.note,
+                    )
+                    for evidence in candidate.locus_evidence
+                ],
+                other_possible_colors=[
+                    ResultEntry(
+                        sex=entry.sex,
+                        color=entry.color,
+                        probability_pct=entry.probability_pct,
+                    )
+                    for entry in candidate.other_possible_colors
+                ],
+            )
+            for candidate in report.candidates
         ],
     )
 
