@@ -161,6 +161,7 @@ export type ReverseLookupCandidate = z.infer<typeof reverseLookupCandidateSchema
 export const reverseLookupResponseSchema = z.object({
   status: z.string(),
   target_color: z.string(),
+  target_sex: z.enum(["male", "female"]).nullable().optional(),
   response_category: z.string(),
   target_conditions: z.array(z.string()),
   unchecked_conditions: z.array(z.string()),

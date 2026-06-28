@@ -31,6 +31,7 @@ export type CalculateOutcome =
 
 export type ReverseLookupInput = {
   target_color: string;
+  target_sex?: "male" | "female";
   cats: RegisteredCat[];
   limit?: number;
 };

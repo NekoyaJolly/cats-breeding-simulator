@@ -80,6 +80,7 @@ class ReverseLookupReport:
     """逆引きAPIが返す候補と、候補が無い場合にも表示する分析。"""
 
     target_color: str
+    target_sex: RegisteredSex | None
     response_category: str
     candidates: list[ReverseLookupCandidate]
     target_conditions: list[str]
@@ -142,11 +143,12 @@ class ReverseLookupService:
         self,
         target_color: str,
         cats: list[RegisteredCat],
+        target_sex: RegisteredSex | None = None,
         limit: int = 20,
     ) -> ReverseLookupReport:
         """登録猫の父母候補を総当たりし、目標カラーに届く候補と分析を返す。"""
 
-        target_resolution = self._target_resolution(target_color, cats)
+        target_resolution = self._target_resolution(target_color, cats, target_sex)
         display_target = self._display_target_color(
             target_color,
             target_resolution.breed if target_resolution else None,
@@ -154,6 +156,7 @@ class ReverseLookupService:
         if target_resolution is None:
             return ReverseLookupReport(
                 target_color=display_target,
+                target_sex=target_sex,
                 response_category=_CATEGORY_DIFFICULT,
                 candidates=[],
                 target_conditions=["現在の対応範囲外、または猫種文脈が必要な目標カラーです。"],
@@ -167,6 +170,7 @@ class ReverseLookupService:
         if not sires or not dams:
             return ReverseLookupReport(
                 target_color=display_target,
+                target_sex=target_sex,
                 response_category=_CATEGORY_DIFFICULT,
                 candidates=[],
                 target_conditions=self._target_conditions(target_loci),
@@ -177,7 +181,7 @@ class ReverseLookupService:
         candidates: list[ReverseLookupCandidate] = []
         for sire in sires:
             for dam in dams:
-                candidate = self._evaluate_pair(target_color, sire, dam)
+                candidate = self._evaluate_pair(target_color, target_sex, sire, dam)
                 if candidate is not None:
                     candidates.append(candidate)
         candidates.sort(
@@ -191,6 +195,7 @@ class ReverseLookupService:
         limited = candidates[:limit]
         return ReverseLookupReport(
             target_color=display_target,
+            target_sex=target_sex,
             response_category=self._response_category(limited),
             candidates=limited,
             target_conditions=self._target_conditions(target_loci),
@@ -209,6 +214,7 @@ class ReverseLookupService:
     def _evaluate_pair(
         self,
         target_color: str,
+        target_sex: RegisteredSex | None,
         sire: RegisteredCat,
         dam: RegisteredCat,
     ) -> ReverseLookupCandidate | None:
@@ -226,11 +232,11 @@ class ReverseLookupService:
         except BreedingCalculationError:
             return None
 
-        conditions = self._hidden_conditions_for_pair(target_color, sire, dam, breed)
+        conditions = self._hidden_conditions_for_pair(target_color, target_sex, sire, dam, breed)
         confirmed_probability = (
             0.0
             if conditions
-            else self._target_probability(base_report.results, target_color, breed)
+            else self._target_probability(base_report.results, target_color, breed, target_sex)
         )
         conditional_report = base_report
         conditional_probability = confirmed_probability
@@ -247,7 +253,7 @@ class ReverseLookupService:
                     dam_carriers=dam_carriers,
                 )
                 conditional_probability = self._target_probability(
-                    conditional_report.results, target_color, breed
+                    conditional_report.results, target_color, breed, target_sex
                 )
             except BreedingCalculationError:
                 conditional_probability = 0.0
@@ -271,8 +277,13 @@ class ReverseLookupService:
             ),
             confirmation_needed=self._confirmation_needed(conditions),
             recommended_tests=self._recommended_tests(conditions),
-            locus_evidence=self._locus_evidence(target_color, sire, dam, breed, mode, conditions),
-            other_possible_colors=self._other_possible_colors(conditional_report.results, target_color, breed),
+            locus_evidence=self._locus_evidence(target_color, target_sex, sire, dam, breed, mode, conditions),
+            other_possible_colors=self._other_possible_colors(
+                conditional_report.results,
+                target_color,
+                breed,
+                target_sex,
+            ),
         )
 
     @staticmethod
@@ -297,8 +308,11 @@ class ReverseLookupService:
         self,
         target_color: str,
         breed: str | None,
+        target_sex: RegisteredSex | None = None,
     ) -> dict[str, tuple[str, str]] | None:
         try:
+            if target_sex is not None:
+                return self._calculator.resolved_color_loci(target_color, target_sex, breed)
             return (
                 self._calculator.resolved_color_loci(target_color, "female", breed)
                 or self._calculator.resolved_color_loci(target_color, "male", breed)
@@ -310,9 +324,10 @@ class ReverseLookupService:
         self,
         target_color: str,
         cats: list[RegisteredCat],
+        target_sex: RegisteredSex | None,
     ) -> TargetResolution | None:
         for breed in self._target_breed_candidates(cats):
-            loci = self._target_loci(target_color, breed)
+            loci = self._target_loci(target_color, breed, target_sex)
             if loci is not None:
                 return TargetResolution(breed=breed, loci=loci)
         return None
@@ -343,10 +358,13 @@ class ReverseLookupService:
         results: list[KittenResult],
         target_color: str,
         breed: str | None,
+        target_sex: RegisteredSex | None,
     ) -> float:
         target_names = self._target_names(target_color, breed)
         total = 0.0
         for result in results:
+            if not _matches_target_sex(result.sex, target_sex):
+                continue
             result_names = {result.color, COLOR_MASTER.canonical_name(result.color)}
             if target_names & result_names:
                 total += result.probability_pct
@@ -357,12 +375,13 @@ class ReverseLookupService:
         results: list[KittenResult],
         target_color: str,
         breed: str | None,
+        target_sex: RegisteredSex | None,
     ) -> list[KittenResult]:
         target_names = self._target_names(target_color, breed)
         out: list[KittenResult] = []
         for result in results:
             result_names = {result.color, COLOR_MASTER.canonical_name(result.color)}
-            if target_names & result_names:
+            if target_names & result_names and _matches_target_sex(result.sex, target_sex):
                 continue
             out.append(result)
         return out[:12]
@@ -370,11 +389,12 @@ class ReverseLookupService:
     def _hidden_conditions_for_pair(
         self,
         target_color: str,
+        target_sex: RegisteredSex | None,
         sire: RegisteredCat,
         dam: RegisteredCat,
         breed: str | None,
     ) -> list[HiddenCondition]:
-        target_loci = self._target_loci(target_color, breed)
+        target_loci = self._target_loci(target_color, breed, target_sex)
         sire_loci = self._calculator.resolved_color_loci(sire.color, "male", breed)
         dam_loci = self._calculator.resolved_color_loci(dam.color, "female", breed)
         if target_loci is None or sire_loci is None or dam_loci is None:
@@ -502,7 +522,7 @@ class ReverseLookupService:
         if confirmed_probability > 0:
             return ["登録済みの毛色・確認済み因子だけで成立"]
         out = [
-            f"{condition.cat_color}の{condition.cat_name}が{_factor_label(condition.locus, condition.allele)} を持つ"
+            f"{condition.cat_name}が{_factor_label(condition.locus, condition.allele)} を持つ"
             for condition in conditions
         ]
         if conditional_probability > 0:
@@ -512,7 +532,7 @@ class ReverseLookupService:
     @staticmethod
     def _confirmation_needed(conditions: list[HiddenCondition]) -> list[str]:
         return [
-            f"{condition.cat_color}の{condition.cat_name}の{_LOCUS_LABELS.get(condition.locus, condition.locus)}"
+            f"{condition.cat_name}の{_LOCUS_LABELS.get(condition.locus, condition.locus)}"
             for condition in conditions
         ]
 
@@ -528,13 +548,14 @@ class ReverseLookupService:
     def _locus_evidence(
         self,
         target_color: str,
+        target_sex: RegisteredSex | None,
         sire: RegisteredCat,
         dam: RegisteredCat,
         breed: str | None,
         mode: str,
         conditions: list[HiddenCondition],
     ) -> list[LocusEvidence]:
-        target_loci = self._target_loci(target_color, breed)
+        target_loci = self._target_loci(target_color, breed, target_sex)
         if target_loci is None:
             return []
         sire_alleles = self._calculator.contributable_alleles(
@@ -672,6 +693,15 @@ def _format_allele(allele: str) -> str:
     """bl をUI向けに b^l と表示する。"""
 
     return "b^l" if allele == "bl" else allele
+
+
+def _matches_target_sex(result_sex: str, target_sex: RegisteredSex | None) -> bool:
+    """性別指定がある場合だけ、子猫結果の性別を絞り込む。"""
+
+    if target_sex is None:
+        return True
+    expected = "Male" if target_sex == "male" else "Female"
+    return result_sex == expected
 
 
 def _factor_label(locus: str, allele: str) -> str:

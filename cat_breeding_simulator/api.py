@@ -148,6 +148,7 @@ class ReverseLookupRequest(BaseModel):
     """目標カラーから探す逆引きAPIの入力。"""
 
     target_color: str = Field(min_length=1)
+    target_sex: Literal["male", "female"] | None = None
     cats: list[RegisteredCatInput] = Field(min_length=2)
     limit: int = Field(default=20, ge=1, le=100)
 
@@ -193,6 +194,7 @@ class ReverseLookupResponse(BaseModel):
 
     status: str
     target_color: str
+    target_sex: Literal["male", "female"] | None = None
     response_category: str
     target_conditions: list[str]
     unchecked_conditions: list[str]
@@ -297,6 +299,7 @@ def reverse_lookup_endpoint(payload: ReverseLookupRequest) -> ReverseLookupRespo
         report = get_reverse_lookup_service().find_candidates(
             target_color=payload.target_color,
             cats=cats,
+            target_sex=payload.target_sex,
             limit=payload.limit,
         )
     except BreedingCalculationError as error:
@@ -305,6 +308,7 @@ def reverse_lookup_endpoint(payload: ReverseLookupRequest) -> ReverseLookupRespo
     return ReverseLookupResponse(
         status="success",
         target_color=report.target_color,
+        target_sex=report.target_sex,
         response_category=report.response_category,
         target_conditions=report.target_conditions,
         unchecked_conditions=report.unchecked_conditions,
