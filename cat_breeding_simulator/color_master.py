@@ -70,6 +70,7 @@ class ResolvedColor:
     breed_context: str
     display_allowed: bool
     input_allowed: bool
+    sex_restriction: str            # female_only / unrestricted
     # engine (PHENOTYPE_GENOTYPES) へ渡せる候補名。canonical 概念を優先した順序。
     engine_candidate_names: tuple[str, ...]
 
@@ -142,6 +143,7 @@ class ColorMaster:
             breed_context=row.get("BreedContext", ""),
             display_allowed=row.get("DisplayAllowed", "") == "true",
             input_allowed=row.get("InputAllowed", "") == "true",
+            sex_restriction=canonical.get("SexRestriction", row.get("SexRestriction", "")),
             engine_candidate_names=self._engine_candidates(row, canonical),
         )
 

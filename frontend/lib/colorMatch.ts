@@ -19,6 +19,28 @@ export function normalizeKey(input: string): string {
   return folded.toLowerCase().replace(/[\s　\-_/().,・。．]/g, "");
 }
 
+// 自由入力が既知カラーの正式名または別名に完全一致する場合、canonical な選択肢へ解決する。
+// 入力補完と同じ正規化キーを使うことで、登録画面と通常入力の別名解釈を揃える。
+export function resolveExactColorOption(
+  colors: ColorOption[],
+  input: string,
+): ColorOption | null {
+  const query = normalizeKey(input);
+  if (query.length === 0) return null;
+
+  for (const color of colors) {
+    if (normalizeKey(color.value) === query) return color;
+    if (color.keywords.some((keyword) => normalizeKey(keyword) === query)) return color;
+  }
+  return null;
+}
+
+// 登録保存時に使う canonical 値。未対応の自由入力はバックエンド検証へ渡すため、そのまま保持する。
+export function canonicalColorValue(colors: ColorOption[], input: string): string {
+  const trimmed = input.trim();
+  return resolveExactColorOption(colors, trimmed)?.value ?? trimmed;
+}
+
 // 1 色が正規化済み query にどの程度マッチするか。小さいほど上位。マッチしなければ null。
 // 0 = value/読みの前方一致、1 = いずれかのキーの前方一致、2 = 部分一致。
 function scoreColor(color: ColorOption, query: string): number | null {
