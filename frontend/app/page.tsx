@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { BreedingForm } from "@/components/BreedingForm";
 import { BreedColorsHint } from "@/components/BreedColorsHint";
+import { LitterInference } from "@/components/LitterInference";
 import { ResultView } from "@/components/ResultView";
 import { TargetColorSearch } from "@/components/TargetColorSearch";
 import { calculate, type CalculateInput } from "@/lib/api";
 import type { CalculationResponse } from "@/lib/schema";
 
-type ActiveView = "simulator" | "target";
+type ActiveView = "simulator" | "target" | "litter";
 
 export default function HomePage() {
   const [activeView, setActiveView] = useState<ActiveView>("simulator");
@@ -64,6 +65,17 @@ export default function HomePage() {
         >
           目標カラーから探す
         </button>
+        <button
+          type="button"
+          className={`flex-1 rounded px-3 py-2 text-sm font-medium ${
+            activeView === "litter"
+              ? "bg-white text-slate-900 shadow-sm"
+              : "text-slate-500 hover:text-slate-800"
+          }`}
+          onClick={() => setActiveView("litter")}
+        >
+          リター実績から推定
+        </button>
       </div>
 
       {activeView === "simulator" ? (
@@ -88,8 +100,10 @@ export default function HomePage() {
             </div>
           )}
         </>
-      ) : (
+      ) : activeView === "target" ? (
         <TargetColorSearch />
+      ) : (
+        <LitterInference />
       )}
     </main>
   );

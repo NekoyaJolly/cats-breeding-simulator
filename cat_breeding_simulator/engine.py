@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
+import itertools
 
 from cat_breeding_simulator.mendelian import (
     allele_distribution,
@@ -466,6 +467,20 @@ class CoatColorCalculator:
         resolved = self._resolve_input_color_name(color, breed)
         return self._namer.post_process_color_name(resolved, color, color, breed)
 
+    @staticmethod
+    def _validate_resolved_sex_restriction(color: str, sex: str) -> None:
+        resolved = COLOR_MASTER.resolve(color)
+        if resolved is None:
+            return
+        if sex == "male" and resolved.sex_restriction == "female_only":
+            raise BreedingCalculationError(
+                f"「{resolved.primary_name}」はメス限定の毛色のため、父猫（オス）には指定できません。"
+            )
+        if sex == "female" and resolved.sex_restriction == "male_only":
+            raise BreedingCalculationError(
+                f"「{resolved.primary_name}」はオス限定の毛色のため、母猫（メス）には指定できません。"
+            )
+
     def validate_parent_color(
         self,
         color: str,
@@ -476,17 +491,108 @@ class CoatColorCalculator:
     ) -> None:
         """親猫入力として有効かを、通常計算と同じ名前解決・性別制約で検証する。"""
 
-        resolved = COLOR_MASTER.resolve(color)
-        if resolved is not None:
-            if sex == "male" and resolved.sex_restriction == "female_only":
-                raise BreedingCalculationError(
-                    f"「{resolved.primary_name}」はメス限定の毛色のため、父猫（オス）には指定できません。"
-                )
-            if sex == "female" and resolved.sex_restriction == "male_only":
-                raise BreedingCalculationError(
-                    f"「{resolved.primary_name}」はオス限定の毛色のため、母猫（メス）には指定できません。"
-                )
+        self._validate_resolved_sex_restriction(color, sex)
         self._resolve_parent_genotypes(color, sex, breed, mode, carriers)
+
+    def parent_genotype_candidates(
+        self,
+        color: str,
+        sex: str,
+        breed: str | None,
+        mode: str = "normal",
+        carriers: dict[str, str] | None = None,
+        include_unconfirmed_carriers: bool = False,
+    ) -> list[ParentGenotype]:
+        """親または観察子猫の表現型から整合し得る遺伝子型候補を返す。
+
+        通常シミュレーターと同じ resolver / alias 解決を先に通し、リター推定だけが必要とする
+        未確認キャリア候補は追加展開として重ねる。色名解決経路を別系統にしないための公開面。
+        """
+
+        self._validate_resolved_sex_restriction(color, sex)
+        genotypes = self._resolve_parent_genotypes(color, sex, breed, mode, carriers)
+        if not include_unconfirmed_carriers:
+            return genotypes
+        return self._expand_unconfirmed_loci(genotypes)
+
+    def possible_kitten_genotypes(
+        self,
+        sire_genotype: ParentGenotype,
+        dam_genotype: ParentGenotype,
+    ) -> list[KittenGenotype]:
+        """指定した父母遺伝子型候補から生まれ得る子猫遺伝子型を重複なく返す。"""
+
+        kittens: list[KittenGenotype] = []
+        seen: set[tuple] = set()
+        sire_gametes = self._build_gametes(sire_genotype)
+        dam_gametes = self._build_gametes(dam_genotype)
+        for sire_gamete in sire_gametes:
+            for dam_gamete in dam_gametes:
+                kitten = self._combine_gametes(sire_gamete, dam_gamete)
+                signature = (
+                    kitten.sex,
+                    tuple(
+                        sorted(
+                            (locus, tuple(sorted(alleles)))
+                            for locus, alleles in kitten.loci.items()
+                        )
+                    ),
+                )
+                if signature in seen:
+                    continue
+                seen.add(signature)
+                kittens.append(kitten)
+        return kittens
+
+    @staticmethod
+    def _expand_unconfirmed_loci(genotypes: list[ParentGenotype]) -> list[ParentGenotype]:
+        """産子実績から推定するため、表現型だけでは閉じていた主要キャリア座位を候補化する。"""
+
+        expanded: list[ParentGenotype] = []
+        seen: set[tuple] = set()
+        for genotype in genotypes:
+            locus_options: dict[str, list[tuple[str, str]]] = {}
+            for locus, alleles in genotype.loci.items():
+                locus_options[locus] = [alleles]
+
+            b_alleles = genotype.loci["B"]
+            if b_alleles == ("B", "B"):
+                locus_options["B"] = [("B", "B"), ("B", "b"), ("B", "bl")]
+            elif b_alleles == ("b", "b"):
+                locus_options["B"] = [("b", "b"), ("b", "bl")]
+
+            a_alleles = genotype.loci["A"]
+            if a_alleles == ("A", "A"):
+                locus_options["A"] = [("A", "A"), ("A", "a")]
+
+            c_alleles = genotype.loci["C"]
+            if c_alleles == ("C", "C"):
+                locus_options["C"] = [("C", "C"), ("C", "cs"), ("C", "cb")]
+
+            loci = list(locus_options.keys())
+            options = [locus_options[locus] for locus in loci]
+            for combination in itertools.product(*options):
+                next_loci = dict(zip(loci, combination))
+                signature = (
+                    genotype.sex,
+                    tuple(
+                        sorted(
+                            (locus, tuple(sorted(next_loci[locus])))
+                            for locus in next_loci
+                        )
+                    ),
+                )
+                if signature in seen:
+                    continue
+                seen.add(signature)
+                expanded.append(
+                    ParentGenotype(
+                        phenotype=genotype.phenotype,
+                        sex=genotype.sex,
+                        loci=next_loci,
+                    )
+                )
+        return expanded
 
     def _blocking_recessive_factors(
         self,
