@@ -239,8 +239,13 @@ def _load_color_base_loci() -> dict[str, list[ColorBase]]:
         os.path.join(os.path.dirname(os.path.dirname(__file__)), filename),
     ]
     filepath = next((path for path in paths_to_try if os.path.exists(path)), None)
+    # Fail-Fast: マスタが無い/壊れている状態で空データのまま起動すると、全リクエストが
+    # 「未対応の毛色」になる無言の機能不全に陥る。起動時に明確に落として原因を露見させる。
     if not filepath:
-        return {}
+        raise RuntimeError(
+            f"{filename} が見つかりません (起動を中止)。CSV のコピー漏れ等を確認してください。"
+            f" 探索パス: {paths_to_try}"
+        )
 
     base: dict[str, list[ColorBase]] = {}
     try:
@@ -252,8 +257,10 @@ def _load_color_base_loci() -> dict[str, list[ColorBase]]:
                 if not color:
                     continue
                 base.setdefault(color, []).append(_color_base_from_row(color, locus_cols, row))
-    except Exception:
-        return {}
+    except (OSError, UnicodeDecodeError, csv.Error) as exc:
+        raise RuntimeError(
+            f"{filename} の読み込みに失敗しました ({filepath}): {exc}"
+        ) from exc
     return base
 
 
@@ -381,8 +388,12 @@ def _load_color_definitions() -> list[dict[str, str]]:
             filepath = path
             break
 
+    # Fail-Fast: 部分データや空データで起動を続けず、欠落・破損を起動時に露見させる。
     if not filepath:
-        return []
+        raise RuntimeError(
+            f"{filename} が見つかりません (起動を中止)。CSV のコピー漏れ等を確認してください。"
+            f" 探索パス: {paths_to_try}"
+        )
 
     definitions = []
     try:
@@ -391,8 +402,10 @@ def _load_color_definitions() -> list[dict[str, str]]:
             for row in reader:
                 if row.get("CoatColor"):
                     definitions.append(dict(row))
-    except Exception:
-        pass
+    except (OSError, UnicodeDecodeError, csv.Error) as exc:
+        raise RuntimeError(
+            f"{filename} の読み込みに失敗しました ({filepath}): {exc}"
+        ) from exc
     return definitions
 
 
@@ -418,13 +431,13 @@ def _load_breed_filters() -> dict[str, dict[str, tuple[str, str]]]:
             filepath = path
             break
 
+    # Fail-Fast: 猫種マスタが無いまま少数のハードコード猫種で起動すると、
+    # 大半の猫種が無言で欠落する。起動時に落として CSV のコピー漏れを露見させる。
     if not filepath:
-        # Fallback to hardcoded defaults if file not found
-        return {
-            "Siamese": {"C": ("cs", "cs")},
-            "Russian Blue": {"D": ("d", "d"), "B": ("B", "B"), "A": ("a", "a")},
-            "Munchkin": {},
-        }
+        raise RuntimeError(
+            f"{filename} が見つかりません (起動を中止)。CSV のコピー漏れ等を確認してください。"
+            f" 探索パス: {paths_to_try}"
+        )
 
     filters: dict[str, dict[str, tuple[str, str]]] = {}
     try:
@@ -447,15 +460,12 @@ def _load_breed_filters() -> dict[str, dict[str, tuple[str, str]]]:
                             breed_constraints[locus_name] = (alleles[0], alleles[1])
 
                 filters[breed] = breed_constraints
-    except Exception:
-        # Fallback in case of any reading error
-        return {
-            "Siamese": {"C": ("cs", "cs")},
-            "Russian Blue": {"D": ("d", "d"), "B": ("B", "B"), "A": ("a", "a")},
-            "Munchkin": {},
-        }
+    except (OSError, UnicodeDecodeError, csv.Error) as exc:
+        raise RuntimeError(
+            f"{filename} の読み込みに失敗しました ({filepath}): {exc}"
+        ) from exc
 
-    # Ensure "Munchkin" exists for backward compatibility / tests (since tests use "Munchkin" without SH/LH)
+    # Munchkin は SH/LH 変種のみで bare 行が無い場合があるため、テスト互換で空制約を補完する。
     if "Munchkin" not in filters:
         filters["Munchkin"] = {}
 
