@@ -1,0 +1,63 @@
+name: CI
+
+# PR 時にテスト・型・lint を回す軽量ゲート (docker/gcloud 不要、数分)。
+# デプロイ (deploy.yml) とは分離し、マージ前に品質を確認する。
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        # requirements.txt (fastapi/uvicorn/httpx) + テストランナー。
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pytest
+
+      - name: Run pytest
+        # python -m で実行するとリポジトリ直下が import パスに入る (pyproject の pythonpath とも整合)。
+        run: python -m pytest -q
+
+  frontend:
+    name: Frontend (test / typecheck / lint)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
