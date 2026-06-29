@@ -24,3 +24,6 @@ include = ["cat_breeding_simulator*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# リポジトリ直下を import パスに追加し、`pytest` 単体 (PYTHONPATH 未設定) でも
+# main / cat_breeding_simulator を解決できるようにする (CI と同条件)。
+pythonpath = ["."]
