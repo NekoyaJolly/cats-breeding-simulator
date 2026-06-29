@@ -7,6 +7,11 @@
 # テストカバレッジ生成物
 /coverage
 
+# Playwright E2E 生成物
+/test-results
+/playwright-report
+/playwright/.cache
+
 # Next.js 自動生成
 next-env.d.ts
 *.tsbuildinfo
