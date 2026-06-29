@@ -320,6 +320,21 @@ def test_sp_locus_data_contract() -> None:
     assert BREED_FILTERS["Ocicat"].get("Sp") == ("Sp", "Sp")
     assert "Sp" not in BREED_FILTERS["Bengal"]
 
+    # 不変条件: 名前がスポット (full "Spotted" または略記 "Sp" トークン) の色行は
+    # 全て Sp/Sp でなければならない。"Sp Tabby-White" / "Pt Sp Tabby" 等の略記漏れを検知する。
+    def _is_spotted_name(name: str) -> bool:
+        tokens = name.replace("-", " ").split()
+        return "Spotted" in tokens or "Sp" in tokens
+
+    wrong = [
+        name
+        for name, bases in COLOR_BASE_LOCI.items()
+        if _is_spotted_name(name)
+        for base in bases
+        if base.autosomal.get("Sp") != ("Sp", "Sp")
+    ]
+    assert not wrong, f"スポット名なのに Sp_Locus が Sp/Sp でない行: {wrong}"
+
 
 def test_spotted_breed_keeps_spotted_in_output() -> None:
     """Egyptian Mau のスポット交配は出力の柄に Spotted を保持する。"""
