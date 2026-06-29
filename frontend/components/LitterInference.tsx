@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
+  fetchBreedColors,
   fetchBreeds,
   fetchColors,
   inferFromLitter,
   type LitterInferenceOutcome,
 } from "@/lib/api";
 import { BREED_READING_JA } from "@/lib/breedReadingJa";
+import { filterColorsByAllowedNames } from "@/lib/colorMatch";
 import type {
   ColorOption,
   InferenceFinding,
@@ -148,6 +150,7 @@ export function LitterInference() {
   const [kittens, setKittens] = useState<KittenInput[]>([createKittenRow()]);
   const [colors, setColors] = useState<ColorOption[]>([]);
   const [breedItems, setBreedItems] = useState<ColorOption[]>([]);
+  const [breedAllowedColors, setBreedAllowedColors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<LitterInferenceResponse | null>(null);
@@ -177,6 +180,27 @@ export function LitterInference() {
       alive = false;
     };
   }, []);
+
+  // 猫種が指定されている場合は、親・子猫カラー候補をその猫種の方針へ寄せる。
+  useEffect(() => {
+    const trimmedBreed = breed.trim();
+    if (!trimmedBreed) {
+      setBreedAllowedColors([]);
+      return;
+    }
+    let alive = true;
+    fetchBreedColors(trimmedBreed).then((list) => {
+      if (alive) setBreedAllowedColors(list);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [breed]);
+
+  const breedFilteredColors = useMemo(
+    () => filterColorsByAllowedNames(colors, breedAllowedColors),
+    [colors, breedAllowedColors],
+  );
 
   const canSubmit = useMemo(
     () =>
@@ -249,7 +273,7 @@ export function LitterInference() {
               value={sireColor}
               onValueChange={setSireColor}
               onCommit={setSireColor}
-              colors={colors}
+              colors={breedFilteredColors}
               recent={[]}
               placeholder="例: Blue"
               suggestionLayout="inline"
@@ -260,7 +284,7 @@ export function LitterInference() {
               value={damColor}
               onValueChange={setDamColor}
               onCommit={setDamColor}
-              colors={colors}
+              colors={breedFilteredColors}
               recent={[]}
               placeholder="例: Red Tabby"
               suggestionLayout="inline"
@@ -326,7 +350,7 @@ export function LitterInference() {
                   value={kitten.color}
                   onValueChange={(value) => updateKitten(kitten.id, { color: value })}
                   onCommit={(value) => updateKitten(kitten.id, { color: value })}
-                  colors={colors}
+                  colors={breedFilteredColors}
                   recent={[]}
                   placeholder="例: Blue Patched Tabby"
                   suggestionLayout="inline"

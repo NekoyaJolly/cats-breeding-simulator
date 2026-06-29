@@ -197,7 +197,13 @@ def _color_base_from_row(color: str, locus_cols: list[str], row: dict[str, str])
     """CSV 1行から ColorBase (基準遺伝子型) を構築する。B は名前から推定する。"""
 
     color_lower = color.lower()
-    if "chocolate" in color_lower or "lilac" in color_lower or "choco" in color_lower:
+    if (
+        "chocolate" in color_lower
+        or "lilac" in color_lower
+        or "choco" in color_lower
+        or "champagne" in color_lower
+        or "platinum" in color_lower
+    ):
         b_allele = ("b", "b")
     elif "cinnamon" in color_lower or "fawn" in color_lower:
         b_allele = ("bl", "bl")
@@ -595,7 +601,12 @@ def _build_canonical_breeds() -> dict[str, bool]:
         if not is_real_breed(name):
             continue
         base = _breed_base(name)
-        canonical[base] = canonical.get(base, False) or bool(constraints)
+        affects = bool(constraints)
+        # Tonkinese は breed 全体の固定遺伝子を持たないが、Point/Mink/Solid class の
+        # C座位補正を engine が適用するため、UI 上は計算影響ありとして扱う。
+        if base == "Tonkinese":
+            affects = True
+        canonical[base] = canonical.get(base, False) or affects
     return canonical
 
 

@@ -109,6 +109,15 @@ def test_s_locus_normal_white_50(calc) -> None:
     assert abs(_pct(results, "-White") - 50.0) < 0.5
 
 
+def test_s_locus_non_white_parents_never_produce_white_spotting(calc) -> None:
+    """s/s × s/s は白斑あり (-White) を生まない。"""
+
+    report = calc.calculate_report("Brown Tabby", "Brown Tabby", breed=None, mode="normal")
+    white_spotted = [result.color for result in report.results if "-White" in result.color]
+    assert not white_spotted
+    assert report.unmatched_probability == 0
+
+
 # --- Wb (ワイドバンド/tipping) ---
 
 def test_wb_not_auto_generated_in_normal(calc) -> None:
@@ -116,6 +125,99 @@ def test_wb_not_auto_generated_in_normal(calc) -> None:
     results = calc.calculate("Brown Tabby", "Brown Tabby", mode="normal")
     wideband = [r.color for r in results if any(w in r.color for w in ("Shell", "Shaded", "Chinchilla", "Golden"))]
     assert not wideband
+
+
+def test_i_locus_non_silver_parents_never_produce_silver_or_smoke(calc) -> None:
+    """i/i × i/i は Silver / Smoke 系を生まない。"""
+
+    report = calc.calculate_report("Brown Tabby", "Brown Tabby", breed=None, mode="normal")
+    silver_or_smoke = [
+        result.color
+        for result in report.results
+        if "Silver" in result.color or "Smoke" in result.color
+    ]
+    assert not silver_or_smoke
+    assert report.unmatched_probability == 0
+
+
+def test_unspecified_tabby_pair_does_not_invent_named_tabby_subpatterns(calc) -> None:
+    """通常タビー同士から、未明示の Classic / Mackerel / Ticked / Spotted 柄を勝手に出さない。"""
+
+    report = calc.calculate_report("Brown Tabby", "Brown Tabby", breed=None, mode="normal")
+    unexpected_patterns = [
+        result.color
+        for result in report.results
+        if any(
+            pattern in result.color
+            for pattern in ("Classic", "Mackerel", "Ticked", "Spotted")
+        )
+    ]
+    assert not unexpected_patterns
+    assert report.unmatched_probability == 0
+
+
+def test_male_offspring_never_get_female_only_tortie_or_calico_names(calc) -> None:
+    """通常XYオスには Tortie / Calico / Blue Cream / Patched Tabby 系を出さない。"""
+
+    report = calc.calculate_report("Red", "Tortoiseshell", breed=None, mode="normal")
+    forbidden = (
+        "Tortie",
+        "Tortoiseshell",
+        "Calico",
+        "Dilute Calico",
+        "Blue Cream",
+        "Lilac Cream",
+        "Patched",
+    )
+    offenders = [
+        result.color
+        for result in report.results
+        if result.sex == "Male" and any(token in result.color for token in forbidden)
+    ]
+    assert not offenders
+    assert report.unmatched_probability == 0
+
+
+def test_black_pair_normal_does_not_invent_closed_or_unexpressed_loci(calc) -> None:
+    """Black × Black normal は、未明示の W/S/I/Wb/C/Ta/Sp を勝手に出力しない。
+
+    D座位は normal で D/- 展開されるため Blue は許容する。一方、表現型・猫種・明示
+    キャリアに根拠がない優性白/白斑/シルバー/ワイドバンド/ポイント/ティックド/
+    スポットは通常結果に混ぜてはならない。
+    """
+
+    report = calc.calculate_report("Black", "Black", breed=None, mode="normal")
+    forbidden_tokens = (
+        "White",
+        "Silver",
+        "Smoke",
+        "Golden",
+        "Chinchilla",
+        "Shaded",
+        "Shell",
+        "Point",
+        "Mink",
+        "Sepia",
+        "Ticked",
+        "Spotted",
+    )
+    offenders = [
+        (result.sex, result.color, token)
+        for result in report.results
+        for token in forbidden_tokens
+        if token in result.color
+    ]
+    assert not offenders
+    assert report.unmatched_probability == 0
+
+
+def test_c_locus_point_pair_never_returns_full_color(calc) -> None:
+    """cs/cs × cs/cs は C/- のフルカラーへ戻らず、全出力が Point 系になる。"""
+
+    report = calc.calculate_report("Seal Point", "Seal Point", breed=None, mode="normal")
+    assert report.results
+    assert all("Point" in result.color for result in report.results)
+    assert report.unmatched_probability == 0
 
 
 # --- 130×204 normal (全出力タビー/パッチドタビー系) ---

@@ -229,6 +229,35 @@ def test_display_map_breed_name_composes_with_white_suffix() -> None:
     assert resolve("Black", "Persian") == "Black"
 
 
+def test_display_map_japanese_bobtail_mike_names() -> None:
+    """Japanese Bobtail の三毛系を猫種固有呼称へ変換する。"""
+
+    resolve = DISPLAY_ALIAS_MAP.resolve_display_name
+    assert resolve("Calico", "Japanese Bobtail") == "Mike"
+    assert resolve("Dilute Calico", "Japanese Bobtail") == "Dilute Mike"
+    assert resolve("Tortie Smoke-White", "Japanese Bobtail") == "Smoke Mike"
+    assert resolve("Blue Cream Smoke-White", "Japanese Bobtail") == "Dilute Smoke Mike"
+    assert resolve("Calico", "Persian") == "Calico"
+
+
+def test_display_map_tonkinese_solid_class_names() -> None:
+    """Tonkinese 文脈では Sepia 側の内部名を Solid class 表示へ変換する。"""
+
+    resolve = DISPLAY_ALIAS_MAP.resolve_display_name
+    assert resolve("Sable", "Tonkinese") == "Natural Solid"
+    assert resolve("Champagne", "Tonkinese") == "Champagne Solid"
+    assert resolve("Platinum", "Tonkinese") == "Platinum Solid"
+    assert resolve("Sable", "Burmese") == "Sable"
+
+
+def test_display_map_burmese_blue_name() -> None:
+    """Burmese 文脈では内部の Blue Solid を登録表示の Blue へ変換する。"""
+
+    resolve = DISPLAY_ALIAS_MAP.resolve_display_name
+    assert resolve("Blue Solid", "Burmese") == "Blue"
+    assert resolve("Blue Solid", "Tonkinese") == "Blue Solid"
+
+
 def test_ui_path_130x204_only_tabby_via_api() -> None:
     """UI 経路 (API → ColorNameResolver 経由) で 130×204 を計算し、出力健全性を検証する。
 
@@ -286,14 +315,202 @@ def test_breed_colors_endpoint_constrained() -> None:
     assert "Black" not in body["colors"]  # Black は Burmese 非対応
 
 
-def test_breed_colors_endpoint_unconstrained() -> None:
-    """遺伝制約の無い猫種は constrained=false / colors=[] (全色が使える)。"""
+def test_breed_colors_endpoint_uses_policy_for_non_point_breeds() -> None:
+    """猫種カラー方針がある猫種は、遺伝制約が無くても候補を方針で絞る。"""
 
     response = client.get("/api/v1/breed-colors", params={"breed": "American Shorthair"})
     assert response.status_code == 200
     body = response.json()
+    assert body["constrained"] is True
+    assert "Black" in body["colors"]
+    assert "Seal Point" not in body["colors"]
+    assert "Seal Point-White" not in body["colors"]
+
+
+def test_breed_colors_endpoint_all_color_breed_stays_unconstrained() -> None:
+    """オールカラー猫種は constrained=false / colors=[] で全候補表示を維持する。"""
+
+    response = client.get("/api/v1/breed-colors", params={"breed": "Cornish Rex"})
+    assert response.status_code == 200
+    body = response.json()
     assert body["constrained"] is False
     assert body["colors"] == []
+
+
+def test_breed_colors_endpoint_point_white_policy() -> None:
+    """Birman は一般の Point-White 系を候補にし、Ragdoll 固有呼称を混ぜない。"""
+
+    response = client.get("/api/v1/breed-colors", params={"breed": "Birman"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["constrained"] is True
+    assert "Seal Point-White" in body["colors"]
+    assert "Seal Point" not in body["colors"]
+    assert "Seal Point Bi-Color" not in body["colors"]
+    assert "Seal Point Mitted" not in body["colors"]
+
+
+def test_breed_colors_endpoint_ragdoll_point_variants() -> None:
+    """Ragdoll は通常 Point と Bi-Color / Mitted 系を猫種候補に含める。"""
+
+    response = client.get("/api/v1/breed-colors", params={"breed": "Ragdoll"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["constrained"] is True
+    assert "Seal Point" in body["colors"]
+    assert "Seal Point Bi-Color" in body["colors"]
+    assert "Seal Point Mitted" in body["colors"]
+    assert "Seal Point-White" not in body["colors"]
+
+
+def test_breed_colors_endpoint_snowshoe_point_variants() -> None:
+    """Snowshoe は Point Bi-Color / Point Mitted 系を猫種候補にする。"""
+
+    response = client.get("/api/v1/breed-colors", params={"breed": "Snowshoe"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["constrained"] is True
+    assert "Seal Point Bi-Color" in body["colors"]
+    assert "Seal Point Mitted" in body["colors"]
+    assert "Seal Point-White" not in body["colors"]
+
+
+def test_snowshoe_fixed_c_locus_without_fixed_s_locus() -> None:
+    """Snowshoe は C座位を cs/cs 固定し、S座位は表現型から読むため猫種全体では固定しない。"""
+
+    assert BREED_FILTERS["Snowshoe"].get("C") == ("cs", "cs")
+    assert "S" not in BREED_FILTERS["Snowshoe"]
+
+
+def test_snowshoe_rejects_full_color_parent() -> None:
+    """Snowshoe にフルカラー親を指定した場合、ポイント固定に反するため認定カラー外で弾く。"""
+
+    response = client.post(
+        "/api/v1/calculate",
+        json={"sire_color": "Black", "dam_color": "Black", "breed": "Snowshoe"},
+    )
+    assert response.status_code == 422
+    detail = response.json()["detail"]
+    assert "Black" in detail and "Snowshoe" in detail and "認定カラー" in detail
+
+
+def _tonkinese_class_totals(results: list[dict[str, object]]) -> dict[str, float]:
+    """Tonkinese の Point/Mink/Solid class 別に確率を集計する。"""
+
+    totals = {"point": 0.0, "mink": 0.0, "solid": 0.0}
+    for result in results:
+        color = str(result["color"])
+        probability = float(result["probability_pct"])
+        if "Mink" in color:
+            totals["mink"] += probability
+        elif "Point" in color:
+            totals["point"] += probability
+        elif "Solid" in color:
+            totals["solid"] += probability
+    return totals
+
+
+def test_tonkinese_has_class_based_c_locus_without_breed_wide_c_filter() -> None:
+    """Tonkinese は breed 全体を C=cb/cs 固定せず、色クラスから C座位を読む。"""
+
+    assert "C" not in BREED_FILTERS["Tonkinese"]
+    breeds = {breed["value"]: breed for breed in client.get("/api/v1/breeds").json()["breeds"]}
+    assert breeds["Tonkinese"]["affects_genetics"] is True
+
+
+def test_tonkinese_accepts_point_mink_solid_classes_and_rejects_full_color() -> None:
+    """Tonkinese は Point/Mink/Solid class を受け、通常フルカラーは認定カラー外で弾く。"""
+
+    tonkinese_colors = (
+        "Natural Point",
+        "Natural Mink",
+        "Natural Solid",
+        "Blue Point",
+        "Blue Mink",
+        "Blue Solid",
+        "Champagne Point",
+        "Champagne Mink",
+        "Champagne Solid",
+        "Platinum Point",
+        "Platinum Mink",
+        "Platinum Solid",
+    )
+    for color in tonkinese_colors:
+        response = client.post(
+            "/api/v1/calculate",
+            json={"sire_color": color, "dam_color": color, "breed": "Tonkinese"},
+        )
+        assert response.status_code == 200, response.json()
+
+    rejected = client.post(
+        "/api/v1/calculate",
+        json={"sire_color": "Black", "dam_color": "Black", "breed": "Tonkinese"},
+    )
+    assert rejected.status_code == 422
+    detail = rejected.json()["detail"]
+    assert "Black" in detail and "Tonkinese" in detail and "認定カラー" in detail
+
+
+def test_tonkinese_point_by_solid_produces_only_mink_class() -> None:
+    """Tonkinese の Point(cs/cs) × Solid(cb/cb) は C座位上 100% Mink(cb/cs)。"""
+
+    response = client.post(
+        "/api/v1/calculate",
+        json={
+            "sire_color": "Natural Point",
+            "dam_color": "Natural Solid",
+            "breed": "Tonkinese",
+        },
+    )
+    assert response.status_code == 200
+    results = response.json()["results"]
+    assert results
+    totals = _tonkinese_class_totals(results)
+    assert totals["mink"] == pytest.approx(100.0, abs=0.02)
+    assert totals["point"] == pytest.approx(0.0, abs=0.02)
+    assert totals["solid"] == pytest.approx(0.0, abs=0.02)
+
+
+def test_tonkinese_platinum_point_by_solid_produces_platinum_mink() -> None:
+    """Tonkinese の Platinum Point × Platinum Solid は Platinum Mink だけになる。"""
+
+    response = client.post(
+        "/api/v1/calculate",
+        json={
+            "sire_color": "Platinum Point",
+            "dam_color": "Platinum Solid",
+            "breed": "Tonkinese",
+        },
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["diagnostics"]["unmatched_probability"] == 0
+    colors = {str(result["color"]) for result in body["results"]}
+    assert colors == {"Platinum Mink"}
+
+
+def test_tonkinese_mink_by_mink_splits_point_mink_solid_classes() -> None:
+    """Tonkinese の Mink(cb/cs) × Mink(cb/cs) は 25/50/25 に分離する。"""
+
+    response = client.post(
+        "/api/v1/calculate",
+        json={
+            "sire_color": "Natural Mink",
+            "dam_color": "Natural Mink",
+            "breed": "Tonkinese",
+        },
+    )
+    assert response.status_code == 200
+    results = response.json()["results"]
+    totals = _tonkinese_class_totals(results)
+    assert totals["point"] == pytest.approx(25.0, abs=0.02)
+    assert totals["mink"] == pytest.approx(50.0, abs=0.02)
+    assert totals["solid"] == pytest.approx(25.0, abs=0.02)
+
+    colors = {str(result["color"]) for result in results}
+    assert "Natural Solid" in colors
+    assert "Sable" not in colors
+    assert "Platinum" not in colors
 
 
 def test_breed_colors_endpoint_unknown_breed_returns_422() -> None:

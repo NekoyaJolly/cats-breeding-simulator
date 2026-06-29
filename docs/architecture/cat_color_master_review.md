@@ -106,10 +106,10 @@
 
 - **Abyssinian** (3): Ruddy, Sorrel, Sorrel Spotted Tabby
 - **Bengal** (7): Black Silver Marbled Tabby, Blue Marble, Brown Marbled Tabby, Leopard, Silver Marbled Tabby, Snow, Snow Spotted Tabby
-- **Burmese** (9): Champagne, Champagne Point, Champagne Solid, Platinum, Platinum Point, Platinum Solid, Sable, Sable Ticked Tabby, Sepia Agouti
+- **Burmese** (5): Champagne, Platinum, Sable, Sable Ticked Tabby, Sepia Agouti
 - **Oriental** (8): Chestnut Tortie Point-White, Chestnut Tortie-White, Ebony Mackerel Tabby, Ebony Silver, Ebony Silver Mackerel Tabby, Ebony Silver Spotted Tabby, Ebony Silver Ticked T, Ebony Smoke
 - **Ragdoll** (36): Blue Cream Point Bi-Color, Blue Cream Point Mitted, Blue Lynx Point Bi-Color, Blue Lynx Point Mitted, Blue Lynx Point Van Bi-Color, Blue Point Bi-Color, Blue Point Mitted, Chocolate Cream P Bi-Color, Chocolate Lynx Point Bi-Color, Chocolate Point Bi-Color, Chocolate Point Mitted, Chocolate Tortie Lynx Point Mitted, Chocolate Tortie Point Bi-Color, Chocolate Tortie Point Mitted, Cream Lynx Point Bi-Color, Cream Point Bi-Color, Cream Point Mitted, Flame Point Bi-Color, Flame Point Mitted, Lilac Point Bi-Color, Lilac Point Mitted, Lilac Tortie Lynx Point Mitted, Lilac Tortie Point Mitted, Red Point Bi-Color, Red Point Mitted, Seal Bi-Color, Seal Lynx Point Bi-Color, Seal Lynx Point Van Bi-Color, Seal Point Bi-Color, Seal Point Mitted, Seal Tortie Lynx Point Bi-Color, Seal Tortie Lynx Point Mitted, Seal Tortie Point Bi-Color, Seal Tortie Point Mitted, Tortie Point Bi-Color, Tortie Point Mitted
-- **Tonkinese** (8): Blue Mink, Champagne Mink, Natural Mink, Natural Point, Natural Solid, Platinum Mink, Seal Mink, Seal Mink Spotted Tabby
+- **Tonkinese** (13): Blue Mink, Blue Solid, Champagne Mink, Champagne Point, Champagne Solid, Natural Mink, Natural Point, Natural Solid, Platinum Mink, Platinum Point, Platinum Solid, Seal Mink, Seal Mink Spotted Tabby
 
 ## 5. タイポ・略称として正規化した色柄
 
@@ -219,7 +219,7 @@ Golden Mackerel Tabby, Golden Tabby, Blue Chinchilla Golden, Blue Chinchilla Sil
 
 - **Pt の扱い**: 元データの `Pt` は全て Tabby 文脈であり `Patched` と解釈した (例: `Blue Pt Tabby-White` → `Blue Patched Tabby-White`)。`Point` は `Point` と明示された名のみ Point 系とした。各行 `Notes` に正規化内容を残している。
 - **CFA/TICA 差**: `Blue Cream`=`Blue Tortie`, `Lilac Cream`=`Lilac Tortie`, `Tortoiseshell-White`/`Mike Tri Color`=`Calico`, `Blue Tortie-White`/`Blue Cream-White`=`Dilute Calico`, `Torbie`=`Patched Tabby` を同一概念の alias として統合した。
-- **猫種固有呼称**: Ruddy/Sorrel(Aby), Sable/Champagne/Platinum/Sepia(Burmese), 各種 Mink(Tonkinese), Ebony/Chestnut/Lavender(Oriental), Leopard/Snow/Marble(Bengal), Mitted/Bi-Color(Ragdoll) を breed_specific とし `DisplayAllowed=false`。
+- **猫種固有呼称**: Ruddy/Sorrel(Aby), Sable/Champagne/Platinum/Sepia(Burmese), 各種 Mink/Point/Solid class(Tonkinese), Ebony/Chestnut/Lavender(Oriental), Leopard/Snow/Marble(Bengal), Mitted/Bi-Color(Ragdoll) を breed_specific とし `DisplayAllowed=false`。
 - **白斑**: `Van`(S/S) は一般表示で `-White` に正規化する方針のため `DisplayAllowed=false`。`Mitted`/`Bi-Color` も同様に一般非表示。
 - **遺伝子座**: マップに同一 Code・同一名で存在する座のみ `current_map` として取り込み、それ以外は名前から `inferred`。Point/Mink/Sepia/Shaded/WideBand 系と alias/breed_specific は `review_required`。
 - **既知のマップ不整合 (要確認)**: `Blue Cream`(code31) はマップ上 `O/O` (ホモ接合オレンジ) だがトーティは `O/o` のはず。master では `OrangeState=tortie` に補正した。エンジン側 CSV は本タスクでは変更していない。

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pytest
 from fastapi.testclient import TestClient
 
 from main import app
@@ -87,6 +88,44 @@ def test_reverse_lookup_separates_confirmed_and_conditional_probabilities() -> N
     assert candidate["other_possible_colors"]
 
 
+@pytest.mark.parametrize(
+    "target_color, expected_locus, expected_probability",
+    [
+        ("Blue", "D座位", 25.0),
+        ("Chocolate", "B座位", 23.4376),
+        ("Seal Point", "C座位", 23.4376),
+    ],
+)
+def test_reverse_lookup_black_pair_reports_hidden_condition_by_locus(
+    target_color: str,
+    expected_locus: str,
+    expected_probability: float,
+) -> None:
+    """黒同士で目標劣性カラーを狙う場合、座位ごとの条件付き候補として返す。"""
+
+    response = client.post(
+        "/api/v1/reverse-lookup",
+        json={
+            "target_color": target_color,
+            "cats": [
+                {"id": "sire-1", "name": "黒の父", "sex": "male", "color": "Black"},
+                {"id": "dam-1", "name": "黒の母", "sex": "female", "color": "Black"},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["response_category"] == "条件付きで期待できる"
+    candidate = body["candidates"][0]
+    assert candidate["confirmed_probability_pct"] == 0
+    assert candidate["conditional_max_probability_pct"] == expected_probability
+    assert candidate["confirmation_needed"]
+    assert candidate["recommended_tests"]
+    assert all(expected_locus in item for item in candidate["confirmation_needed"])
+    assert all(expected_locus in item for item in candidate["recommended_tests"])
+
+
 def test_reverse_lookup_ignores_same_sex_pairs() -> None:
     """父母が揃わない登録内容では候補を返さない。"""
 
@@ -125,6 +164,53 @@ def test_reverse_lookup_no_candidate_includes_unchecked_loci() -> None:
     assert body["response_category"] == "現在の登録情報では確認できない"
     assert any(condition.startswith("W座位") for condition in body["target_conditions"])
     assert any("W座位" in condition for condition in body["unchecked_conditions"])
+
+
+def test_reverse_lookup_solid_nonwhite_pair_cannot_confirm_tabby_white_target() -> None:
+    """Black × Black では、A座位とS座位を要する Brown Tabby-White を確認できない。"""
+
+    response = client.post(
+        "/api/v1/reverse-lookup",
+        json={
+            "target_color": "Brown Tabby-White",
+            "cats": [
+                {"id": "sire-1", "name": "黒の父", "sex": "male", "color": "Black"},
+                {"id": "dam-1", "name": "黒の母", "sex": "female", "color": "Black"},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["candidates"] == []
+    assert body["response_category"] == "現在の登録情報では確認できない"
+    assert any(condition.startswith("A座位") for condition in body["target_conditions"])
+    assert any(condition.startswith("S座位") for condition in body["target_conditions"])
+    assert any("A座位" in condition for condition in body["unchecked_conditions"])
+    assert any("S座位" in condition for condition in body["unchecked_conditions"])
+
+
+def test_reverse_lookup_non_orange_pair_cannot_confirm_tortie_target() -> None:
+    """非オレンジ同士では、O/o を要する Tortoiseshell 候補を確認できない。"""
+
+    response = client.post(
+        "/api/v1/reverse-lookup",
+        json={
+            "target_color": "Tortoiseshell",
+            "target_sex": "female",
+            "cats": [
+                {"id": "sire-1", "name": "黒の父", "sex": "male", "color": "Black"},
+                {"id": "dam-1", "name": "黒の母", "sex": "female", "color": "Black"},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["target_sex"] == "female"
+    assert body["candidates"] == []
+    assert body["response_category"] == "現在の登録情報では確認できない"
+    assert any(condition.startswith("O座位") for condition in body["target_conditions"])
 
 
 def test_reverse_lookup_resolves_target_with_registered_breed_context() -> None:

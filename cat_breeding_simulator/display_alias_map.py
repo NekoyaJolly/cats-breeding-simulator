@@ -88,24 +88,37 @@ class DisplayAliasMap:
         breed_key = _key(breed)
         return [_key(value) for value in self._breed_values if _key(value) in breed_key]
 
+    def _resolve_breed_specific(self, name: str, breed: str) -> str | None:
+        """猫種別表示名を完全名で解決する。未登録なら None。"""
+
+        for breed_key in self._matching_breed_keys(breed):
+            display = self._breed_specific.get((_key(name), breed_key))
+            if display is not None:
+                return display
+        return None
+
     def resolve_display_name(self, name: str, breed: str | None) -> str:
         """内部表現型名 (canonical 形) を表示名へ解決する。
 
         手順:
-          1. 白斑接尾辞 (-White / -White Van) を分離する。
-          2. 猫種指定があれば、基底名 (接尾辞除去後) を猫種別呼称へ変換する。
-          3. 一般表示の Van 正規化 (§5.2): 猫種が Van を許可しない限り Van を落として -White にする。
-          4. 接尾辞を再付与して返す。
+          1. 猫種指定があれば、白斑込みの完全名を猫種別呼称へ変換する。
+          2. 白斑接尾辞 (-White / -White Van) を分離する。
+          3. 猫種指定があれば、基底名 (接尾辞除去後) を猫種別呼称へ変換する。
+          4. 一般表示の Van 正規化 (§5.2): 猫種が Van を許可しない限り Van を落として -White にする。
+          5. 接尾辞を再付与して返す。
         """
+
+        if breed:
+            display = self._resolve_breed_specific(name, breed)
+            if display is not None:
+                return display
 
         core, suffix = _split_white_suffix(name)
 
         if breed:
-            for breed_key in self._matching_breed_keys(breed):
-                display = self._breed_specific.get((_key(core), breed_key))
-                if display is not None:
-                    core = display
-                    break
+            display = self._resolve_breed_specific(core, breed)
+            if display is not None:
+                core = display
 
         # データ正本 §5.2: 一般表示 (および Van 非許可猫種) では Van を -White に正規化する。
         # 本マスタには Van を許可する猫種行が無いため、Van 接尾辞は常に -White へ寄せる。

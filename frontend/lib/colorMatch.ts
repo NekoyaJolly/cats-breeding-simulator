@@ -41,6 +41,19 @@ export function canonicalColorValue(colors: ColorOption[], input: string): strin
   return resolveExactColorOption(colors, trimmed)?.value ?? trimmed;
 }
 
+// 猫種別の許容カラー名でサジェスト候補を絞る。許容リストが空の猫種は全色候補のまま扱う。
+export function filterColorsByAllowedNames(
+  colors: ColorOption[],
+  allowedColorNames: string[],
+): ColorOption[] {
+  if (allowedColorNames.length === 0) return colors;
+  const allowedKeys = new Set(allowedColorNames.map((name) => normalizeKey(name)));
+  return colors.filter((color) => {
+    if (allowedKeys.has(normalizeKey(color.value))) return true;
+    return color.keywords.some((keyword) => allowedKeys.has(normalizeKey(keyword)));
+  });
+}
+
 // 1 色が正規化済み query にどの程度マッチするか。小さいほど上位。マッチしなければ null。
 // 0 = value/読みの前方一致、1 = いずれかのキーの前方一致、2 = 部分一致。
 function scoreColor(color: ColorOption, query: string): number | null {

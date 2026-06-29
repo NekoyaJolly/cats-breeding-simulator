@@ -10,8 +10,9 @@
     - 表示名変換ロジックをコードに固定値で書かず、本 CSV に集約する (§1.1)。
     - CanonicalPhenotype はエンジンが実際に出力する内部表現型名で記述する
       (master の CanonicalColorId とは別概念。逆引きの突合キーになるため一致が必須)。
-    - 猫種別呼称 (Oriental: Ebony/Chestnut/Lavender 系、Abyssinian/Somali: Ruddy 系) を
-      DisplayContext=breed_specific として収録する。Any/一般表示には出さない。
+    - 猫種別呼称 (Oriental: Ebony/Chestnut/Lavender 系、Abyssinian/Somali: Ruddy 系、
+      Tonkinese: Solid class 系) を DisplayContext=breed_specific として収録する。
+      Any/一般表示には出さない。
     - シード範囲は「名指し例 + 経路網羅」: 名指しされた猫種について、エンジンが normal_mode で
       実際に到達し得る内部表現型 (solid / smoke / tabby / silver_tabby と -White 合成) を覆う。
 
@@ -95,6 +96,35 @@ ORI_RULES: tuple[tuple[str, str], ...] = (
     ("Lilac Smoke", "Lavender Smoke"),
     ("Lilac Tabby", "Lavender Tabby"),
     ("Lilac Silver Tabby", "Lavender Silver Tabby"),
+    ("Brown Patched Tabby", "Ebony Patched Tabby"),
+    ("Lilac Patched Tabby", "Lavender Patched Tabby"),
+    ("Lilac Spotted Tabby", "Lavender Spotted Tabby"),
+    ("Chocolate Patched Tabby", "Chestnut Patched Tabby"),
+    ("Silver Ticked Tabby", "Ebony Silver Ticked Tabby"),
+)
+
+# Japanese Bobtail: 三毛系を日本猫文脈の呼称へ。
+# Smoke Mike は白斑込みの別名なので、CanonicalPhenotype も -White 付きで登録する。
+JBT_BREEDS: tuple[str, ...] = ("Japanese Bobtail",)
+JBT_RULES: tuple[tuple[str, str], ...] = (
+    ("Calico", "Mike"),
+    ("Dilute Calico", "Dilute Mike"),
+    ("Tortie Smoke-White", "Smoke Mike"),
+    ("Blue Cream Smoke-White", "Dilute Smoke Mike"),
+)
+
+# Burmese: 内部の sepia dilute solid 名を登録表示へ復元する。
+BUR_BREEDS: tuple[str, ...] = ("Burmese",)
+BUR_RULES: tuple[tuple[str, str], ...] = (
+    ("Blue Solid", "Blue"),
+)
+
+# Tonkinese: engine 内部の Sepia/Burmese 系名を Solid class 表示へ復元する。
+TON_BREEDS: tuple[str, ...] = ("Tonkinese",)
+TON_RULES: tuple[tuple[str, str], ...] = (
+    ("Sable", "Natural Solid"),
+    ("Champagne", "Champagne Solid"),
+    ("Platinum", "Platinum Solid"),
 )
 
 
@@ -139,7 +169,42 @@ def _rows() -> list[dict[str, str]]:
                 canonical,
                 breed,
                 breed_name,
-                f"{breed} 固有呼称復元。一般表示は CanonicalPhenotype のまま。",
+                (
+                    f"{breed} 固有呼称復元 (-White 接尾辞は解決層が再付与)。"
+                    "一般表示は CanonicalPhenotype のまま。"
+                    if canonical == "Silver Ticked Tabby"
+                    else f"{breed} 固有呼称復元。一般表示は CanonicalPhenotype のまま。"
+                ),
+            )
+
+    for breed in JBT_BREEDS:
+        for canonical, breed_name in JBT_RULES:
+            add(
+                canonical,
+                canonical,
+                breed,
+                breed_name,
+                f"{breed} の三毛系呼称。一般表示は CanonicalPhenotype のまま。",
+            )
+
+    for breed in BUR_BREEDS:
+        for canonical, breed_name in BUR_RULES:
+            add(
+                canonical,
+                canonical,
+                breed,
+                breed_name,
+                f"{breed} のセピア希釈呼称。一般表示は CanonicalPhenotype のまま。",
+            )
+
+    for breed in TON_BREEDS:
+        for canonical, breed_name in TON_RULES:
+            add(
+                canonical,
+                canonical,
+                breed,
+                breed_name,
+                f"{breed} の Solid class 呼称。一般表示は CanonicalPhenotype のまま。",
             )
 
     return rows

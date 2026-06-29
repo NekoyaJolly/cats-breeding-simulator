@@ -53,7 +53,7 @@ export function TargetColorSearch() {
     startEdit,
     cancelEdit,
     handleSaveEdit,
-    colors,
+    targetColors,
     breedItems,
     targetColor,
     setTargetColor,
@@ -326,7 +326,7 @@ export function TargetColorSearch() {
             value={targetColor}
             onValueChange={setTargetColor}
             onCommit={setTargetColor}
-            colors={colors}
+            colors={targetColors}
             recent={[]}
             placeholder="例: Lilac / Cinnamon Golden Tabby"
           />

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -9,10 +10,11 @@ import {
   type SetStateAction,
 } from "react";
 import { z } from "zod";
-import { fetchBreeds, fetchColors, type CalculateInput } from "@/lib/api";
+import { fetchBreedColors, fetchBreeds, fetchColors, type CalculateInput } from "@/lib/api";
 import type { ColorOption } from "@/lib/schema";
 import { BREED_READING_JA } from "@/lib/breedReadingJa";
 import { parseCarriers } from "@/lib/carriers";
+import { filterColorsByAllowedNames, normalizeKey } from "@/lib/colorMatch";
 import { ColorCombobox } from "./ColorCombobox";
 
 // 計算モード。explicit_carrier のときのみキャリア入力欄を表示する。
@@ -88,6 +90,7 @@ export function BreedingForm({ onSubmit, loading }: Props) {
   const [damCarriers, setDamCarriers] = useState("");
   const [colors, setColors] = useState<ColorOption[]>([]);
   const [breedItems, setBreedItems] = useState<ColorOption[]>([]);
+  const [breedAllowedColors, setBreedAllowedColors] = useState<string[]>([]);
   // 履歴は入力欄ごとに分離 (父毛色 / 母毛色 / 猫種)。
   const [sireRecent, setSireRecent] = useState<string[]>([]);
   const [damRecent, setDamRecent] = useState<string[]>([]);
@@ -122,6 +125,22 @@ export function BreedingForm({ onSubmit, loading }: Props) {
     };
   }, []);
 
+  // 猫種指定時は、その猫種のカラー方針に沿って毛色サジェストを絞る。
+  useEffect(() => {
+    const trimmedBreed = breed.trim();
+    if (!trimmedBreed) {
+      setBreedAllowedColors([]);
+      return;
+    }
+    let alive = true;
+    fetchBreedColors(trimmedBreed).then((list) => {
+      if (alive) setBreedAllowedColors(list);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [breed]);
+
   // 履歴を localStorage から復元する (入力欄ごと)。
   // 新キーが空の既存ユーザーは、旧・父母共有キーをフォールバックで引き継ぐ
   // (以後、各欄で確定すると新キーが優先される)。
@@ -144,24 +163,42 @@ export function BreedingForm({ onSubmit, loading }: Props) {
     commitRecent(setBreedRecent, BREED_RECENT_KEY, value);
   }
 
+  const breedFilteredColors = useMemo(
+    () => filterColorsByAllowedNames(colors, breedAllowedColors),
+    [colors, breedAllowedColors],
+  );
+  const breedAllowedKeys = useMemo(
+    () => new Set(breedAllowedColors.map((colorName) => normalizeKey(colorName))),
+    [breedAllowedColors],
+  );
+  const isBreedAllowedRecent = useCallback(
+    (value: string): boolean =>
+      breedAllowedKeys.size === 0 || breedAllowedKeys.has(normalizeKey(value)),
+    [breedAllowedKeys],
+  );
+
   // female_only (パッチド/トーティ系) はオス親では遺伝的に成立しないため、
   // 父猫欄のサジェスト候補・履歴から除外する (母猫欄は全色のまま)。
   const femaleOnly = useMemo(
     () =>
       new Set(
-        colors
+        breedFilteredColors
           .filter((color) => color.sex_restriction === "female_only")
           .map((color) => color.value),
       ),
-    [colors],
+    [breedFilteredColors],
   );
   const sireColors = useMemo(
-    () => colors.filter((color) => !femaleOnly.has(color.value)),
-    [colors, femaleOnly],
+    () => breedFilteredColors.filter((color) => !femaleOnly.has(color.value)),
+    [breedFilteredColors, femaleOnly],
   );
   const sireRecentShown = useMemo(
-    () => sireRecent.filter((value) => !femaleOnly.has(value)),
-    [sireRecent, femaleOnly],
+    () => sireRecent.filter((value) => !femaleOnly.has(value) && isBreedAllowedRecent(value)),
+    [sireRecent, femaleOnly, isBreedAllowedRecent],
+  );
+  const damRecentShown = useMemo(
+    () => damRecent.filter((value) => isBreedAllowedRecent(value)),
+    [damRecent, isBreedAllowedRecent],
   );
 
   // 親色は必須。breed は任意。
@@ -212,8 +249,8 @@ export function BreedingForm({ onSubmit, loading }: Props) {
           value={damColor}
           onValueChange={setDamColor}
           onCommit={pushDamRecent}
-          colors={colors}
-          recent={damRecent}
+          colors={breedFilteredColors}
+          recent={damRecentShown}
           placeholder="例: Brown Tabby / ブラウンタビー"
         />
       </div>

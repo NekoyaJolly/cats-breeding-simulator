@@ -230,8 +230,9 @@
 354,Shaded Silver-White,o/o,D/D,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
 355,Tortoiseshell-White Van,O/o,D/D,a/a,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 356,Champagne Mink,o/o,D/D,a/a,cb/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-357,Champagne Solid,o/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-358,Platinum Solid,o/o,d/d,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+357,Champagne Solid,o/o,D/D,a/a,cb/cb,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+358,Platinum Solid,o/o,d/d,a/a,cb/cb,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+339,Platinum Mink(Lilac Mink),o/o,d/d,a/a,cb/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 359,Seal Lynx Point-White,o/o,D/D,A/A,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 360,Natural Point,o/o,D/D,a/a,cs/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 361,Platinum Point,o/o,d/d,a/a,cs/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
@@ -245,7 +246,7 @@
 369,Blue Lynx Point-White,o/o,d/d,A/A,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 370,Natural Mink (Seal Mink),o/o,D/D,a/a,cb/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 371,Chocolate Point-White,o/o,D/D,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-372,Blue Solid,o/o,d/d,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+372,Blue Solid,o/o,d/d,a/a,cb/cb,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 373,Blue Mink,o/o,d/d,a/a,cb/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 374,Choco Tortie Point Mitted,O/o,D/D,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 375,Chocolate Point Mitted,o/o,D/D,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
@@ -258,7 +259,7 @@
 382,Chocolate-White,o/o,D/D,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 383,Blue Point-White,o/o,d/d,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 384,Shell Tortoiseshell-White,O/o,D/D,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-385,Natural Solid,o/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+385,Natural Solid,o/o,D/D,a/a,cb/cb,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 386,Cameo(Red Silver) Tabby,O/O,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
 387,Seal Tortie Lynx Point-W,O/o,D/D,A/A,cs/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 388,Blue Chinchilla Golden,o/o,d/d,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
