@@ -11,24 +11,24 @@
 ## 1. 件数サマリー
 
 - 元データ件数 (色柄データUTF8Ver.csv, 名前あり): **407**
-- 現行正本件数 (cat_color_genetic_map.csv): **330**
-- 生成した色柄概念 (ColorId) 件数: **383**
+- 現行正本件数 (cat_color_genetic_map.csv): **348**
+- 生成した色柄概念 (ColorId) 件数: **400**
 
 | Status | 件数 |
 |---|---|
-| canonical | 266 |
-| alias | 32 |
-| breed_specific | 82 |
+| canonical | 283 |
+| alias | 43 |
+| breed_specific | 71 |
 | excluded | 3 |
 | review | 0 |
-| **合計** | **383** |
+| **合計** | **400** |
 
 - `GeneticRuleSource=review_required` (遺伝子ルール要確認): **166** 件
 - 正規化 (略称・タイポ展開) を適用した概念: **86** 件
 
 ### 1.1 CanonicalColorId と元データカバレッジ
 
-- alias 解決件数 (`Status=alias` かつ `CanonicalColorId` あり): **32 / 32**
+- alias 解決件数 (`Status=alias` かつ `CanonicalColorId` あり): **43 / 43**
 - alias 解決先が存在しない行数 (`CanonicalColorId` が空 or 実在しない): **0**
 - 元データ 407 件のカバレッジ (SourceCode が master のいずれかの行に保持): **407 / 407** (100%)
 
@@ -36,13 +36,13 @@
 
 ## 2. 差分: 元データ ↔ 現行正本
 
-### 2.1 元データにあるが現行マップに無い Code (77)
+### 2.1 元データにあるが現行マップに無い Code (76)
 
-313:Smoke Dilute Calico, 314:Red Point Bi-Color, 315:Cream Point Bi-Color, 316:Silver Classic Tobie, 317:Silver Mackerel Tobie, 318:Brown Mackerel Tobie, 319:Blue Tortie Point Mitted, 320:Lilac Point Mitted, 321:Blue Tortie Point Bi-Color, 322:Blue Silver Mc Tabby-White, 323:Red Point Mitted, 324:Smoke, 325:Ebony Silver, 326:Shaded Chocolate, 327:Chocolate Tortie, 328:Lilac Tortie, 329:Cream Cameo Tabby, 330:Cream Cameo Mc Tabby, 331:Cream Cameo Tabby-White, 332:Cream Cameo Mc Tabby-W, 333:Blue Silver Tabby-W Van, 334:Chocolate Lynx Point-White, 335:Cream Cameo, 336:Seal Tortie Point Bi-Color, 337:Seal Tortie Point Mitted, 338:Browm Classic Torbie-White, 339:Platinum Mink(Lilac Mink), 340:Blue Silver Classic Tabby, 341:Cream Shell Cameo, 342:Flame Lynx Point, 343:Shell Cream, 344:Shaded Cream, 345:Tortie Point Mitted, 346:Seal Tortie Point, 347:Blue Cream Point Bi-Color, 348:Sable Ticked Tabby, 349:Chocolate Cream P Bi-Color, 350:Shell Blue(Blue Chinchilla), 351:Seal Point (A.O.C), 391:Red Lynx Point-White, 392:Chocolate Silver Spotted Tabby, 393:Ebony Silver Ticked T, 394:Shaded Tortie-White, 395:Black Brown Spotted Tabby, 396:Ebony Silver Mc Tabby, 397:Red Silver(Cameo)Tabby-W, 398:Chocolate Tabby, 399:Blue Silver Spotted Tabby, 400:Cinnamon-White, 401:Blue Ticked Tabby-White, 402:Chestnut Tortie, 403:Flame Point Mitted, 404:Chestnut Tortie-White, 405:Chestnut Tortie Point-W, 406:Choco Silver Tortie Lynx Point, 407:Brown Sp Tabby (Rosettes), 408:Choco Tortie Lynx Point Mitted, 409:Shell Cameo-White, 410:Ebony Smoke, 411:Ebony Tabby, 412:Ebony Mackerel Tabby, 413:Red Point-White, 414:Chinchilla Silver-White, 415:Chinchilla Golden-White, 416:Red Ticked Tabby, 417:Cream Ticked Tabby, 418:Chocolate Lynx Point (AOC), 419:Chocolate Pt Tabby-White, 420:Cream Silver Tabby-White, 421:Smoke Calico Van, 422:Cameo Spotted Tabby, 423:Blue Silver Pt Sp Tabby, 424:Ebony Silver Spotted Tabby, 425:Silver Marbled Tabby, 426:Blue Silver Sp Tabby-W, 427:Cream Point-White, 428:Lilac-White
+313:Smoke Dilute Calico, 314:Red Point Bi-Color, 315:Cream Point Bi-Color, 316:Silver Classic Tobie, 317:Silver Mackerel Tobie, 318:Brown Mackerel Tobie, 319:Blue Tortie Point Mitted, 320:Lilac Point Mitted, 321:Blue Tortie Point Bi-Color, 322:Blue Silver Mc Tabby-White, 323:Red Point Mitted, 324:Smoke, 325:Ebony Silver, 326:Shaded Chocolate, 327:Chocolate Tortie, 328:Lilac Tortie, 329:Cream Cameo Tabby, 330:Cream Cameo Mc Tabby, 331:Cream Cameo Tabby-White, 332:Cream Cameo Mc Tabby-W, 333:Blue Silver Tabby-W Van, 334:Chocolate Lynx Point-White, 335:Cream Cameo, 336:Seal Tortie Point Bi-Color, 337:Seal Tortie Point Mitted, 338:Browm Classic Torbie-White, 339:Platinum Mink(Lilac Mink), 340:Blue Silver Classic Tabby, 341:Cream Shell Cameo, 342:Flame Lynx Point, 343:Shell Cream, 344:Shaded Cream, 345:Tortie Point Mitted, 346:Seal Tortie Point, 347:Blue Cream Point Bi-Color, 348:Sable Ticked Tabby, 349:Chocolate Cream P Bi-Color, 350:Shell Blue(Blue Chinchilla), 351:Seal Point (A.O.C), 391:Red Lynx Point-White, 392:Chocolate Silver Spotted Tabby, 393:Ebony Silver Ticked T, 394:Shaded Tortie-White, 395:Black Brown Spotted Tabby, 396:Ebony Silver Mc Tabby, 397:Red Silver(Cameo)Tabby-W, 399:Blue Silver Spotted Tabby, 400:Cinnamon-White, 401:Blue Ticked Tabby-White, 402:Chestnut Tortie, 403:Flame Point Mitted, 404:Chestnut Tortie-White, 405:Chestnut Tortie Point-W, 406:Choco Silver Tortie Lynx Point, 407:Brown Sp Tabby (Rosettes), 408:Choco Tortie Lynx Point Mitted, 409:Shell Cameo-White, 410:Ebony Smoke, 411:Ebony Tabby, 412:Ebony Mackerel Tabby, 413:Red Point-White, 414:Chinchilla Silver-White, 415:Chinchilla Golden-White, 416:Red Ticked Tabby, 417:Cream Ticked Tabby, 418:Chocolate Lynx Point (AOC), 419:Chocolate Pt Tabby-White, 420:Cream Silver Tabby-White, 421:Smoke Calico Van, 422:Cameo Spotted Tabby, 423:Blue Silver Pt Sp Tabby, 424:Ebony Silver Spotted Tabby, 425:Silver Marbled Tabby, 426:Blue Silver Sp Tabby-W, 427:Cream Point-White, 428:Lilac-White
 
-### 2.2 現行マップにあるが元データに無い Code (0)
+### 2.2 現行マップにあるが元データに無い Code (17)
 
-(なし)
+494:Brown Classic Tabby, 495:Brown Patched Classic Tabby, 496:Blue Classic Tabby, 497:Blue Patched Classic Tabby, 498:Red Classic Tabby, 499:Red Classic Tabby-White, 500:Cream Classic Tabby, 501:Cameo Classic Tabby, 502:Cameo Classic Tabby-White, 503:Silver Classic Tabby-White, 504:Silver Patched Classic Tabby, 505:Lilac Classic Tabby, 506:Lilac Classic Tabby-White, 507:Lilac Patched Classic Tabby, 509:Chocolate Silver Tabby, 510:Lilac Patched Tabby, 511:Lilac Spotted Tabby
 
 ### 2.3 Code 一致だが名前不一致 (1)
 
@@ -50,9 +50,9 @@
 |---|---|---|
 | 312 | Calico Smoke | Calico |
 
-### 2.4 マップのみに存在する色柄 (0)
+### 2.4 マップのみに存在する色柄 (17)
 
-(なし)
+494:Brown Classic Tabby, 495:Brown Patched Classic Tabby, 496:Blue Classic Tabby, 497:Blue Patched Classic Tabby, 498:Red Classic Tabby, 499:Red Classic Tabby-White, 500:Cream Classic Tabby, 501:Cameo Classic Tabby, 502:Cameo Classic Tabby-White, 503:Silver Classic Tabby-White, 504:Silver Patched Classic Tabby, 505:Lilac Classic Tabby, 506:Lilac Classic Tabby-White, 507:Lilac Patched Classic Tabby, 509:Chocolate Silver Tabby, 510:Lilac Patched Tabby, 511:Lilac Spotted Tabby
 
 ## 3. 同一概念として統合した別名 (alias)
 
@@ -72,9 +72,20 @@
 | Brown Mackerel Torbie-White | `brown_patched_tabby_white` | TICA: Torbie = Patched Tabby (Brown Patched Tabby-White) |
 | Calico Smoke | `tortie_smoke_white` | 同一概念: Calico Smoke → Tortie Smoke-White (tortie_smoke_white) |
 | Chestnut | `chocolate` | 同一概念: Chestnut → Chocolate (chocolate) |
+| Chestnut Patched Tabby | `chocolate_patched_tabby` | 同一概念: Chestnut Patched Tabby → Chocolate Patched Tabby (chocolate_patched_tabby) |
+| Chestnut Silver Tabby | `chocolate_silver_tabby` | 同一概念: Chestnut Silver Tabby → Chocolate Silver Tabby (chocolate_silver_tabby) |
+| Chestnut Tabby | `chocolate_tabby` | 同一概念: Chestnut Tabby → Chocolate Tabby (chocolate_tabby) |
 | Chestnut Tortie | `chocolate_tortie` | 同一概念: Chestnut Tortie → Chocolate Tortie (chocolate_tortie) |
 | Ebony | `black` | 同一概念: Ebony → Black (black) |
+| Ebony Patched Tabby | `brown_patched_tabby` | 同一概念: Ebony Patched Tabby → Brown Patched Tabby (brown_patched_tabby) |
+| Ebony Silver Tabby-White | `silver_tabby_white` | 同一概念: Ebony Silver Tabby-White → Silver Tabby-White (silver_tabby_white) |
+| Ebony Silver Ticked Tabby-White | `silver_ticked_tabby_white` | 同一概念: Ebony Silver Ticked Tabby-White → Silver Ticked Tabby-White (silver_ticked_tabby_white) |
+| Ebony Tabby | `brown_tabby` | 同一概念: Ebony Tabby → Brown Tabby (brown_tabby) |
+| Ebony-White | `black_white` | 同一概念: Ebony-White → Black-White (black_white) |
 | Lavender | `lilac` | 同一概念: Lavender → Lilac (lilac) |
+| Lavender Patched Tabby | `lilac_patched_tabby` | 同一概念: Lavender Patched Tabby → Lilac Patched Tabby (lilac_patched_tabby) |
+| Lavender Spotted Tabby | `lilac_spotted_tabby` | 同一概念: Lavender Spotted Tabby → Lilac Spotted Tabby (lilac_spotted_tabby) |
+| Lavender Tabby | `lilac_tabby` | 同一概念: Lavender Tabby → Lilac Tabby (lilac_tabby) |
 | Lilac Tortie | `lilac_cream` | 同一概念: Lilac Tortie → Lilac Cream (lilac_cream) |
 | Mike Tri Color | `calico` | 同一概念: Mike Tri Color → Calico (calico) |
 | Peke-Face Red | `red` | Peke-Face は形態/タイプ由来語: Peke-Face Red → Red (red) |
@@ -96,7 +107,7 @@
 - **Abyssinian** (3): Ruddy, Sorrel, Sorrel Spotted Tabby
 - **Bengal** (7): Black Silver Marbled Tabby, Blue Marble, Brown Marbled Tabby, Leopard, Silver Marbled Tabby, Snow, Snow Spotted Tabby
 - **Burmese** (9): Champagne, Champagne Point, Champagne Solid, Platinum, Platinum Point, Platinum Solid, Sable, Sable Ticked Tabby, Sepia Agouti
-- **Oriental** (19): Chestnut Patched Tabby, Chestnut Silver Tabby, Chestnut Tabby, Chestnut Tortie Point-White, Chestnut Tortie-White, Ebony Mackerel Tabby, Ebony Patched Tabby, Ebony Silver, Ebony Silver Mackerel Tabby, Ebony Silver Spotted Tabby, Ebony Silver Tabby-White, Ebony Silver Ticked T, Ebony Silver Ticked Tabby-White, Ebony Smoke, Ebony Tabby, Ebony-White, Lavender Patched Tabby, Lavender Spotted Tabby, Lavender Tabby
+- **Oriental** (8): Chestnut Tortie Point-White, Chestnut Tortie-White, Ebony Mackerel Tabby, Ebony Silver, Ebony Silver Mackerel Tabby, Ebony Silver Spotted Tabby, Ebony Silver Ticked T, Ebony Smoke
 - **Ragdoll** (36): Blue Cream Point Bi-Color, Blue Cream Point Mitted, Blue Lynx Point Bi-Color, Blue Lynx Point Mitted, Blue Lynx Point Van Bi-Color, Blue Point Bi-Color, Blue Point Mitted, Chocolate Cream P Bi-Color, Chocolate Lynx Point Bi-Color, Chocolate Point Bi-Color, Chocolate Point Mitted, Chocolate Tortie Lynx Point Mitted, Chocolate Tortie Point Bi-Color, Chocolate Tortie Point Mitted, Cream Lynx Point Bi-Color, Cream Point Bi-Color, Cream Point Mitted, Flame Point Bi-Color, Flame Point Mitted, Lilac Point Bi-Color, Lilac Point Mitted, Lilac Tortie Lynx Point Mitted, Lilac Tortie Point Mitted, Red Point Bi-Color, Red Point Mitted, Seal Bi-Color, Seal Lynx Point Bi-Color, Seal Lynx Point Van Bi-Color, Seal Point Bi-Color, Seal Point Mitted, Seal Tortie Lynx Point Bi-Color, Seal Tortie Lynx Point Mitted, Seal Tortie Point Bi-Color, Seal Tortie Point Mitted, Tortie Point Bi-Color, Tortie Point Mitted
 - **Tonkinese** (8): Blue Mink, Champagne Mink, Natural Mink, Natural Point, Natural Solid, Platinum Mink, Seal Mink, Seal Mink Spotted Tabby
 
@@ -179,12 +190,12 @@
 | Chocolate Tortie Lynx Point Mitted | Choco Tortie Lynx Point Mitted | Choco→Chocolate |
 | Chocolate Tortie Point Mitted | Choco Tortie Point Mitted | Choco→Chocolate |
 | Ebony Silver Mackerel Tabby | Ebony Silver Mc Tabby | Mc→Mackerel |
-| Ebony Silver Ticked Tabby-White | Ebony Silver Ticked T-W | T-W→Tabby-White |
 | Seal Lynx Point Van Bi-Color | Seal Lynx Point Van Bi-C | Bi-C→Bi-Color |
 | Brown Classic Torbie | Brown Classic Tobie | Tobie→Torbie |
 | Brown Classic Torbie-White | Browm Classic Torbie-White | Browm→Brown |
 | Brown Mackerel Torbie | Brown Mackerel Tobie | Tobie→Torbie |
 | Brown Mackerel Torbie-White | Brown Mc Tobie-White | Mc→Mackerel, Tobie→Torbie |
+| Ebony Silver Ticked Tabby-White | Ebony Silver Ticked T-W | T-W→Tabby-White |
 | Peke-Face Red Mackerel Tabby | Peke-Face Red Mc Tabby | Mc→Mackerel |
 | Peke-Face Red Mackerel Tabby-White | P-F Red Mc Tabby-White | Mc→Mackerel, P-F→Peke-Face |
 | Peke-Face Red Tabby-White | P-F Red Tabby-White | P-F→Peke-Face |

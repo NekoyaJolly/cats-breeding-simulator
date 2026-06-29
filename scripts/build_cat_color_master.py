@@ -203,6 +203,20 @@ ALIAS_TARGETS: dict[str, str] = {
     "lavender": "Lilac",
     "chestnut": "Chocolate",
     "chestnut tortie": "Chocolate Tortie",
+    # Oriental 呼称のパターン変種 (タビー/パッチド/スポット等)。solid 同様 canonical へ寄せ、
+    # 猫種文脈の Oriental 表示は cat_color_display_alias_map.csv が復元する。
+    # 黒系タビーの canonical は "Brown Tabby" (アグーチ黒=ブラウン), solid は "Black"。
+    "ebony tabby": "Brown Tabby",
+    "ebony patched tabby": "Brown Patched Tabby",
+    "ebony-white": "Black-White",
+    "ebony silver tabby-white": "Silver Tabby-White",
+    "ebony silver ticked tabby-white": "Silver Ticked Tabby-White",
+    "lavender tabby": "Lilac Tabby",
+    "lavender patched tabby": "Lilac Patched Tabby",
+    "lavender spotted tabby": "Lilac Spotted Tabby",
+    "chestnut tabby": "Chocolate Tabby",
+    "chestnut silver tabby": "Chocolate Silver Tabby",
+    "chestnut patched tabby": "Chocolate Patched Tabby",
 }
 
 # 猫種固有呼称の検出: (判定するトークン/部分文字列, BreedContext)

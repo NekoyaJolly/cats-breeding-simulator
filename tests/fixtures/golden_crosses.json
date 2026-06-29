@@ -1286,6 +1286,7 @@
      },
      "label": "Blue Patched Tabby-White が B/b (チョコレートキャリア) と仮定 (Lilac は B 劣性を発現)",
      "new_colors": [
+      "Lilac Patched Tabby",
       "Lilac Tabby",
       "Lilac Tabby-White"
      ],
@@ -1309,6 +1310,11 @@
       },
       {
        "color": "Blue Tabby-White",
+       "probability_pct": 6.25,
+       "sex": "Female"
+      },
+      {
+       "color": "Lilac Patched Tabby",
        "probability_pct": 6.25,
        "sex": "Female"
       },

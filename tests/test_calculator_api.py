@@ -394,3 +394,42 @@ def test_spotted_propagates_by_phenotype_without_breed() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert any("Spotted" in result["color"] for result in payload["results"])
+
+
+# --- Classic タビー (mc/mc) 追加 / Oriental 基底名の canonical 化 ---
+
+
+def test_classic_tabby_inputtable_and_named() -> None:
+    """Classic タビー (mc/mc) が入力可能で、出力の柄に Classic を保持する。
+
+    mc/mc × mc/mc は不可逆で Mc/- を生まないため、子は全て Classic タビーになる。
+    """
+
+    response = client.post(
+        "/api/v1/calculate",
+        json={"sire_color": "Brown Classic Tabby", "dam_color": "Brown Classic Tabby"},
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["results"]
+    assert all("Classic" in result["color"] for result in payload["results"])
+
+
+def test_oriental_tabby_names_canonicalize_to_general() -> None:
+    """Oriental 基底名 (Lavender/Ebony/Chestnut のタビー変種) が一般 canonical へ正規化される。
+
+    黒系タビーの canonical は Brown Tabby (アグーチ黒=ブラウン)。
+    """
+
+    assert COLOR_MASTER.canonical_name("Lavender Tabby") == "Lilac Tabby"
+    assert COLOR_MASTER.canonical_name("Ebony Tabby") == "Brown Tabby"
+    assert COLOR_MASTER.canonical_name("Chestnut Tabby") == "Chocolate Tabby"
+    assert COLOR_MASTER.canonical_name("Lavender Patched Tabby") == "Lilac Patched Tabby"
+
+
+def test_oriental_display_restores_breed_name_for_tabby() -> None:
+    """一般 canonical 化した色も、Oriental 文脈では猫種固有名で表示する。"""
+
+    canonical = COLOR_MASTER.canonical_name("Chestnut Tabby")  # -> Chocolate Tabby
+    assert DISPLAY_ALIAS_MAP.resolve_display_name(canonical, None) == "Chocolate Tabby"
+    assert DISPLAY_ALIAS_MAP.resolve_display_name(canonical, "Oriental") == "Chestnut Tabby"
