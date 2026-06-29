@@ -260,15 +260,16 @@ PR 作成からマージ判断・次 Phase 着手までの「AI が自走、Owne
 
 ### 0. 正本 (V9) — 唯一のソース・オブ・トゥルース
 
-毛色計算・データ・運用の仕様は、以下の **V9 正本3冊** を唯一の正本とする。コード/テスト/CSV を変更する前に、該当する正本を必ず読む。本 AGENTS.md と正本が矛盾する場合は **正本を優先** する。
+毛色計算・データ・運用の仕様は、以下の **V9 正本4冊** を唯一の正本とする。コード/テスト/CSV を変更する前に、該当する正本を必ず読む。本 AGENTS.md と正本が矛盾する場合は **正本を優先** する。
 
 | 正本 | パス | 範囲 |
 |------|------|------|
 | シミュレーター正本 V9 | [`docs/architecture/01_シミュレーター正本_V9.md`](./docs/architecture/01_シミュレーター正本_V9.md) | 計算ロジック・モード・キャリア扱い・表現型出力・検証基準 |
 | データ正本 V9 | [`docs/architecture/02_データ正本_V9.md`](./docs/architecture/02_データ正本_V9.md) | CSVマスタ・表示名・データ検証ルール |
 | 運用正本 V9 | [`docs/architecture/03_運用正本_V9.md`](./docs/architecture/03_運用正本_V9.md) | 開発・CI/CD・デプロイ・テスト運用 |
+| 座位マスタ正本 V9 | [`docs/architecture/04_座位マスタ_V9.md`](./docs/architecture/04_座位マスタ_V9.md) | 遺伝子座の定義・対立遺伝子・優性順位・展開カテゴリ・発現/推論条件・実装状況 |
 
-> 配置: 運用正本 §2 の構成どおり、3冊と各CSVは `docs/architecture/` 配下に置く。
+> 配置: 運用正本 §2 の構成どおり、4冊と各CSVは `docs/architecture/` 配下に置く。
 
 > **色柄概念マスター**: 色柄の名称・別名・分類・団体差(CFA/TICA)・猫種固有呼称の唯一正本は [`docs/architecture/cat_color_master.csv`](./docs/architecture/cat_color_master.csv) (仕様: [`cat_color_master_schema.md`](./docs/architecture/cat_color_master_schema.md)、差分レビュー: [`cat_color_master_review.md`](./docs/architecture/cat_color_master_review.md)、生成: [`scripts/build_cat_color_master.py`](./scripts/build_cat_color_master.py))。alias 解決は専用カラム `CanonicalColorId` を機械可読の唯一根拠とする。
 > **エンジン接続**: 計算エンジンは名前解決レイヤ [`cat_breeding_simulator/color_master.py`](./cat_breeding_simulator/color_master.py) 経由で本マスターを使用する (入力 alias の canonical 解決 + 出力名の canonical 正規化、breed_specific/excluded/review の通常モード拒否)。遺伝子型は引き続き `cat_color_genetic_map.csv` が供給し、遺伝計算ロジックは変更しない。両者は段階的に整合させる。
