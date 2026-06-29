@@ -42,3 +42,24 @@ def test_color_base_loci_raises_on_broken_csv(monkeypatch, tmp_path):
 
     with pytest.raises(RuntimeError):
         master_data._load_color_base_loci()
+
+
+@pytest.mark.parametrize("loader, filename", LOADERS)
+def test_loader_raises_on_invalid_header(loader, filename, monkeypatch, tmp_path):
+    """必須列を欠くCSV (DictReaderは例外を出さないが有効行0件) を破損として検知する。"""
+
+    # 探索先頭 (相対パス = cwd) に、必須列を欠いたヘッダの CSV を置く。
+    (tmp_path / filename).write_text("WrongColumn,Other\nfoo,bar\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(RuntimeError):
+        loader()
+
+
+@pytest.mark.parametrize("loader, filename", LOADERS)
+def test_loader_raises_on_empty_file(loader, filename, monkeypatch, tmp_path):
+    """空ファイル (有効行0件) でも空データで起動を続けず RuntimeError にする。"""
+
+    (tmp_path / filename).write_text("", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(RuntimeError):
+        loader()

@@ -219,11 +219,18 @@ def _load_master_rows() -> list[dict[str, str]]:
         if os.path.exists(path):
             try:
                 with open(path, mode="r", encoding="utf-8-sig", newline="") as f:
-                    return [dict(row) for row in csv.DictReader(f) if row.get("ColorId")]
+                    rows = [dict(row) for row in csv.DictReader(f) if row.get("ColorId")]
             except (OSError, UnicodeDecodeError, csv.Error) as exc:
                 raise RuntimeError(
                     f"{filename} の読み込みに失敗しました ({path}): {exc}"
                 ) from exc
+            # Fail-Fast: 空ファイル・ヘッダ不正・ColorId 列欠落だと有効行 0 件で空マスタになる。
+            if not rows:
+                raise RuntimeError(
+                    f"{filename} に有効なデータがありません ({path})。"
+                    " 空ファイル・ヘッダ不正・ColorId 列の欠落の可能性があります。"
+                )
+            return rows
     # Fail-Fast: 色名マスタを欠くと正規化が無言で無効化され (略称のまま入出力)、本番でのみ
     # 機能不全が起きる。起動時に落として CSV のコピー漏れを露見させる。
     raise RuntimeError(

@@ -261,6 +261,13 @@ def _load_color_base_loci() -> dict[str, list[ColorBase]]:
         raise RuntimeError(
             f"{filename} の読み込みに失敗しました ({filepath}): {exc}"
         ) from exc
+    # Fail-Fast: DictReader は例外を出さなくても、空ファイル・ヘッダ不正・CoatColor 列欠落だと
+    # 有効行が 0 件のまま空データで起動してしまう。読み込めても中身が空なら破損として落とす。
+    if not base:
+        raise RuntimeError(
+            f"{filename} に有効なデータがありません ({filepath})。"
+            " 空ファイル・ヘッダ不正・CoatColor 列の欠落の可能性があります。"
+        )
     return base
 
 
@@ -406,6 +413,12 @@ def _load_color_definitions() -> list[dict[str, str]]:
         raise RuntimeError(
             f"{filename} の読み込みに失敗しました ({filepath}): {exc}"
         ) from exc
+    # Fail-Fast: 空ファイル・ヘッダ不正・CoatColor 列欠落だと有効行 0 件で空のまま起動するため落とす。
+    if not definitions:
+        raise RuntimeError(
+            f"{filename} に有効なデータがありません ({filepath})。"
+            " 空ファイル・ヘッダ不正・CoatColor 列の欠落の可能性があります。"
+        )
     return definitions
 
 
@@ -464,6 +477,14 @@ def _load_breed_filters() -> dict[str, dict[str, tuple[str, str]]]:
         raise RuntimeError(
             f"{filename} の読み込みに失敗しました ({filepath}): {exc}"
         ) from exc
+
+    # Fail-Fast: 空ファイル・ヘッダ不正・Breed 列欠落だと有効な猫種行が 0 件になる。
+    # Munchkin 補完で非空に見えてしまう前に、ここで破損を検知して落とす。
+    if not filters:
+        raise RuntimeError(
+            f"{filename} に有効な猫種データがありません ({filepath})。"
+            " 空ファイル・ヘッダ不正・Breed 列の欠落の可能性があります。"
+        )
 
     # Munchkin は SH/LH 変種のみで bare 行が無い場合があるため、テスト互換で空制約を補完する。
     if "Munchkin" not in filters:
