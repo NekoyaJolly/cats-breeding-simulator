@@ -39,3 +39,4 @@ AliasId,CanonicalPhenotype,GeneralDisplayName,Breed,BreedSpecificDisplayName,Reg
 38,Lilac Patched Tabby,Lilac Patched Tabby,Oriental,Lavender Patched Tabby,,official,breed_specific,20,Oriental 固有呼称復元。一般表示は CanonicalPhenotype のまま。
 39,Lilac Spotted Tabby,Lilac Spotted Tabby,Oriental,Lavender Spotted Tabby,,official,breed_specific,20,Oriental 固有呼称復元。一般表示は CanonicalPhenotype のまま。
 40,Chocolate Patched Tabby,Chocolate Patched Tabby,Oriental,Chestnut Patched Tabby,,official,breed_specific,20,Oriental 固有呼称復元。一般表示は CanonicalPhenotype のまま。
+41,Silver Ticked Tabby,Silver Ticked Tabby,Oriental,Ebony Silver Ticked Tabby,,official,breed_specific,20,Oriental 固有呼称復元 (-White 接尾辞は解決層が再付与)。一般表示は CanonicalPhenotype のまま。
