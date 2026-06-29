@@ -11,12 +11,13 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # マスタデータファイルとPythonスクリプトをコンテナ内にコピー。
-# 遺伝マップ (genetic/breed) に加え、色名正規化レイヤが import 時に読む
+# 遺伝マップ (genetic/breed) と猫種カラー方針に加え、色名正規化レイヤが import 時に読む
 # cat_color_master.csv (入力 alias 解決 + 出力 canonical 化) と
 # cat_color_display_alias_map.csv (猫種別表示名 / Van 正規化) も同梱する。
 # これらを欠くと COLOR_MASTER / DISPLAY_ALIAS_MAP が空マスタになり、
-# 本番でのみ正規化が無効化される (略称のまま入出力される)。
+# 本番でのみ正規化や猫種別カラー候補が無効化される。
 COPY docs/architecture/cat_color_genetic_map.csv docs/architecture/cat_breed_genetic_map.csv ./
+COPY docs/architecture/cat_breed_color_policy.csv ./
 COPY docs/architecture/cat_color_master.csv docs/architecture/cat_color_display_alias_map.csv ./
 COPY main.py ./
 COPY cat_breeding_simulator/ ./cat_breeding_simulator/

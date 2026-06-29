@@ -5,16 +5,18 @@
 """
 
 import os
+from pathlib import Path
 
 import pytest
 
-from cat_breeding_simulator import color_master, display_alias_map, master_data
+from cat_breeding_simulator import breed_color_policy, color_master, display_alias_map, master_data
 
 # (ローダー関数, 期待されるファイル名)。エラーメッセージにファイル名が含まれることも確認する。
 LOADERS = [
     (master_data._load_color_base_loci, "cat_color_genetic_map.csv"),
     (master_data._load_color_definitions, "cat_color_genetic_map.csv"),
     (master_data._load_breed_filters, "cat_breed_genetic_map.csv"),
+    (breed_color_policy._load_policy_rows, "cat_breed_color_policy.csv"),
     (color_master._load_master_rows, "cat_color_master.csv"),
     (display_alias_map._load_map_rows, "cat_color_display_alias_map.csv"),
 ]
@@ -63,3 +65,17 @@ def test_loader_raises_on_empty_file(loader, filename, monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
     with pytest.raises(RuntimeError):
         loader()
+
+
+def test_dockerfile_copies_all_fail_fast_csv_files() -> None:
+    """Cloud Run 起動時に必要な Fail-Fast CSV を Docker イメージへ同梱する。"""
+
+    dockerfile_text = Path("Dockerfile").read_text(encoding="utf-8")
+    required_filenames = {filename for _loader, filename in LOADERS}
+    missing_filenames = sorted(
+        filename for filename in required_filenames if filename not in dockerfile_text
+    )
+    assert missing_filenames == [], (
+        "Dockerfile に同梱されていない Fail-Fast CSV があります: "
+        + ", ".join(missing_filenames)
+    )
