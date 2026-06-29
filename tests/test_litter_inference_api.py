@@ -62,6 +62,138 @@ def test_litter_inference_representative_case() -> None:
     assert any("Red / Cream" in warning for warning in body["warnings"])
 
 
+def test_litter_inference_confirms_dilute_carriers_from_blue_kitten() -> None:
+    """Black × Black から Blue 子猫が出た実績は、両親 D/d を確定する。"""
+
+    response = client.post(
+        "/api/v1/litter-inference",
+        json={
+            "sire": {"color": "Black"},
+            "dam": {"color": "Black"},
+            "kittens": [
+                {"id": "k1", "sex": "female", "color": "Blue"},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["response_category"] == "推定可能"
+    confirmed = _finding_keys(body["confirmed"])
+    assert ("父猫", "D座位", "D/d") in confirmed
+    assert ("母猫", "D座位", "D/d") in confirmed
+    assert body["contradictions"] == []
+
+
+def test_litter_inference_confirms_point_carriers_from_point_kitten() -> None:
+    """Black × Black から Seal Point 子猫が出た実績は、両親 C/cs を確定する。"""
+
+    response = client.post(
+        "/api/v1/litter-inference",
+        json={
+            "sire": {"color": "Black"},
+            "dam": {"color": "Black"},
+            "kittens": [
+                {"id": "k1", "sex": "female", "color": "Seal Point"},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["response_category"] == "推定可能"
+    confirmed = _finding_keys(body["confirmed"])
+    assert ("父猫", "C座位", "C/cs") in confirmed
+    assert ("母猫", "C座位", "C/cs") in confirmed
+    assert body["contradictions"] == []
+
+
+def test_litter_inference_confirms_cinnamon_factor_from_cinnamon_kitten() -> None:
+    """Cinnamon × Black から Cinnamon 子猫が出た実績は、黒親の b^l 保有を確定する。"""
+
+    response = client.post(
+        "/api/v1/litter-inference",
+        json={
+            "sire": {"color": "Cinnamon"},
+            "dam": {"color": "Black"},
+            "kittens": [
+                {"id": "k1", "sex": "female", "color": "Cinnamon"},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["response_category"] == "推定可能"
+    confirmed = _finding_keys(body["confirmed"])
+    assert ("父猫", "B座位", "b^l/b^l") in confirmed
+    assert ("母猫", "B座位", "B/b^l") in confirmed
+    assert body["contradictions"] == []
+
+
+def test_litter_inference_does_not_invent_white_spotting_carrier() -> None:
+    """Black × Black から白斑子猫は説明できず、S座位を未確認キャリアとして自動生成しない。"""
+
+    response = client.post(
+        "/api/v1/litter-inference",
+        json={
+            "sire": {"color": "Black"},
+            "dam": {"color": "Black"},
+            "kittens": [
+                {"id": "k1", "sex": "female", "color": "Black-White"},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["response_category"] == "矛盾"
+    assert body["candidate_pair_count"] == 0
+    assert any("説明できません" in contradiction for contradiction in body["contradictions"])
+
+
+def test_litter_inference_does_not_invent_orange_from_non_orange_pair() -> None:
+    """Black × Black から Tortoiseshell 子猫は説明できず、O座位を勝手に足さない。"""
+
+    response = client.post(
+        "/api/v1/litter-inference",
+        json={
+            "sire": {"color": "Black"},
+            "dam": {"color": "Black"},
+            "kittens": [
+                {"id": "k1", "sex": "female", "color": "Tortoiseshell"},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["response_category"] == "矛盾"
+    assert body["candidate_pair_count"] == 0
+    assert any("説明できません" in contradiction for contradiction in body["contradictions"])
+
+
+def test_litter_inference_does_not_invent_silver_from_non_silver_pair() -> None:
+    """Brown Tabby × Brown Tabby から Silver Tabby 子猫は説明できず、I座位を勝手に足さない。"""
+
+    response = client.post(
+        "/api/v1/litter-inference",
+        json={
+            "sire": {"color": "Brown Tabby"},
+            "dam": {"color": "Brown Tabby"},
+            "kittens": [
+                {"id": "k1", "sex": "female", "color": "Silver Tabby"},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["response_category"] == "矛盾"
+    assert body["candidate_pair_count"] == 0
+    assert any("説明できません" in contradiction for contradiction in body["contradictions"])
+
+
 def test_litter_inference_warns_for_calico_white_spotting() -> None:
     """Calico系の観察色は、白斑確認の警告を返す。"""
 
