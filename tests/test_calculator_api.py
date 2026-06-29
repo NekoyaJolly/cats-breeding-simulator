@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from cat_breeding_simulator.engine import BreedingCalculationError, CoatColorCalculator
 from cat_breeding_simulator.color_master import COLOR_MASTER
 from cat_breeding_simulator.display_alias_map import DISPLAY_ALIAS_MAP
-from cat_breeding_simulator.master_data import COLOR_DEFINITIONS
+from cat_breeding_simulator.master_data import COLOR_BASE_LOCI, BREED_FILTERS, COLOR_DEFINITIONS
 from main import app
 
 
@@ -302,3 +302,80 @@ def test_breed_colors_endpoint_unknown_breed_returns_422() -> None:
     response = client.get("/api/v1/breed-colors", params={"breed": "ドラゴン"})
     assert response.status_code == 422
     assert "未対応の猫種" in response.json()["detail"]
+
+
+# --- Sp (スポテッド) 座位: 座位マスタ正本 V9 §5.11 / §7 Phase B ---
+
+
+def test_sp_locus_data_contract() -> None:
+    """Sp_Locus 列がデータに正しく載っている (CSV 退行検知)。
+
+    スポット色行は Sp/Sp、非スポット色行は sp/sp。猫種は Egyptian Mau・Ocicat のみ
+    Sp/Sp 固定で、Bengal は固定しない (マーブル個体を残すため)。
+    """
+
+    assert COLOR_BASE_LOCI["Brown Spotted Tabby"][0].autosomal["Sp"] == ("Sp", "Sp")
+    assert COLOR_BASE_LOCI["Brown Tabby"][0].autosomal["Sp"] == ("sp", "sp")
+    assert BREED_FILTERS["Egyptian Mau"].get("Sp") == ("Sp", "Sp")
+    assert BREED_FILTERS["Ocicat"].get("Sp") == ("Sp", "Sp")
+    assert "Sp" not in BREED_FILTERS["Bengal"]
+
+
+def test_spotted_breed_keeps_spotted_in_output() -> None:
+    """Egyptian Mau のスポット交配は出力の柄に Spotted を保持する。"""
+
+    response = client.post(
+        "/api/v1/calculate",
+        json={
+            "sire_color": "Brown Spotted Tabby",
+            "dam_color": "Brown Spotted Tabby",
+            "breed": "Egyptian Mau",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["results"]
+    assert all("Spotted" in result["color"] for result in payload["results"])
+
+
+def test_spotted_fixed_breed_rejects_non_spotted_color() -> None:
+    """Sp/Sp 固定猫種 (Egyptian Mau) に非スポット色を指定 → 認定カラー外として弾く。"""
+
+    response = client.post(
+        "/api/v1/calculate",
+        json={
+            "sire_color": "Brown Tabby",
+            "dam_color": "Brown Tabby",
+            "breed": "Egyptian Mau",
+        },
+    )
+    assert response.status_code == 422
+    detail = response.json()["detail"]
+    assert "Egyptian Mau" in detail and "認定カラー" in detail
+
+
+def test_unfixed_breed_allows_non_spotted_color() -> None:
+    """Sp を固定しない猫種 (Bengal) は非スポット色も受け付ける (マーブル個体を排除しない)。"""
+
+    response = client.post(
+        "/api/v1/calculate",
+        json={
+            "sire_color": "Brown Tabby",
+            "dam_color": "Brown Tabby",
+            "breed": "Bengal",
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["results"]
+
+
+def test_spotted_propagates_by_phenotype_without_breed() -> None:
+    """猫種無指定でも、表現された親 (Spotted) から子へスポットが伝播する (express-then-infer)。"""
+
+    response = client.post(
+        "/api/v1/calculate",
+        json={"sire_color": "Brown Spotted Tabby", "dam_color": "Brown Tabby"},
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert any("Spotted" in result["color"] for result in payload["results"])
