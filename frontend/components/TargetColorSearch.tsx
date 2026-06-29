@@ -17,24 +17,17 @@ import { canonicalColorValue, resolveExactColorOption } from "@/lib/colorMatch";
 import type {
   ColorOption,
   RegisteredCat,
-  ResultEntry,
-  ReverseLookupCandidate,
   ReverseLookupResponse,
 } from "@/lib/schema";
 import { ColorCombobox } from "./ColorCombobox";
+import { ResultsView } from "./targetColorSearch/ResultsView";
+import { carriersText, sexLabel } from "./targetColorSearch/format";
 
 type TargetSex = "any" | RegisteredCat["sex"];
 type AdditionalColorInput = {
   id: string;
   value: string;
 };
-
-const CATEGORIES = [
-  "確定で期待できる",
-  "条件付きで期待できる",
-  "現在の情報では判定が難しい",
-  "現在の登録情報では確認できない",
-] as const;
 
 const inputClass =
   "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500";
@@ -57,20 +50,6 @@ function repository(): RegisteredCatRepository {
   return createLocalRegisteredCatRepository();
 }
 
-function formatPct(value: number): string {
-  return `${value.toFixed(value % 1 === 0 ? 0 : 1)}%`;
-}
-
-function sexLabel(sex: RegisteredCat["sex"]): string {
-  return sex === "male" ? "♂ 父猫候補" : "♀ 母猫候補";
-}
-
-function targetSexLabel(sex: ReverseLookupResponse["target_sex"]): string {
-  if (sex === "male") return "♂ オス";
-  if (sex === "female") return "♀ メス";
-  return "指定なし";
-}
-
 function autoRegisteredName(
   color: string,
   sex: RegisteredCat["sex"],
@@ -88,21 +67,6 @@ function autoRegisteredName(
   return name;
 }
 
-function colorRows(rows: ResultEntry[]): string {
-  if (rows.length === 0) return "現在の計算範囲では表示できるカラーがありません。";
-  return rows
-    .slice(0, 8)
-    .map((row) => `${row.sex === "Female" ? "♀" : "♂"} ${row.color} ${formatPct(row.probability_pct)}`)
-    .join(" / ");
-}
-
-function carriersText(carriers: RegisteredCat["carriers"]): string {
-  if (!carriers) return "";
-  return Object.entries(carriers)
-    .map(([locus, genotype]) => `${locus}:${genotype}`)
-    .join(", ");
-}
-
 function splitColorEntries(
   primaryColor: string,
   additionalColors: AdditionalColorInput[],
@@ -115,187 +79,6 @@ function splitColorEntries(
 
 function canonicalColorEntries(entries: string[], colors: ColorOption[]): string[] {
   return [...new Set(entries.map((entry) => canonicalColorValue(colors, entry)))];
-}
-
-function CandidateCard({
-  candidate,
-  index,
-}: {
-  candidate: ReverseLookupCandidate;
-  index: number;
-}) {
-  const summaryProbability =
-    candidate.confirmed_probability_pct > 0
-      ? candidate.confirmed_probability_pct
-      : candidate.conditional_max_probability_pct;
-
-  return (
-    <details className="rounded-md border border-slate-200 bg-white">
-      <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <div>
-          <p className="text-xs font-medium text-slate-400">組み合わせ {index + 1}</p>
-          <h4 className="text-base font-semibold text-slate-800">
-            {candidate.sire.name} × {candidate.dam.name}
-          </h4>
-          <p className="mt-1 text-xs text-slate-500">
-            {candidate.sire.color} ♂ / {candidate.dam.color} ♀
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="rounded bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
-            {candidate.category}
-          </span>
-          <span className="text-lg font-semibold tabular-nums text-slate-800">
-            {formatPct(summaryProbability)}
-          </span>
-        </div>
-      </summary>
-
-      <div className="border-t border-slate-100 p-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-md bg-emerald-50 p-3">
-            <p className="text-xs text-emerald-700">確定確率</p>
-            <p className="text-xl font-semibold tabular-nums text-emerald-900">
-              {formatPct(candidate.confirmed_probability_pct)}
-            </p>
-          </div>
-          <div className="rounded-md bg-amber-50 p-3">
-            <p className="text-xs text-amber-700">条件付き最大確率</p>
-            <p className="text-xl font-semibold tabular-nums text-amber-900">
-              {formatPct(candidate.conditional_max_probability_pct)}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-          <InfoList title="成立条件" items={candidate.establishment_conditions} />
-          <InfoList
-            title="確認が必要な条件"
-            items={
-              candidate.confirmation_needed.length > 0
-                ? candidate.confirmation_needed
-                : ["追加確認なしで評価できます。"]
-            }
-          />
-          <InfoList
-            title="推奨検査"
-            items={
-              candidate.recommended_tests.length > 0
-                ? candidate.recommended_tests
-                : ["現時点で追加検査の提案はありません。"]
-            }
-          />
-          <div className="rounded-md bg-slate-50 p-3 text-sm">
-            <p className="font-medium text-slate-700">
-              目標カラー以外に生まれる可能性のあるカラー
-            </p>
-            <p className="mt-1 text-xs leading-5 text-slate-600">
-              {colorRows(candidate.other_possible_colors)}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-4 overflow-hidden rounded-md border border-slate-200">
-          <table className="min-w-full text-left text-xs">
-            <thead className="bg-slate-50 text-slate-500">
-              <tr>
-                <th className="px-3 py-2 font-medium">座位</th>
-                <th className="px-3 py-2 font-medium">目標条件</th>
-                <th className="px-3 py-2 font-medium">父猫側</th>
-                <th className="px-3 py-2 font-medium">母猫側</th>
-                <th className="px-3 py-2 font-medium">根拠</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {candidate.locus_evidence.map((evidence) => (
-                <tr key={evidence.locus}>
-                  <td className="px-3 py-2 font-medium text-slate-700">
-                    {evidence.locus}
-                  </td>
-                  <td className="px-3 py-2 text-slate-600">{evidence.target}</td>
-                  <td className="px-3 py-2 text-slate-600">{evidence.sire}</td>
-                  <td className="px-3 py-2 text-slate-600">{evidence.dam}</td>
-                  <td className="px-3 py-2 text-slate-500">{evidence.note}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </details>
-  );
-}
-
-function InfoList({ title, items }: { title: string; items: string[] }) {
-  return (
-    <div className="rounded-md bg-slate-50 p-3 text-sm">
-      <p className="font-medium text-slate-700">{title}</p>
-      <ul className="mt-1 space-y-1 text-xs leading-5 text-slate-600">
-        {items.map((item) => (
-          <li key={item}>{item}</li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function NoCandidateAnalysis({ data }: { data: ReverseLookupResponse }) {
-  return (
-    <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-      <p className="font-semibold">
-        現在の登録情報では、目標カラーの成立条件を満たす交配候補を確認できません。
-      </p>
-      <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
-        <InfoList title="目標カラーに必要な主な条件" items={data.target_conditions} />
-        <InfoList title="現在確認できない条件" items={data.unchecked_conditions} />
-        <InfoList title="確認するとよい項目" items={data.recommended_checks} />
-      </div>
-      <p className="mt-3 text-xs leading-5 text-amber-800">
-        ゴールデン / ワイドバンド / CORIN系は品種・系統で扱いが複雑なため、
-        現在の対応範囲では登録情報と既存ルールに基づく確認結果として表示します。
-      </p>
-    </div>
-  );
-}
-
-function ResultsView({ data }: { data: ReverseLookupResponse }) {
-  const grouped = CATEGORIES.map((category) => ({
-    category,
-    candidates: data.candidates.filter((candidate) => candidate.category === category),
-  }));
-
-  return (
-    <section className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-lg font-semibold text-slate-800">結果ランキング</h3>
-        <span className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-600">
-          目標: {targetSexLabel(data.target_sex)} / {data.target_color}
-        </span>
-      </div>
-      {data.candidates.length === 0 && <NoCandidateAnalysis data={data} />}
-      {grouped.map((group) => (
-        <section key={group.category} className="space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-1">
-            <h4 className="text-sm font-semibold text-slate-700">{group.category}</h4>
-            <span className="text-xs text-slate-400">{group.candidates.length} 件</span>
-          </div>
-          {group.candidates.length > 0 ? (
-            group.candidates.map((candidate, index) => (
-              <CandidateCard
-                key={`${candidate.sire.id}-${candidate.dam.id}-${group.category}`}
-                candidate={candidate}
-                index={index}
-              />
-            ))
-          ) : (
-            <p className="text-sm text-slate-500">
-              このカテゴリで確認できる交配候補はまだありません。
-            </p>
-          )}
-        </section>
-      ))}
-    </section>
-  );
 }
 
 export function TargetColorSearch() {
