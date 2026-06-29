@@ -1,0 +1,21 @@
+import { describe, expect, it } from "vitest";
+
+import { LOCUS_GLOSSARY } from "./lociGlossary";
+
+describe("LOCUS_GLOSSARY", () => {
+  it("主要な遺伝子座を網羅している", () => {
+    for (const locus of ["A", "B", "C", "D", "I", "O", "S", "W", "Mc", "Ta", "Sp", "Wb"]) {
+      expect(LOCUS_GLOSSARY[locus]).toBeDefined();
+    }
+  });
+
+  it("各エントリの symbol はキーと一致し、全フィールドが非空", () => {
+    // symbol とキーがずれると、診断情報 (opened_loci 等) との突合で誤表示になるため不変条件として検証。
+    for (const [key, info] of Object.entries(LOCUS_GLOSSARY)) {
+      expect(info.symbol).toBe(key);
+      expect(info.name.length).toBeGreaterThan(0);
+      expect(info.inheritance.length).toBeGreaterThan(0);
+      expect(info.description.length).toBeGreaterThan(0);
+    }
+  });
+});
