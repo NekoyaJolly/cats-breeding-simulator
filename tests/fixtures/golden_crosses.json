@@ -1592,7 +1592,7 @@
      "sex": "Female"
     },
     {
-     "color": "Sable",
+     "color": "Natural Solid",
      "probability_pct": 11.7188,
      "sex": "Female"
     },
@@ -1602,7 +1602,7 @@
      "sex": "Male"
     },
     {
-     "color": "Sable",
+     "color": "Natural Solid",
      "probability_pct": 11.7188,
      "sex": "Male"
     },
@@ -1622,7 +1622,7 @@
      "sex": "Female"
     },
     {
-     "color": "Platinum",
+     "color": "Blue Solid",
      "probability_pct": 0.7812,
      "sex": "Female"
     },
@@ -1632,7 +1632,7 @@
      "sex": "Male"
     },
     {
-     "color": "Platinum",
+     "color": "Blue Solid",
      "probability_pct": 0.7812,
      "sex": "Male"
     }
@@ -1775,12 +1775,12 @@
      "sex": "Male"
     },
     {
-     "color": "Platinum",
+     "color": "Blue",
      "probability_pct": 3.125,
      "sex": "Female"
     },
     {
-     "color": "Platinum",
+     "color": "Blue",
      "probability_pct": 3.125,
      "sex": "Male"
     }

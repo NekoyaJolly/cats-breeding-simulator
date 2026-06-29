@@ -6,6 +6,9 @@
 
 from __future__ import annotations
 
+import csv
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -13,6 +16,20 @@ from cat_breeding_simulator.engine import BreedingCalculationError, CoatColorCal
 from main import app
 
 client = TestClient(app)
+
+BREED_POLICY_PATH = Path("docs/architecture/cat_breed_color_policy.csv")
+BREED_POLICY_COLUMNS = {
+    "Breed",
+    "CurrentBreedKey",
+    "PolicyStatus",
+    "FixedGeneticPolicy",
+    "AllowedColorPolicy",
+    "ExcludedColorPolicy",
+    "DisplayNamePolicy",
+    "OutOfScopeNotes",
+    "ImplementationNotes",
+}
+BREED_POLICY_STATUSES = {"documented", "needs_review", "future_breed"}
 
 
 def test_breeds_endpoint_returns_breeds() -> None:
@@ -89,3 +106,34 @@ def test_calculate_endpoint_rejects_unknown_breed() -> None:
     )
     assert response.status_code == 422
     assert "未対応の猫種" in response.json()["detail"]
+
+
+def test_breed_color_policy_csv_has_required_shape() -> None:
+    """猫種カラー方針CSVは固定遺伝子・許容色・表示名・対象外メモを分離して保持する。"""
+
+    with BREED_POLICY_PATH.open(encoding="utf-8") as csv_file:
+        reader = csv.DictReader(csv_file)
+        assert set(reader.fieldnames or []) == BREED_POLICY_COLUMNS
+        rows = list(reader)
+
+    assert rows
+    assert {row["PolicyStatus"] for row in rows} <= BREED_POLICY_STATUSES
+
+
+def test_breed_color_policy_documents_tonkinese_classes() -> None:
+    """Tonkinese は breed 全体を cb/cs 固定せず、色クラスごとの C座位を記録する。"""
+
+    with BREED_POLICY_PATH.open(encoding="utf-8") as csv_file:
+        rows = list(csv.DictReader(csv_file))
+
+    tonkinese = next(row for row in rows if row["Breed"] == "Tonkinese")
+    assert tonkinese["PolicyStatus"] == "documented"
+    assert "No fixed C policy at breed level" in tonkinese["FixedGeneticPolicy"]
+    assert "Point=cs/cs" in tonkinese["FixedGeneticPolicy"]
+    assert "Mink=cb/cs" in tonkinese["FixedGeneticPolicy"]
+    assert "Solid/Sepia=cb/cb" in tonkinese["FixedGeneticPolicy"]
+    assert "Natural Point" in tonkinese["AllowedColorPolicy"]
+    assert "Natural Mink" in tonkinese["AllowedColorPolicy"]
+    assert "Natural Solid" in tonkinese["AllowedColorPolicy"]
+    assert "Sepia class" in tonkinese["DisplayNamePolicy"]
+    assert "Point class" in tonkinese["ImplementationNotes"]

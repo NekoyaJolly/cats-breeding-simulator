@@ -120,6 +120,8 @@ def test_reverse_lookup_black_pair_reports_hidden_condition_by_locus(
     candidate = body["candidates"][0]
     assert candidate["confirmed_probability_pct"] == 0
     assert candidate["conditional_max_probability_pct"] == expected_probability
+    assert candidate["confirmation_needed"]
+    assert candidate["recommended_tests"]
     assert all(expected_locus in item for item in candidate["confirmation_needed"])
     assert all(expected_locus in item for item in candidate["recommended_tests"])
 

@@ -8,6 +8,7 @@ from typing import Literal
 from fastapi import APIRouter, FastAPI, HTTPException, Request
 from pydantic import BaseModel, Field, field_validator
 
+from cat_breeding_simulator.breed_color_policy import allowed_color_names_for_breed
 from cat_breeding_simulator.color_master import COLOR_MASTER
 from cat_breeding_simulator.color_reading_ja import reading_ja
 from cat_breeding_simulator.engine import BreedingCalculationError, CoatColorCalculator
@@ -539,16 +540,21 @@ def breeds_endpoint() -> BreedsResponse:
 
 @router.get("/breed-colors", response_model=BreedColorsResponse)
 def breed_colors_endpoint(breed: str) -> BreedColorsResponse:
-    """指定猫種で使える毛色 (遺伝制約を満たす canonical 色名) を返す。
+    """指定猫種で使える毛色 (猫種カラー方針または遺伝制約由来) を返す。
 
-    認定カラーの案内ポップアップ用。制約を持たない猫種は constrained=false / colors=[]
-    (全色が使える) を返す。
+    認定カラーの案内ポップアップ用。猫種カラー方針 CSV があればそれを優先し、
+    方針が無い猫種は従来の遺伝制約へフォールバックする。どちらの制約も無い猫種は
+    constrained=false / colors=[] (全色が使える) を返す。
     """
 
     breed_key = CoatColorCalculator._normalize_breed_key(breed)
     # /calculate と同じ基準 (VALID_BREEDS) で未対応の猫種は弾く (API 間で挙動を揃える)。
     if breed_key not in VALID_BREEDS:
         raise HTTPException(status_code=422, detail=f"未対応の猫種です: '{breed}'")
+    policy_colors = allowed_color_names_for_breed(breed_key)
+    if policy_colors is not None:
+        return BreedColorsResponse(breed=breed, constrained=True, colors=policy_colors)
+
     keys = recognized_color_keys_for_breed(breed_key)
     if keys is None:
         return BreedColorsResponse(breed=breed, constrained=False, colors=[])

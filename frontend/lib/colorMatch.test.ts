@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   canonicalColorValue,
+  filterColorsByAllowedNames,
   filterColors,
   normalizeKey,
   resolveExactColorOption,
@@ -66,6 +67,25 @@ describe("canonicalColorValue", () => {
 
   it("未対応の自由入力はトリムして保持する", () => {
     expect(canonicalColorValue(COLORS, "  謎の色  ")).toBe("謎の色");
+  });
+});
+
+describe("filterColorsByAllowedNames", () => {
+  it("許容カラー名に一致する候補だけを残す", () => {
+    expect(filterColorsByAllowedNames(COLORS, ["Black", "Blue"]).map((c) => c.value)).toEqual([
+      "Black",
+      "Blue",
+    ]);
+  });
+
+  it("許容カラー名はキーワード経由でも一致する", () => {
+    expect(filterColorsByAllowedNames(COLORS, ["BT"]).map((c) => c.value)).toEqual([
+      "Brown Tabby",
+    ]);
+  });
+
+  it("許容カラー名が空なら全候補を残す", () => {
+    expect(filterColorsByAllowedNames(COLORS, [])).toEqual(COLORS);
   });
 });
 

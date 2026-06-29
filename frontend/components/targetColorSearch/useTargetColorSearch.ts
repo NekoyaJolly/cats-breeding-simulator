@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
+  fetchBreedColors,
   fetchBreeds,
   fetchColors,
   searchTargetColor,
@@ -13,7 +14,11 @@ import {
   createLocalRegisteredCatRepository,
   type RegisteredCatRepository,
 } from "@/lib/registeredCatRepository";
-import { canonicalColorValue, resolveExactColorOption } from "@/lib/colorMatch";
+import {
+  canonicalColorValue,
+  filterColorsByAllowedNames,
+  resolveExactColorOption,
+} from "@/lib/colorMatch";
 import type {
   ColorOption,
   RegisteredCat,
@@ -101,6 +106,9 @@ export function useTargetColorSearch() {
   const [editCarriers, setEditCarriers] = useState("");
   const [colors, setColors] = useState<ColorOption[]>([]);
   const [breedItems, setBreedItems] = useState<ColorOption[]>([]);
+  const [registrationBreedAllowedColors, setRegistrationBreedAllowedColors] = useState<string[]>([]);
+  const [editBreedAllowedColors, setEditBreedAllowedColors] = useState<string[]>([]);
+  const [targetBreedAllowedColors, setTargetBreedAllowedColors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [registrationError, setRegistrationError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -138,12 +146,87 @@ export function useTargetColorSearch() {
     };
   }, []);
 
-  const maleColors = useMemo(
-    () => colors.filter((colorOption) => colorOption.sex_restriction !== "female_only"),
-    [colors],
+  useEffect(() => {
+    const trimmedBreed = breed.trim();
+    if (!trimmedBreed) {
+      setRegistrationBreedAllowedColors([]);
+      return;
+    }
+    let alive = true;
+    fetchBreedColors(trimmedBreed).then((list) => {
+      if (alive) setRegistrationBreedAllowedColors(list);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [breed]);
+
+  useEffect(() => {
+    const trimmedBreed = editBreed.trim();
+    if (!trimmedBreed) {
+      setEditBreedAllowedColors([]);
+      return;
+    }
+    let alive = true;
+    fetchBreedColors(trimmedBreed).then((list) => {
+      if (alive) setEditBreedAllowedColors(list);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [editBreed]);
+
+  const targetBreed = useMemo(() => {
+    const uniqueBreeds = [
+      ...new Set(
+        cats
+          .map((cat) => cat.breed?.trim())
+          .filter((catBreed): catBreed is string => Boolean(catBreed)),
+      ),
+    ];
+    return uniqueBreeds.length === 1 ? uniqueBreeds[0] : "";
+  }, [cats]);
+
+  useEffect(() => {
+    if (!targetBreed) {
+      setTargetBreedAllowedColors([]);
+      return;
+    }
+    let alive = true;
+    fetchBreedColors(targetBreed).then((list) => {
+      if (alive) setTargetBreedAllowedColors(list);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [targetBreed]);
+
+  const registrationBreedColors = useMemo(
+    () => filterColorsByAllowedNames(colors, registrationBreedAllowedColors),
+    [colors, registrationBreedAllowedColors],
   );
-  const registrationColors = sex === "male" ? maleColors : colors;
-  const editColors = editSex === "male" ? maleColors : colors;
+  const editBreedColors = useMemo(
+    () => filterColorsByAllowedNames(colors, editBreedAllowedColors),
+    [colors, editBreedAllowedColors],
+  );
+  const targetColors = useMemo(
+    () => filterColorsByAllowedNames(colors, targetBreedAllowedColors),
+    [colors, targetBreedAllowedColors],
+  );
+  const maleRegistrationColors = useMemo(
+    () =>
+      registrationBreedColors.filter(
+        (colorOption) => colorOption.sex_restriction !== "female_only",
+      ),
+    [registrationBreedColors],
+  );
+  const maleEditColors = useMemo(
+    () =>
+      editBreedColors.filter((colorOption) => colorOption.sex_restriction !== "female_only"),
+    [editBreedColors],
+  );
+  const registrationColors = sex === "male" ? maleRegistrationColors : registrationBreedColors;
+  const editColors = editSex === "male" ? maleEditColors : editBreedColors;
   const sires = useMemo(() => cats.filter((cat) => cat.sex === "male"), [cats]);
   const dams = useMemo(() => cats.filter((cat) => cat.sex === "female"), [cats]);
   const colorsToRegister = splitColorEntries(color, additionalColors);
@@ -335,6 +418,7 @@ export function useTargetColorSearch() {
     handleSaveEdit,
     // マスタ
     colors,
+    targetColors,
     breedItems,
     // 目標・検索
     targetColor,

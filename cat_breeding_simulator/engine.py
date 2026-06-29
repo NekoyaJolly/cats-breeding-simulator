@@ -32,6 +32,14 @@ from cat_breeding_simulator.phenotype_naming import PhenotypeNamer
 
 ProbabilityMap = dict[tuple[str, str], float]
 
+_TONKINESE_BREED_KEY = "Tonkinese"
+_TONKINESE_POINT_CLASS_COLORS: frozenset[str] = frozenset(
+    {"Natural Point", "Blue Point", "Champagne Point", "Platinum Point"}
+)
+_TONKINESE_SOLID_CLASS_COLORS: frozenset[str] = frozenset(
+    {"Natural Solid", "Blue Solid", "Champagne Solid", "Platinum Solid"}
+)
+
 
 def _genotype_key(loci: dict[str, tuple[str, str]]) -> tuple:
     """遺伝子型をアレル単位でそのまま表すキー (デバッグ・未分類サンプル記録用)。"""
@@ -41,6 +49,41 @@ def _genotype_key(loci: dict[str, tuple[str, str]]) -> tuple:
         a1, a2 = loci[locus]
         parts.append((locus, tuple(sorted([a1, a2]))))
     return tuple(parts)
+
+
+def _tonkinese_c_locus_for_color(color: str) -> tuple[str, str] | None:
+    """Tonkinese の Point/Mink/Solid class から C座位を返す。"""
+
+    if color in _TONKINESE_POINT_CLASS_COLORS:
+        return ("cs", "cs")
+    if "Mink" in color:
+        return ("cb", "cs")
+    if color in _TONKINESE_SOLID_CLASS_COLORS:
+        return ("cb", "cb")
+    return None
+
+
+def _apply_tonkinese_c_class(
+    color: str,
+    genotypes: list[ParentGenotype],
+) -> list[ParentGenotype]:
+    """Tonkinese 文脈では色名クラスを C座位の正本として親候補へ反映する。"""
+
+    required = _tonkinese_c_locus_for_color(color)
+    if required is None:
+        return []
+
+    adjusted: list[ParentGenotype] = []
+    seen: set[tuple] = set()
+    for genotype in genotypes:
+        loci = dict(genotype.loci)
+        loci["C"] = required
+        signature = _genotype_key(loci)
+        if signature in seen:
+            continue
+        seen.add(signature)
+        adjusted.append(replace(genotype, loci=loci))
+    return adjusted
 
 
 def _carrier_options_for(
@@ -918,6 +961,14 @@ class CoatColorCalculator:
             return genotypes
 
         breed_key = self._normalize_breed_key(breed)
+        if breed_key == _TONKINESE_BREED_KEY:
+            genotypes = _apply_tonkinese_c_class(phenotype_key, genotypes)
+            if not genotypes:
+                raise BreedingCalculationError(
+                    f"「{phenotype_key}」は「{breed}」の認定カラー"
+                    "（Point/Mink/Solid class）にありません。"
+                    f"{breed} の認定カラーを選ぶか、猫種の指定を外してください。"
+                )
         breed_constraints = BREED_FILTERS.get(breed_key, {})
         filtered: list[ParentGenotype] = []
         for genotype in genotypes:

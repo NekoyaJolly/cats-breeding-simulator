@@ -157,7 +157,7 @@ CFA/TICA 差・猫種固有呼称の扱い:
 - **猫種固有呼称は一般カラーとして混ぜない**。`breed_specific` とし `DisplayAllowed=false`。
   - Abyssinian/Somali: `Ruddy` / `Sorrel`
   - Burmese: `Sable` / `Champagne` / `Platinum` / `Sepia`
-  - Tonkinese: `*Mink` / `Natural Point` 等
+  - Tonkinese: `*Mink` / `*Point` / `*Solid` class 等
   - Oriental: `Ebony` (→ 一般 `Black`) / `Lavender` (→ 一般 `Lilac`) / `Chestnut` (→ 一般 `Chocolate`)
   - Bengal: `Leopard` / `Snow` / `Marble(d)`
   - Ragdoll: `*Mitted` / `*Bi-Color`
@@ -284,11 +284,11 @@ CFA/TICA 差・猫種固有呼称の扱い:
 1. フルカラー表現型は `normal_mode` では `C/C` 相当として扱う。
 2. `C/cs`・`C/cb` は表現型から判定できないため `normal_mode` では**自動展開しない** (カテゴリC)。
 3. Point / Sepia / Mink は、入力色・猫種標準・血統/産子履歴・明示キャリアで確認される場合のみ `explicit_carrier_mode` または猫種制約 (breed constraint) で扱う。
-4. 猫種正本 ([`cat_breed_genetic_map.csv`](./cat_breed_genetic_map.csv)) で固定: Siamese / Colorpoint 系 = `cs/cs`、Burmese 系 = `cb/cb`、Tonkinese 系 = `cb/cs`。
+4. 猫種正本 ([`cat_breed_genetic_map.csv`](./cat_breed_genetic_map.csv)) で固定: Siamese / Colorpoint 系 = `cs/cs`、Burmese 系 = `cb/cb`。Tonkinese は猫種内に Point / Mink / Solid(Sepia) class が併存するため、breed 全体では `cb/cs` 固定にしない。`cb/cs` は Tonkinese の Mink class/profile 指定時のみ扱う。
 5. Ragdoll / Birman 等のポイント前提猫種は `cs/cs` 固定 (候補含む)。
 6. 不可逆: `cs/cs × cs/cs` から `C/-` フルカラーは出ない (§4.4)。
 
-**master での対応**: Point/Mink/Sepia 概念は `InputAllowed=true` (入力・猫種・明示キャリアで使用可) かつ `DisplayAllowed=false` (breed_unselected の `normal_mode` 一般結果には出さない)。Mink = `breed_specific(Tonkinese)`、Sepia = `breed_specific(Burmese)`、その他 Point は `general`。これらが実際に出るかはエンジンの計算モード/猫種制約に従い、master は名前の可否のみ定義する。
+**master での対応**: Point/Mink/Sepia 概念は `InputAllowed=true` (入力・猫種・明示キャリアで使用可) かつ `DisplayAllowed=false` (breed_unselected の `normal_mode` 一般結果には出さない)。Mink = `breed_specific(Tonkinese)`、Tonkinese Solid class = `breed_specific(Tonkinese)` かつ C座位上は `cb/cb`、Burmese Sepia = `breed_specific(Burmese)`、その他 Point は `general` または猫種別 class として扱う。これらが実際に出るかはエンジンの計算モード/猫種制約に従い、master は名前の可否のみ定義する。
 
 **Wb-locus 方針**: Wb 系 (Shell / Chinchilla / Shaded / Golden) は `normal_mode` で **Wb キャリアを自動展開しない** (非ワイドバンド親から wide な子を生成しない。不可逆ルール: `wb/wb × wb/wb` から tipping 系は出ない / [`01_シミュレーター正本_V9.md`](./01_シミュレーター正本_V9.md) §4.11)。ただし**親がワイドバンドで子が実際に `Wb/-` になる場合は、その子を命名する** (未分類にしない / 命名規則は 01 §6.4)。master では canonical または alias として保持し、`InputAllowed=true`、`GeneticRuleSource=review_required` を維持する (§12.2〜12.4)。
 
