@@ -5,9 +5,11 @@ import {
   useEffect,
   useId,
   useMemo,
+  useRef,
   useState,
   type Dispatch,
   type FormEvent,
+  type PointerEvent,
   type SetStateAction,
 } from "react";
 import { z } from "zod";
@@ -61,9 +63,86 @@ type CarrierLocusDefinition = {
 };
 
 type CarrierSelection = Partial<Record<CarrierLocus, string>>;
+/**
+ * 選択済み遺伝子型の短い補足文を座位と値ごとに保持する。
+ */
+type CarrierDescriptionMap = Partial<
+  Record<CarrierLocus, Record<string, Record<Language, string>>>
+>;
 
 const carrierOptions = (values: readonly string[]): readonly CarrierOption[] =>
   values.map((value) => ({ value, label: { ja: value, en: value } }));
+
+const CARRIER_CHOICE_DESCRIPTIONS: CarrierDescriptionMap = {
+  A: {
+    "A/A": { ja: "タビー固定", en: "Tabby fixed" },
+    "A/a": { ja: "タビー・ソリッド因子", en: "Tabby, solid carrier" },
+    "a/a": { ja: "ソリッド固定", en: "Solid fixed" },
+  },
+  B: {
+    "B/B": { ja: "黒系固定", en: "Black fixed" },
+    "B/b": { ja: "チョコ因子", en: "Chocolate carrier" },
+    "B/bl": { ja: "シナモン因子", en: "Cinnamon carrier" },
+    "b/b": { ja: "チョコ固定", en: "Chocolate fixed" },
+    "b/bl": { ja: "チョコ・シナモン因子", en: "Choc/cinnamon carrier" },
+    "bl/bl": { ja: "シナモン固定", en: "Cinnamon fixed" },
+  },
+  C: {
+    "C/C": { ja: "フルカラー固定", en: "Full color fixed" },
+    "C/cs": { ja: "ポイント因子", en: "Point carrier" },
+    "C/cb": { ja: "セピア因子", en: "Sepia carrier" },
+    "cs/cs": { ja: "ポイント固定", en: "Point fixed" },
+    "cb/cs": { ja: "ミンク固定", en: "Mink fixed" },
+    "cb/cb": { ja: "セピア固定", en: "Sepia fixed" },
+  },
+  D: {
+    "D/D": { ja: "濃色固定", en: "Dense fixed" },
+    "D/d": { ja: "希釈因子", en: "Dilution carrier" },
+    "d/d": { ja: "希釈固定", en: "Dilute fixed" },
+  },
+  I: {
+    "I/I": { ja: "シルバー固定", en: "Silver fixed" },
+    "I/i": { ja: "シルバー・非銀因子", en: "Silver, non-silver carrier" },
+    "i/i": { ja: "非シルバー固定", en: "Non-silver fixed" },
+  },
+  O: {
+    "O/Y": { ja: "レッド系オス", en: "Red-series male" },
+    "o/Y": { ja: "非レッド系オス", en: "Non-red male" },
+    "O/O": { ja: "レッド系固定", en: "Red fixed" },
+    "O/o": { ja: "トーティ系", en: "Tortie-series" },
+    "o/o": { ja: "非レッド固定", en: "Non-red fixed" },
+  },
+  S: {
+    "S/S": { ja: "高白斑固定", en: "High white fixed" },
+    "S/s": { ja: "白斑あり", en: "White spotting" },
+    "s/s": { ja: "白斑なし", en: "No white spotting" },
+  },
+  W: {
+    "W/W": { ja: "白固定", en: "White fixed" },
+    "W/w": { ja: "白・非白因子", en: "White, non-white carrier" },
+    "w/w": { ja: "優性白なし", en: "No dominant white" },
+  },
+  Mc: {
+    "Mc/Mc": { ja: "マッカレル固定", en: "Mackerel fixed" },
+    "Mc/mc": { ja: "クラシック因子", en: "Classic carrier" },
+    "mc/mc": { ja: "クラシック固定", en: "Classic fixed" },
+  },
+  Ta: {
+    "Ta/Ta": { ja: "ティックド固定", en: "Ticked fixed" },
+    "Ta/ta": { ja: "非ティックド因子", en: "Non-ticked carrier" },
+    "ta/ta": { ja: "ティックドなし", en: "No ticked pattern" },
+  },
+  Sp: {
+    "Sp/Sp": { ja: "スポット固定", en: "Spotted fixed" },
+    "Sp/sp": { ja: "スポット因子", en: "Spotted carrier" },
+    "sp/sp": { ja: "スポットなし", en: "No spotted modifier" },
+  },
+  Wb: {
+    "Wb/Wb": { ja: "ワイドバンド固定", en: "Wide band fixed" },
+    "Wb/wb": { ja: "広帯因子", en: "Wide band carrier" },
+    "wb/wb": { ja: "広帯なし", en: "No wide band" },
+  },
+};
 
 const CARRIER_LOCI = [
   {
@@ -137,6 +216,14 @@ function optionsForParent(
   if (parent === "sire" && definition.sireOptions) return definition.sireOptions;
   if (parent === "dam" && definition.damOptions) return definition.damOptions;
   return definition.options;
+}
+
+function carrierChoiceDescription(
+  locus: CarrierLocus,
+  value: string,
+  language: Language,
+): string {
+  return CARRIER_CHOICE_DESCRIPTIONS[locus]?.[value]?.[language] ?? value;
 }
 
 function hasCarrierSelection(selection: CarrierSelection): boolean {
@@ -241,6 +328,7 @@ const labelClass = "block text-sm font-medium text-slate-700";
 export function BreedingForm({ onSubmit, loading, language }: Props) {
   const text = UI_TEXT[language];
   const carrierModalTitleId = useId();
+  const activeCarrierPointerId = useRef<number | null>(null);
   const [sireColor, setSireColor] = useState("");
   const [damColor, setDamColor] = useState("");
   const [breed, setBreed] = useState("");
@@ -414,6 +502,27 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
     }
   }
 
+  function updateCarrierFromPointer(
+    event: PointerEvent<HTMLDivElement>,
+    parent: CarrierParent,
+    locus: CarrierLocus,
+    groupName: string,
+  ) {
+    const element = document.elementFromPoint(event.clientX, event.clientY);
+    const label = element?.closest("label");
+    if (!(label instanceof HTMLLabelElement)) return;
+    if (label.dataset.carrierGroup !== groupName) return;
+    updateCarrier(parent, locus, label.dataset.carrierValue ?? "");
+  }
+
+  function stopCarrierPointer(event: PointerEvent<HTMLDivElement>) {
+    if (activeCarrierPointerId.current !== event.pointerId) return;
+    activeCarrierPointerId.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }
+
   function clearCarrierSelection(parent: CarrierParent) {
     const other = parent === "sire" ? damCarriers : sireCarriers;
     if (parent === "sire") {
@@ -558,14 +667,14 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
 
       {carrierModalParent && (
         <div
-          className="fixed inset-0 z-50 flex items-end bg-slate-900/40 sm:items-center sm:p-4"
+          className="fixed inset-0 z-50 flex items-end bg-slate-900/40 px-2 pb-2 pt-4 sm:items-center sm:p-4"
           onClick={() => setCarrierModalParent(null)}
         >
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby={carrierModalTitleId}
-            className="max-h-[88vh] w-full overflow-hidden rounded-t-lg bg-white shadow-xl sm:mx-auto sm:max-w-2xl sm:rounded-lg"
+            className="max-h-[88vh] w-full overflow-hidden rounded-lg bg-white shadow-xl sm:mx-auto sm:max-w-2xl"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="border-b border-slate-200 px-4 py-3">
@@ -606,6 +715,9 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
                   })),
                 ];
                 const selectedValue = activeCarrierSelection[definition.locus] ?? "";
+                const selectedDescription = selectedValue
+                  ? carrierChoiceDescription(definition.locus, selectedValue, language)
+                  : definition.locus;
                 const groupName = `carrier-${carrierModalParent}-${definition.locus}`;
 
                 return (
@@ -622,8 +734,13 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
                           <div className="truncate text-sm font-semibold text-slate-900">
                             {definition.name[language]}
                           </div>
-                          <div className="mt-0.5 text-xs text-slate-500">
-                            {definition.locus}
+                          <div
+                            className={`mt-0.5 truncate text-xs ${
+                              selectedValue ? "text-emerald-700" : "text-slate-500"
+                            }`}
+                            title={selectedDescription}
+                          >
+                            {selectedDescription}
                           </div>
                         </div>
                       </div>
@@ -631,7 +748,32 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
                         <legend className="sr-only">
                           {definition.locus} {text.parentForm.carrierSelector.selected}
                         </legend>
-                        <div className="inline-flex max-w-full flex-wrap gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1 shadow-inner">
+                        <div
+                          className="inline-flex max-w-full touch-pan-y select-none flex-wrap gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1 shadow-inner"
+                          onPointerDown={(event) => {
+                            event.preventDefault();
+                            activeCarrierPointerId.current = event.pointerId;
+                            event.currentTarget.setPointerCapture(event.pointerId);
+                            updateCarrierFromPointer(
+                              event,
+                              carrierModalParent,
+                              definition.locus,
+                              groupName,
+                            );
+                          }}
+                          onPointerMove={(event) => {
+                            if (activeCarrierPointerId.current !== event.pointerId) return;
+                            event.preventDefault();
+                            updateCarrierFromPointer(
+                              event,
+                              carrierModalParent,
+                              definition.locus,
+                              groupName,
+                            );
+                          }}
+                          onPointerUp={stopCarrierPointer}
+                          onPointerCancel={stopCarrierPointer}
+                        >
                           {choices.map((choice, index) => {
                             const isSelected = selectedValue === choice.value;
                             const isExplicitChoice = choice.value.length > 0;
@@ -644,7 +786,9 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
                               <label
                                 key={`${definition.locus}-${index}-${choice.value || "none"}`}
                                 htmlFor={inputId}
-                                className={`relative flex min-h-8 min-w-12 cursor-pointer items-center justify-center rounded-md px-2 text-center text-xs font-semibold leading-tight transition focus-within:outline-none focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-1 ${
+                                data-carrier-group={groupName}
+                                data-carrier-value={choice.value}
+                                className={`relative flex min-h-8 min-w-11 cursor-ew-resize items-center justify-center rounded-md px-1.5 text-center text-xs font-semibold leading-tight transition has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-emerald-500 has-[:focus-visible]:ring-offset-1 ${
                                   isSelected
                                     ? selectedClass
                                     : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
