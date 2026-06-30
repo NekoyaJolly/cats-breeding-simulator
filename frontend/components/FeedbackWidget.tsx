@@ -3,6 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { submitFeedback } from "@/lib/api";
+import {
+  LANGUAGE_STORAGE_KEY,
+  UI_TEXT,
+  isLanguage,
+  languageFromBrowser,
+  type Language,
+} from "@/lib/i18n";
 
 const POSITION_KEY = "cbs:feedbackPosition";
 const MAX_LENGTH = 200;
@@ -11,6 +18,16 @@ const BUTTON_SIZE = 52;
 
 type Position = { x: number; y: number };
 type SendStatus = "idle" | "sending" | "sent" | "error";
+
+function readFeedbackLanguage(): Language {
+  try {
+    const stored = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    if (isLanguage(stored)) return stored;
+  } catch {
+    // 言語保存が読めない場合はブラウザ言語へフォールバックする。
+  }
+  return languageFromBrowser(window.navigator.language);
+}
 
 function clampToViewport(pos: Position): Position {
   if (typeof window === "undefined") return pos;
@@ -29,14 +46,40 @@ function clampToViewport(pos: Position): Position {
  * - 送信で /api/v1/feedback (管理者宛メール) に届く。
  */
 export function FeedbackWidget() {
+  const [language, setLanguage] = useState<Language>("ja");
   const [position, setPosition] = useState<Position | null>(null);
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<SendStatus>("idle");
+  const text = UI_TEXT[language].feedback;
 
   const positionRef = useRef<Position | null>(null);
   const dragStartRef = useRef<{ px: number; py: number; x: number; y: number } | null>(null);
   const movedRef = useRef(false);
+
+  useEffect(() => {
+    setLanguage(readFeedbackLanguage());
+    const onLanguageChange = (event: Event) => {
+      if (event instanceof CustomEvent) {
+        const nextLanguage = String(event.detail);
+        if (isLanguage(nextLanguage)) setLanguage(nextLanguage);
+      }
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== LANGUAGE_STORAGE_KEY) return;
+      setLanguage(
+        isLanguage(event.newValue)
+          ? event.newValue
+          : languageFromBrowser(window.navigator.language),
+      );
+    };
+    window.addEventListener("ccp:language-change", onLanguageChange);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener("ccp:language-change", onLanguageChange);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
 
   // 初期位置 (localStorage か既定値=右下) を復元する。
   useEffect(() => {
@@ -158,8 +201,8 @@ export function FeedbackWidget() {
     <>
       <button
         type="button"
-        aria-label="フィードバックを送る"
-        title="フィードバックを送る"
+        aria-label={text.trigger}
+        title={text.trigger}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -198,13 +241,15 @@ export function FeedbackWidget() {
           <div
             role="dialog"
             aria-modal="true"
-            aria-label="フィードバック"
+            aria-label={text.title}
             className="w-full max-w-md rounded-lg bg-white p-5 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-base font-bold text-slate-900">フィードバック</h2>
+            <h2 className="text-base font-bold text-slate-900">{text.title}</h2>
             <p className="mt-1 text-sm text-slate-600">
-              ご意見・ご要望をお聞かせください（最大{MAX_LENGTH}文字）。
+              {text.description}
+              {MAX_LENGTH}
+              {text.descriptionSuffix}
             </p>
             <textarea
               value={message}
@@ -212,7 +257,7 @@ export function FeedbackWidget() {
               maxLength={MAX_LENGTH}
               rows={4}
               autoFocus
-              placeholder="気づいたこと・改善してほしいことなど"
+              placeholder={text.placeholder}
               className="mt-3 w-full resize-none rounded-md border border-slate-300 p-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
             <div className="mt-1 text-right text-xs text-slate-400">
@@ -220,12 +265,12 @@ export function FeedbackWidget() {
             </div>
             {status === "error" && (
               <p className="mt-1 text-sm text-red-600">
-                送信に失敗しました。時間をおいて再度お試しください。
+                {text.error}
               </p>
             )}
             {status === "sent" && (
               <p className="mt-1 text-sm text-teal-600">
-                送信しました。ありがとうございます！
+                {text.sent}
               </p>
             )}
             <div className="mt-4 flex justify-end gap-2">
@@ -235,7 +280,7 @@ export function FeedbackWidget() {
                 disabled={status === "sending"}
                 className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
               >
-                キャンセル
+                {text.cancel}
               </button>
               <button
                 type="button"
@@ -243,7 +288,7 @@ export function FeedbackWidget() {
                 disabled={!message.trim() || status === "sending"}
                 className="rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
               >
-                {status === "sending" ? "送信中…" : "送信"}
+                {status === "sending" ? text.sending : text.send}
               </button>
             </div>
           </div>

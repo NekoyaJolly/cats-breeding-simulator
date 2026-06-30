@@ -34,6 +34,8 @@ describe("CandidateCard", () => {
           conditional_max_probability_pct: 50,
         })}
         index={0}
+        language="ja"
+        categoryLabel="確定で期待できる"
       />,
     );
     // サマリー(常時可視)の代表確率は確定確率(25%)。条件付き最大(50%)はサマリーに出さない。
@@ -50,6 +52,8 @@ describe("CandidateCard", () => {
           conditional_max_probability_pct: 50,
         })}
         index={0}
+        language="ja"
+        categoryLabel="確定で期待できる"
       />,
     );
     const summary = container.querySelector("summary");
@@ -57,16 +61,30 @@ describe("CandidateCard", () => {
   });
 
   it("確認・検査・他カラーが空のとき、デフォルト文言を表示する", () => {
-    render(<CandidateCard candidate={makeCandidate()} index={0} />);
+    render(
+      <CandidateCard
+        candidate={makeCandidate()}
+        index={0}
+        language="ja"
+        categoryLabel="確定で期待できる"
+      />,
+    );
     expect(screen.getByText("追加確認なしで評価できます。")).toBeInTheDocument();
     expect(screen.getByText("現時点で追加検査の提案はありません。")).toBeInTheDocument();
     expect(
-      screen.getByText("現在の計算範囲では表示できるカラーがありません。"),
+      screen.getByText("現在の計算範囲では表示できる色柄がありません。"),
     ).toBeInTheDocument();
   });
 
   it("組み合わせ番号は index+1 で表示する", () => {
-    render(<CandidateCard candidate={makeCandidate()} index={2} />);
+    render(
+      <CandidateCard
+        candidate={makeCandidate()}
+        index={2}
+        language="ja"
+        categoryLabel="確定で期待できる"
+      />,
+    );
     expect(screen.getByText("組み合わせ 3")).toBeInTheDocument();
   });
 });

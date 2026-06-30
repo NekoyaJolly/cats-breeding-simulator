@@ -42,23 +42,26 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("登録2頭 → 目標カラー検索で結果ランキングが表示される", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("ccp:language", "ja");
+  });
   await page.goto("/");
 
-  // 「目標カラーから探す」タブへ切り替える。
-  await page.getByRole("button", { name: "目標カラーから探す" }).click();
+  // Target Coat タブへ切り替える。
+  await page.getByRole("button", { name: "Target Coat" }).click();
 
   // 1頭目 (メス: 既定) を登録する。
   await page.locator("#registered-cat-color").fill("Blue");
-  await page.getByRole("button", { name: "登録する" }).click();
+  await page.getByRole("button", { name: "候補に追加" }).click();
 
   // 2頭目 (オス) を登録する。
   await page.locator("#registered-cat-sex").selectOption("male");
   await page.locator("#registered-cat-color").fill("Black");
-  await page.getByRole("button", { name: "登録する" }).click();
+  await page.getByRole("button", { name: "候補に追加" }).click();
 
   // 目標カラーを入力して検索する。
   await page.locator("#target-color").fill("Blue");
-  await page.getByRole("button", { name: "交配候補を検索" }).click();
+  await page.getByRole("button", { name: "候補を探す" }).click();
 
   // 結果ランキングと候補カードが表示される。
   await expect(page.getByRole("heading", { name: "結果ランキング" })).toBeVisible();

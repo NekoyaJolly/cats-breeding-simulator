@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   type KeyboardEvent,
+  type ReactNode,
 } from "react";
 import type { ColorOption } from "@/lib/schema";
 import { filterColors } from "@/lib/colorMatch";
@@ -14,6 +15,7 @@ import { filterColors } from "@/lib/colorMatch";
 type Props = {
   id: string;
   label: string;
+  labelAction?: ReactNode;
   required?: boolean;
   value: string;
   onValueChange: (value: string) => void;
@@ -23,6 +25,8 @@ type Props = {
   // 履歴 (最近選んだ canonical 名)。query が空のとき優先表示する。
   recent: string[];
   placeholder?: string;
+  recentLabel?: string;
+  femaleOnlyLabel?: string;
   // 登録フォームでは候補が下の操作ボタンを覆わないよう、行内表示を選べる。
   suggestionLayout?: "overlay" | "inline";
 };
@@ -51,6 +55,7 @@ function resolveRecent(recent: string[], byValue: Map<string, ColorOption>): Col
 export function ColorCombobox({
   id,
   label,
+  labelAction,
   required = false,
   value,
   onValueChange,
@@ -58,6 +63,8 @@ export function ColorCombobox({
   colors,
   recent,
   placeholder,
+  recentLabel = "最近の選択",
+  femaleOnlyLabel = "♀ 限定",
   suggestionLayout = "overlay",
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -143,9 +150,12 @@ export function ColorCombobox({
 
   return (
     <div className="space-y-1" ref={containerRef}>
-      <label htmlFor={id} className={labelClass}>
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
+      <div className="flex min-h-6 items-center justify-between gap-2">
+        <label htmlFor={id} className={labelClass}>
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+        {labelAction && <div className="shrink-0">{labelAction}</div>}
+      </div>
       <div className="relative">
         <input
           id={id}
@@ -182,7 +192,7 @@ export function ColorCombobox({
           >
             {showingRecent && (
               <li className="px-3 py-1 text-xs font-medium text-slate-400">
-                最近の選択
+                {recentLabel}
               </li>
             )}
             {suggestions.map((color, index) => {
@@ -214,7 +224,7 @@ export function ColorCombobox({
                   <span className="flex shrink-0 items-center gap-1">
                     {color.sex_restriction === "female_only" && (
                       <span className="rounded bg-pink-50 px-1.5 py-0.5 text-[10px] font-medium text-pink-600">
-                        ♀ 限定
+                        {femaleOnlyLabel}
                       </span>
                     )}
                     {color.breed_context && (

@@ -7,35 +7,63 @@ import type {
   ParentColorNote,
   ResultEntry,
 } from "@/lib/schema";
+import { UI_TEXT, type Language } from "@/lib/i18n";
 import { LocusChip } from "./LocusChip";
 import { LOCUS_GLOSSARY } from "@/lib/lociGlossary";
 
-const PARENT_LABEL: Record<string, string> = { sire: "父猫", dam: "母猫" };
-
 // 入力した親色が子に出ないときの注釈。劣性形質の理解補助 (なぜ親の色が出ないか)。
-function ParentColorNotes({ notes }: { notes: ParentColorNote[] }) {
+function ParentColorNotes({
+  notes,
+  language,
+}: {
+  notes: ParentColorNote[];
+  language: Language;
+}) {
+  const text = UI_TEXT[language];
   if (notes.length === 0) return null;
   return (
     <div className="mt-3 space-y-2">
       {notes.map((note) => {
-        const parent = PARENT_LABEL[note.parent] ?? note.parent;
-        const other = note.parent === "sire" ? "母猫" : "父猫";
+        const parent = note.parent === "sire" ? text.parentResult.sire : text.parentResult.dam;
+        const other = note.parent === "sire" ? text.parentResult.dam : text.parentResult.sire;
         return (
           <div
             key={note.parent}
             className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"
           >
-            <span className="font-medium">
-              {parent}の毛色「{note.color}」
-            </span>
-            はこの組み合わせでは子猫に出現しません。
-            {note.blocked_factors.length > 0 && (
+            {language === "ja" ? (
               <>
-                {other}が次の劣性因子を持たないためです:{" "}
                 <span className="font-medium">
-                  {note.blocked_factors.join(" ・ ")}
+                  {parent}の色柄「{note.color}」
                 </span>
-                。
+                はこの組み合わせでは子猫に出現しません。
+                {note.blocked_factors.length > 0 && (
+                  <>
+                    {other}が次の劣性因子を持たないためです:{" "}
+                    <span className="font-medium">
+                      {note.blocked_factors.join(" ・ ")}
+                    </span>
+                    。
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <span className="font-medium">
+                  The {parent.toLowerCase()} coat &quot;{note.color}&quot;
+                </span>{" "}
+                does not appear in this combination.
+                {note.blocked_factors.length > 0 && (
+                  <>
+                    {" "}
+                    The {other.toLowerCase()} does not carry these recessive
+                    factors:{" "}
+                    <span className="font-medium">
+                      {note.blocked_factors.join(", ")}
+                    </span>
+                    .
+                  </>
+                )}
               </>
             )}
           </div>
@@ -104,11 +132,14 @@ function SexResultGroup({
   title,
   accentClass,
   rows,
+  language,
 }: {
   title: string;
   accentClass: string;
   rows: ResultEntry[];
+  language: Language;
 }) {
+  const text = UI_TEXT[language];
   const [expanded, setExpanded] = useState(false);
   const groups = groupByBase(rows);
   const total = rows.reduce((sum, row) => sum + row.probability_pct, 0);
@@ -123,12 +154,13 @@ function SexResultGroup({
         <h3 className="text-sm font-semibold">{title}</h3>
         {/* 各行は整数丸めのため合計が厳密一致しない。概算であることを「約」で明示する。 */}
         <span className="text-xs tabular-nums opacity-80">
-          合計 約{formatPctInt(total)}
+          {text.parentResult.totalApprox}
+          {formatPctInt(total)}
         </span>
       </div>
       {groups.length === 0 ? (
         <p className="px-4 py-3 text-sm text-slate-500">
-          該当する表現型がありません。
+          {text.parentResult.noPhenotype}
         </p>
       ) : (
         <>
@@ -164,7 +196,11 @@ function SexResultGroup({
               className="w-full border-t border-slate-100 px-4 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50"
               aria-expanded={expanded}
             >
-              {expanded ? "閉じる" : `詳細を見る (残り ${hiddenCount} 件)`}
+              {expanded
+                ? text.parentResult.close
+                : language === "ja"
+                  ? `${text.parentResult.showDetails} (${text.parentResult.remaining} ${hiddenCount} 件)`
+                  : `${text.parentResult.showDetails} (${hiddenCount} ${text.parentResult.remaining})`}
             </button>
           )}
         </>
@@ -174,34 +210,52 @@ function SexResultGroup({
 }
 
 // 結果を ♀ / ♂ に分割して表示する。デスクトップは横並び、モバイルは縦積み。
-function SexSplitResults({ rows }: { rows: ResultEntry[] }) {
+function SexSplitResults({
+  rows,
+  language,
+}: {
+  rows: ResultEntry[];
+  language: Language;
+}) {
+  const text = UI_TEXT[language];
   const female = rows.filter((row) => row.sex === "Female");
   const male = rows.filter((row) => row.sex === "Male");
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <SexResultGroup
-        title="♀ メス"
+        title={text.parentResult.female}
         accentClass="bg-pink-50 text-pink-800"
         rows={female}
+        language={language}
       />
       <SexResultGroup
-        title="♂ オス"
+        title={text.parentResult.male}
         accentClass="bg-sky-50 text-sky-800"
         rows={male}
+        language={language}
       />
     </div>
   );
 }
 
 // carrier_exploration の 1 シナリオ。通常結果とは別枠で表示する。
-function CarrierScenario({ scenario }: { scenario: CarrierScenarioEntry }) {
+function CarrierScenario({
+  scenario,
+  language,
+}: {
+  scenario: CarrierScenarioEntry;
+  language: Language;
+}) {
+  const text = UI_TEXT[language];
   const assumed = Object.entries(scenario.assumed_carriers);
   return (
     <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
       <h4 className="text-sm font-semibold text-amber-900">{scenario.label}</h4>
       <p className="mt-1 text-xs text-amber-700">
-        根拠: {scenario.probability_basis}
-        {scenario.prior_probability_applied ? " / 事前確率あり" : " / 条件付き"}
+        {text.parentResult.basis}: {scenario.probability_basis}
+        {scenario.prior_probability_applied
+          ? ` / ${text.parentResult.priorApplied}`
+          : ` / ${text.parentResult.conditional}`}
       </p>
       {assumed.length > 0 && (
         <ul className="mt-2 space-y-0.5 text-xs text-amber-800">
@@ -217,17 +271,24 @@ function CarrierScenario({ scenario }: { scenario: CarrierScenarioEntry }) {
       )}
       {scenario.new_colors.length > 0 && (
         <p className="mt-2 text-xs text-amber-800">
-          新規に出現する毛色: {scenario.new_colors.join(", ")}
+          {text.parentResult.newCoats}: {scenario.new_colors.join(", ")}
         </p>
       )}
       <div className="mt-3">
-        <SexSplitResults rows={scenario.results} />
+        <SexSplitResults rows={scenario.results} language={language} />
       </div>
     </div>
   );
 }
 
-export function ResultView({ data }: { data: CalculationResponse }) {
+export function ResultView({
+  data,
+  language,
+}: {
+  data: CalculationResponse;
+  language: Language;
+}) {
+  const text = UI_TEXT[language];
   const { diagnostics, parameters } = data;
   const carrierScenarios = data.carrier_exploration_results ?? [];
   // 入力 (親色 / 猫種 / モード) が変わったら結果カードを remount し、
@@ -246,42 +307,44 @@ export function ResultView({ data }: { data: CalculationResponse }) {
     <div className="space-y-6">
       <section>
         <div className="flex items-baseline justify-between">
-          <h2 className="text-lg font-semibold">計算結果</h2>
+          <h2 className="text-lg font-semibold">{text.parentResult.title}</h2>
           <span className="rounded bg-slate-200 px-2 py-0.5 text-xs text-slate-600">
-            モード: {data.mode}
+            {text.parentResult.mode}: {data.mode}
           </span>
         </div>
         <div className="mt-3">
-          <SexSplitResults key={resultsKey} rows={data.results} />
+          <SexSplitResults key={resultsKey} rows={data.results} language={language} />
         </div>
-        <ParentColorNotes notes={data.parent_color_notes} />
+        <ParentColorNotes notes={data.parent_color_notes} language={language} />
       </section>
 
       <section className="rounded-md bg-slate-100 p-4 text-sm">
-        <h3 className="font-semibold text-slate-700">遺伝子情報</h3>
+        <h3 className="font-semibold text-slate-700">
+          {text.parentResult.geneticsTitle}
+        </h3>
         <p className="mt-0.5 text-xs text-slate-400">
-          座位（A / B / D…）をタップ／ホバーすると遺伝子座の解説が出ます。
+          {text.parentResult.geneticsDescription}
         </p>
         <dl className="mt-2 grid grid-cols-1 gap-y-1 sm:grid-cols-2">
-          <dt className="text-slate-500">展開した座位</dt>
+          <dt className="text-slate-500">{text.parentResult.openedLoci}</dt>
           <dd className="flex flex-wrap items-center gap-1">
             {diagnostics.opened_loci.length > 0
               ? diagnostics.opened_loci.map((locus) => (
                   <LocusChip key={locus} locus={locus} />
                 ))
-              : "なし"}
+              : text.parentResult.none}
           </dd>
-          <dt className="text-slate-500">固定した座位</dt>
+          <dt className="text-slate-500">{text.parentResult.closedLoci}</dt>
           <dd className="flex flex-wrap items-center gap-1">
             {diagnostics.closed_loci.length > 0
               ? diagnostics.closed_loci.map((locus) => (
                   <LocusChip key={locus} locus={locus} />
                 ))
-              : "なし"}
+              : text.parentResult.none}
           </dd>
           {otherLoci.length > 0 && (
             <>
-              <dt className="text-slate-500">その他の座位</dt>
+              <dt className="text-slate-500">{text.parentResult.otherLoci}</dt>
               <dd className="flex flex-wrap items-center gap-1">
                 {otherLoci.map((locus) => (
                   <LocusChip key={locus} locus={locus} />
@@ -289,15 +352,17 @@ export function ResultView({ data }: { data: CalculationResponse }) {
               </dd>
             </>
           )}
-          <dt className="text-slate-500">未分類の確率</dt>
+          <dt className="text-slate-500">
+            {text.parentResult.unmatchedProbability}
+          </dt>
           <dd className="tabular-nums">
             {formatPct(diagnostics.unmatched_probability)} (
-            {diagnostics.unmatched_genotype_count} 遺伝子型)
+            {diagnostics.unmatched_genotype_count} {text.parentResult.genotypeCount})
           </dd>
         </dl>
         {diagnostics.assumptions.length > 0 && (
           <div className="mt-2">
-            <p className="text-slate-500">前提条件:</p>
+            <p className="text-slate-500">{text.parentResult.assumptions}</p>
             <ul className="ml-4 list-disc text-slate-600">
               {diagnostics.assumptions.map((assumption, index) => (
                 <li key={index}>{assumption}</li>
@@ -310,12 +375,13 @@ export function ResultView({ data }: { data: CalculationResponse }) {
       {carrierScenarios.length > 0 && (
         <section className="space-y-3">
           <h3 className="text-base font-semibold">
-            全キャリア探索シナリオ (参考・通常結果とは分離)
+            {text.parentResult.carrierScenarioTitle}
           </h3>
           {carrierScenarios.map((scenario) => (
             <CarrierScenario
               key={`${resultsKey}-${scenario.scenario}`}
               scenario={scenario}
+              language={language}
             />
           ))}
         </section>

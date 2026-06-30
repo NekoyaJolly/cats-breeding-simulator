@@ -4,8 +4,12 @@ import { FeedbackWidget } from "@/components/FeedbackWidget";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "猫毛色シミュレーター",
-  description: "親猫2匹の毛色から子猫の毛色確率を計算する",
+  title: "Cat Coat Planner",
+  description: "Kitten coat color & pattern simulator / 猫の色柄シミュレーター",
+  applicationName: "Cat Coat Planner",
+  appleWebApp: {
+    title: "Coat Planner",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
