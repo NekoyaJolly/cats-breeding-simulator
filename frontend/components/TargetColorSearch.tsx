@@ -1,9 +1,10 @@
 "use client";
 
 import type { RegisteredCat } from "@/lib/schema";
+import { UI_TEXT, type Language } from "@/lib/i18n";
 import { ColorCombobox } from "./ColorCombobox";
 import { ResultsView } from "./targetColorSearch/ResultsView";
-import { carriersText, sexLabel } from "./targetColorSearch/format";
+import { carriersText } from "./targetColorSearch/format";
 import { useTargetColorSearch } from "./targetColorSearch/useTargetColorSearch";
 
 const inputClass =
@@ -14,7 +15,8 @@ const secondaryButtonClass =
 
 // 「目標カラーから探す」画面。状態とロジックは useTargetColorSearch に集約し、
 // このコンポーネントは表示と入力ハンドラの結線に専念する。
-export function TargetColorSearch() {
+export function TargetColorSearch({ language }: { language: Language }) {
+  const text = UI_TEXT[language];
   const {
     name,
     setName,
@@ -63,11 +65,21 @@ export function TargetColorSearch() {
     error,
     result,
     handleSearch,
-  } = useTargetColorSearch();
+  } = useTargetColorSearch(text.common.geneticsAffects);
+
+  function catSexLabel(sexValue: RegisteredCat["sex"]): string {
+    return sexValue === "male"
+      ? text.common.maleCandidate
+      : text.common.femaleCandidate;
+  }
 
   function renderCatList(groupCats: RegisteredCat[]) {
     if (groupCats.length === 0) {
-      return <p className="px-4 py-3 text-sm text-slate-500">まだ登録されていません。</p>;
+      return (
+        <p className="px-4 py-3 text-sm text-slate-500">
+          {text.targetForm.emptyGroup}
+        </p>
+      );
     }
     return (
       <ul className="divide-y divide-slate-100">
@@ -77,7 +89,7 @@ export function TargetColorSearch() {
               <form onSubmit={handleSaveEdit} className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div className="space-y-1">
                   <label htmlFor={`edit-name-${cat.id}`} className={labelClass}>
-                    登録名
+                    {text.targetForm.name}
                   </label>
                   <input
                     id={`edit-name-${cat.id}`}
@@ -88,7 +100,7 @@ export function TargetColorSearch() {
                 </div>
                 <div className="space-y-1">
                   <label htmlFor={`edit-sex-${cat.id}`} className={labelClass}>
-                    性別
+                    {text.common.sex}
                   </label>
                   <select
                     id={`edit-sex-${cat.id}`}
@@ -96,32 +108,36 @@ export function TargetColorSearch() {
                     value={editSex}
                     onChange={(event) => setEditSex(event.target.value === "male" ? "male" : "female")}
                   >
-                    <option value="female">♀ 母猫候補</option>
-                    <option value="male">♂ 父猫候補</option>
+                    <option value="female">{text.common.femaleCandidate}</option>
+                    <option value="male">{text.common.maleCandidate}</option>
                   </select>
                 </div>
                 <ColorCombobox
                   id={`edit-color-${cat.id}`}
-                  label="毛色"
+                  label={text.targetForm.coat}
                   value={editColor}
                   onValueChange={setEditColor}
                   onCommit={setEditColor}
                   colors={editColors}
                   recent={[]}
                   suggestionLayout="inline"
+                  recentLabel={text.common.recent}
+                  femaleOnlyLabel={text.common.femaleOnly}
                 />
                 <ColorCombobox
                   id={`edit-breed-${cat.id}`}
-                  label="猫種 (任意)"
+                  label={text.common.breed}
                   value={editBreed}
                   onValueChange={setEditBreed}
                   onCommit={setEditBreed}
                   colors={breedItems}
                   recent={[]}
+                  recentLabel={text.common.recent}
+                  femaleOnlyLabel={text.common.femaleOnly}
                 />
                 <div className="space-y-1 md:col-span-2">
                   <label htmlFor={`edit-carriers-${cat.id}`} className={labelClass}>
-                    確認済み因子 (任意)
+                    {text.targetForm.carriers}
                   </label>
                   <input
                     id={`edit-carriers-${cat.id}`}
@@ -137,10 +153,10 @@ export function TargetColorSearch() {
                     className="rounded-md bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={!editName.trim() || !editColor.trim()}
                   >
-                    更新する
+                    {text.common.update}
                   </button>
                   <button type="button" className={secondaryButtonClass} onClick={cancelEdit}>
-                    キャンセル
+                    {text.common.cancel}
                   </button>
                 </div>
               </form>
@@ -148,20 +164,22 @@ export function TargetColorSearch() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="font-medium text-slate-800">
-                    {cat.name} <span className="text-slate-400">{sexLabel(cat.sex)}</span>
+                    {cat.name} <span className="text-slate-400">{catSexLabel(cat.sex)}</span>
                   </p>
                   <p className="text-xs text-slate-500">
                     {cat.color}
                     {cat.breed ? ` / ${cat.breed}` : ""}
-                    {cat.carriers ? ` / 確認済み因子: ${carriersText(cat.carriers)}` : ""}
+                    {cat.carriers
+                      ? ` / ${text.targetForm.carriersLabel}: ${carriersText(cat.carriers)}`
+                      : ""}
                   </p>
                 </div>
                 <div className="flex gap-2">
                   <button type="button" className={secondaryButtonClass} onClick={() => startEdit(cat)}>
-                    編集
+                    {text.common.edit}
                   </button>
                   <button type="button" className={secondaryButtonClass} onClick={() => removeCat(cat.id)}>
-                    登録から外す
+                    {text.common.remove}
                   </button>
                 </div>
               </div>
@@ -175,23 +193,25 @@ export function TargetColorSearch() {
   return (
     <div className="space-y-6">
       <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-800">両親猫のカラー登録</h2>
+        <h2 className="text-lg font-semibold text-slate-800">
+          {text.targetForm.registrationTitle}
+        </h2>
         <form onSubmit={handleAddCat} className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="space-y-1">
             <label htmlFor="registered-cat-name" className={labelClass}>
-              登録名
+              {text.targetForm.name}
             </label>
             <input
               id="registered-cat-name"
               className={inputClass}
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="例: 青系の父"
+              placeholder={text.targetForm.namePlaceholder}
             />
           </div>
           <div className="space-y-1">
             <label htmlFor="registered-cat-sex" className={labelClass}>
-              性別
+              {text.common.sex}
             </label>
             <select
               id="registered-cat-sex"
@@ -199,8 +219,8 @@ export function TargetColorSearch() {
               value={sex}
               onChange={(event) => setSex(event.target.value === "male" ? "male" : "female")}
             >
-              <option value="female">♀ 母猫候補</option>
-              <option value="male">♂ 父猫候補</option>
+              <option value="female">{text.common.femaleCandidate}</option>
+              <option value="male">{text.common.maleCandidate}</option>
             </select>
           </div>
           <div className="space-y-3 md:col-span-2">
@@ -208,32 +228,36 @@ export function TargetColorSearch() {
               <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
                 <ColorCombobox
                   id="registered-cat-color"
-                  label="毛色"
+                  label={text.targetForm.coat}
                   value={color}
                   onValueChange={setColor}
                   onCommit={setColor}
                   colors={registrationColors}
                   recent={[]}
-                  placeholder="例: Blue / Chocolate"
+                  placeholder={text.targetForm.coatPlaceholder}
                   suggestionLayout="inline"
+                  recentLabel={text.common.recent}
+                  femaleOnlyLabel={text.common.femaleOnly}
                 />
                 <button
                   type="button"
                   className={`${secondaryButtonClass} mt-6 whitespace-nowrap`}
                   onClick={addColorInput}
                 >
-                  ＋ カラー追加
+                  {text.targetForm.addCoat}
                 </button>
               </div>
               <ColorCombobox
                 id="registered-cat-breed"
-                label="猫種 (任意)"
+                label={text.common.breed}
                 value={breed}
                 onValueChange={setBreed}
                 onCommit={setBreed}
                 colors={breedItems}
                 recent={[]}
-                placeholder="例: British Shorthair"
+                placeholder={text.targetForm.breedPlaceholder}
+                recentLabel={text.common.recent}
+                femaleOnlyLabel={text.common.femaleOnly}
               />
             </div>
             {additionalColors.map((entryColor, index) => (
@@ -243,35 +267,37 @@ export function TargetColorSearch() {
               >
                 <ColorCombobox
                   id={`registered-cat-additional-color-${entryColor.id}`}
-                  label={`追加カラー ${index + 1}`}
+                  label={`${text.targetForm.additionalCoat} ${index + 1}`}
                   value={entryColor.value}
                   onValueChange={(value) => updateAdditionalColor(entryColor.id, value)}
                   onCommit={(value) => updateAdditionalColor(entryColor.id, value)}
                   colors={registrationColors}
                   recent={[]}
-                  placeholder="例: Lilac"
+                  placeholder={language === "ja" ? "例: Lilac" : "e.g. Lilac"}
                   suggestionLayout="inline"
+                  recentLabel={text.common.recent}
+                  femaleOnlyLabel={text.common.femaleOnly}
                 />
                 <button
                   type="button"
                   className={`${secondaryButtonClass} mt-6 whitespace-nowrap`}
                   onClick={() => removeAdditionalColor(entryColor.id)}
                 >
-                  削除
+                  {text.common.delete}
                 </button>
               </div>
             ))}
           </div>
           <div className="space-y-1 md:col-span-2">
             <label htmlFor="registered-cat-carriers" className={labelClass}>
-              確認済み因子 (任意)
+              {text.targetForm.carriers}
             </label>
             <input
               id="registered-cat-carriers"
               className={inputClass}
               value={carriers}
               onChange={(event) => setCarriers(event.target.value)}
-              placeholder="例: B:B/b, D:D/d"
+              placeholder={text.targetForm.carriersPlaceholder}
             />
           </div>
           <div className="md:col-span-2">
@@ -280,7 +306,7 @@ export function TargetColorSearch() {
               className="rounded-md bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={colorsToRegister.length === 0}
             >
-              登録する
+              {text.targetForm.addCandidate}
             </button>
           </div>
         </form>
@@ -291,24 +317,30 @@ export function TargetColorSearch() {
         )}
 
         <div className="mt-5 space-y-2">
-          <h3 className="text-sm font-semibold text-slate-700">自舎カラー構成</h3>
+          <h3 className="text-sm font-semibold text-slate-700">
+            {text.targetForm.savedTitle}
+          </h3>
           {cats.length === 0 ? (
             <p className="text-sm text-slate-500">
-              父候補・母候補のカラーを追加すると、目標カラーの交配候補を検索できます。
+              {text.targetForm.savedEmpty}
             </p>
           ) : (
             <div className="space-y-2">
               <details className="rounded-md border border-slate-200 bg-white">
                 <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold text-slate-700">
-                  <span>父候補</span>
-                  <span className="text-slate-400">{sires.length} 件</span>
+                  <span>{text.targetForm.sireGroup}</span>
+                  <span className="text-slate-400">
+                    {language === "ja" ? `${sires.length} 件` : sires.length}
+                  </span>
                 </summary>
                 {renderCatList(sires)}
               </details>
               <details className="rounded-md border border-slate-200 bg-white">
                 <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold text-slate-700">
-                  <span>母候補</span>
-                  <span className="text-slate-400">{dams.length} 件</span>
+                  <span>{text.targetForm.damGroup}</span>
+                  <span className="text-slate-400">
+                    {language === "ja" ? `${dams.length} 件` : dams.length}
+                  </span>
                 </summary>
                 {renderCatList(dams)}
               </details>
@@ -318,21 +350,25 @@ export function TargetColorSearch() {
       </section>
 
       <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-800">目標カラーの選択</h2>
+        <h2 className="text-lg font-semibold text-slate-800">
+          {text.targetForm.targetTitle}
+        </h2>
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-[1fr_180px_auto] md:items-end">
           <ColorCombobox
             id="target-color"
-            label="目標カラー"
+            label={text.targetForm.targetCoat}
             value={targetColor}
             onValueChange={setTargetColor}
             onCommit={setTargetColor}
             colors={targetColors}
             recent={[]}
-            placeholder="例: Lilac / Cinnamon Golden Tabby"
+            placeholder={text.targetForm.targetPlaceholder}
+            recentLabel={text.common.recent}
+            femaleOnlyLabel={text.common.femaleOnly}
           />
           <div className="space-y-1">
             <label htmlFor="target-sex" className={labelClass}>
-              子猫の性別 (任意)
+              {text.targetForm.targetSex}
             </label>
             <select
               id="target-sex"
@@ -343,9 +379,9 @@ export function TargetColorSearch() {
                 setTargetSex(value === "male" || value === "female" ? value : "any");
               }}
             >
-              <option value="any">指定なし</option>
-              <option value="male">♂ オス</option>
-              <option value="female">♀ メス</option>
+              <option value="any">{text.common.any}</option>
+              <option value="male">{text.common.male}</option>
+              <option value="female">{text.common.female}</option>
             </select>
           </div>
           <button
@@ -354,7 +390,7 @@ export function TargetColorSearch() {
             disabled={!targetColor.trim() || cats.length < 2 || loading}
             className="rounded-md bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "検索中…" : "交配候補を検索"}
+            {loading ? text.targetForm.loading : text.targetForm.button}
           </button>
         </div>
         {error && (
@@ -366,7 +402,7 @@ export function TargetColorSearch() {
 
       {result && (
         <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-          <ResultsView data={result} />
+          <ResultsView data={result} language={language} />
         </section>
       )}
     </div>

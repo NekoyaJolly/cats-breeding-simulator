@@ -88,7 +88,7 @@ function canonicalColorEntries(entries: string[], colors: ColorOption[]): string
 
 // 「目標カラーから探す」画面の状態・副作用・操作を集約したコンテナフック。
 // UI コンポーネントを表示に専念させ、ロジックを単体テスト可能にするために分離する。
-export function useTargetColorSearch() {
+export function useTargetColorSearch(geneticsAffectsLabel = "遺伝に影響") {
   const [cats, setCats] = useState<RegisteredCat[]>([]);
   const [name, setName] = useState("");
   const [sex, setSex] = useState<RegisteredCat["sex"]>("female");
@@ -134,7 +134,7 @@ export function useTargetColorSearch() {
             value: breedOption.value,
             reading_ja: reading,
             status: "",
-            breed_context: breedOption.affects_genetics ? "遺伝に影響" : "",
+            breed_context: breedOption.affects_genetics ? geneticsAffectsLabel : "",
             sex_restriction: "",
             keywords: [breedOption.value, reading].filter(Boolean),
           };
@@ -144,7 +144,7 @@ export function useTargetColorSearch() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [geneticsAffectsLabel]);
 
   useEffect(() => {
     const trimmedBreed = breed.trim();

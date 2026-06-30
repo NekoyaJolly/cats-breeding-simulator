@@ -10,6 +10,7 @@ import {
 } from "@/lib/api";
 import { BREED_READING_JA } from "@/lib/breedReadingJa";
 import { filterColorsByAllowedNames } from "@/lib/colorMatch";
+import { UI_TEXT, type Language } from "@/lib/i18n";
 import type {
   ColorOption,
   InferenceFinding,
@@ -54,10 +55,12 @@ function FindingList({
   title,
   items,
   emptyText,
+  supportLabel,
 }: {
   title: string;
   items: InferenceFinding[];
   emptyText: string;
+  supportLabel: string;
 }) {
   return (
     <div className="rounded-md bg-slate-50 p-3">
@@ -71,7 +74,7 @@ function FindingList({
               <p className="font-medium text-slate-800">
                 {item.parent} / {item.locus}: {item.genotype}
                 <span className="ml-2 text-xs text-slate-400">
-                  支持 {supportText(item.support_pct)}
+                  {supportLabel} {supportText(item.support_pct)}
                 </span>
               </p>
               <p className="mt-1 text-xs leading-5 text-slate-600">{item.note}</p>
@@ -83,13 +86,24 @@ function FindingList({
   );
 }
 
-function ResultPanel({ data }: { data: LitterInferenceResponse }) {
+function ResultPanel({
+  data,
+  language,
+}: {
+  data: LitterInferenceResponse;
+  language: Language;
+}) {
+  const text = UI_TEXT[language];
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-slate-800">推定結果</h2>
+        <h2 className="text-lg font-semibold text-slate-800">
+          {text.kittenForm.resultTitle}
+        </h2>
         <span className="rounded bg-slate-100 px-2 py-1 text-sm font-medium text-slate-600">
-          {data.response_category} / 候補 {data.candidate_pair_count} 件
+          {language === "ja"
+            ? `${data.response_category} / ${text.kittenForm.candidateCount} ${data.candidate_pair_count} 件`
+            : `${data.response_category} / ${data.candidate_pair_count} ${text.kittenForm.candidateCount}`}
         </span>
       </div>
 
@@ -104,23 +118,37 @@ function ResultPanel({ data }: { data: LitterInferenceResponse }) {
       )}
 
       <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-        <FindingList title="確定" items={data.confirmed} emptyText="確定できる因子はありません。" />
         <FindingList
-          title="条件付き確定"
-          items={data.conditional}
-          emptyText="条件付きで確定できる因子はありません。"
+          title={text.kittenForm.confirmed}
+          items={data.confirmed}
+          emptyText={text.kittenForm.confirmedEmpty}
+          supportLabel={text.kittenForm.support}
         />
-        <FindingList title="推定" items={data.inferred} emptyText="推定できる因子はありません。" />
         <FindingList
-          title="未確認"
+          title={text.kittenForm.conditional}
+          items={data.conditional}
+          emptyText={text.kittenForm.conditionalEmpty}
+          supportLabel={text.kittenForm.support}
+        />
+        <FindingList
+          title={text.kittenForm.inferred}
+          items={data.inferred}
+          emptyText={text.kittenForm.inferredEmpty}
+          supportLabel={text.kittenForm.support}
+        />
+        <FindingList
+          title={text.kittenForm.unconfirmed}
           items={data.unconfirmed}
-          emptyText="未確認として残る因子はありません。"
+          emptyText={text.kittenForm.unconfirmedEmpty}
+          supportLabel={text.kittenForm.support}
         />
       </div>
 
       {data.warnings.length > 0 && (
         <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3">
-          <h3 className="text-sm font-semibold text-amber-800">警告</h3>
+          <h3 className="text-sm font-semibold text-amber-800">
+            {text.kittenForm.warnings}
+          </h3>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-800">
             {data.warnings.map((item) => (
               <li key={item}>{item}</li>
@@ -131,7 +159,9 @@ function ResultPanel({ data }: { data: LitterInferenceResponse }) {
 
       {data.recommended_tests.length > 0 && (
         <div className="mt-4 rounded-md bg-slate-50 p-3">
-          <h3 className="text-sm font-semibold text-slate-700">推奨検査</h3>
+          <h3 className="text-sm font-semibold text-slate-700">
+            {text.kittenForm.recommendedTests}
+          </h3>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
             {data.recommended_tests.map((item) => (
               <li key={item}>{item}</li>
@@ -143,7 +173,8 @@ function ResultPanel({ data }: { data: LitterInferenceResponse }) {
   );
 }
 
-export function LitterInference() {
+export function LitterInference({ language }: { language: Language }) {
+  const text = UI_TEXT[language];
   const [sireColor, setSireColor] = useState("");
   const [damColor, setDamColor] = useState("");
   const [breed, setBreed] = useState("");
@@ -169,7 +200,7 @@ export function LitterInference() {
             value: breedOption.value,
             reading_ja: reading,
             status: "",
-            breed_context: breedOption.affects_genetics ? "遺伝に影響" : "",
+            breed_context: breedOption.affects_genetics ? text.common.geneticsAffects : "",
             sex_restriction: "",
             keywords: [breedOption.value, reading].filter(Boolean),
           };
@@ -179,7 +210,7 @@ export function LitterInference() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [text.common.geneticsAffects]);
 
   // 猫種が指定されている場合は、親・子猫カラー候補をその猫種の方針へ寄せる。
   useEffect(() => {
@@ -264,49 +295,59 @@ export function LitterInference() {
   return (
     <div className="space-y-6">
       <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-800">リター実績から推定</h2>
+        <h2 className="text-lg font-semibold text-slate-800">
+          {text.kittenForm.sectionTitle}
+        </h2>
         <form onSubmit={handleSubmit} className="mt-4 space-y-5">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <ColorCombobox
               id="litter-sire-color"
-              label="父猫カラー"
+              label={text.kittenForm.sireCoat}
               value={sireColor}
               onValueChange={setSireColor}
               onCommit={setSireColor}
               colors={breedFilteredColors}
               recent={[]}
-              placeholder="例: Blue"
+              placeholder={text.kittenForm.sirePlaceholder}
               suggestionLayout="inline"
+              recentLabel={text.common.recent}
+              femaleOnlyLabel={text.common.femaleOnly}
             />
             <ColorCombobox
               id="litter-dam-color"
-              label="母猫カラー"
+              label={text.kittenForm.damCoat}
               value={damColor}
               onValueChange={setDamColor}
               onCommit={setDamColor}
               colors={breedFilteredColors}
               recent={[]}
-              placeholder="例: Red Tabby"
+              placeholder={text.kittenForm.damPlaceholder}
               suggestionLayout="inline"
+              recentLabel={text.common.recent}
+              femaleOnlyLabel={text.common.femaleOnly}
             />
           </div>
 
           <ColorCombobox
             id="litter-breed"
-            label="猫種 (任意)"
+            label={text.common.breed}
             value={breed}
             onValueChange={setBreed}
             onCommit={setBreed}
             colors={breedItems}
             recent={[]}
-            placeholder="例: British Shorthair"
+            placeholder={text.kittenForm.breedPlaceholder}
+            recentLabel={text.common.recent}
+            femaleOnlyLabel={text.common.femaleOnly}
           />
 
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
-              <h3 className="text-sm font-semibold text-slate-700">子猫</h3>
+              <h3 className="text-sm font-semibold text-slate-700">
+                {text.kittenForm.kittenSection}
+              </h3>
               <button type="button" className={secondaryButtonClass} onClick={addKitten}>
-                ＋ 子猫を追加
+                {text.kittenForm.addKitten}
               </button>
             </div>
             {kittens.map((kitten, index) => (
@@ -316,19 +357,19 @@ export function LitterInference() {
               >
                 <div className="space-y-1">
                   <label htmlFor={`kitten-name-${kitten.id}`} className={labelClass}>
-                    子猫名 {index + 1}
+                    {text.kittenForm.kittenName} {index + 1}
                   </label>
                   <input
                     id={`kitten-name-${kitten.id}`}
                     className={inputClass}
                     value={kitten.name}
                     onChange={(event) => updateKitten(kitten.id, { name: event.target.value })}
-                    placeholder="任意"
+                    placeholder={text.kittenForm.kittenNamePlaceholder}
                   />
                 </div>
                 <div className="space-y-1">
                   <label htmlFor={`kitten-sex-${kitten.id}`} className={labelClass}>
-                    性別
+                    {text.common.sex}
                   </label>
                   <select
                     id={`kitten-sex-${kitten.id}`}
@@ -340,27 +381,29 @@ export function LitterInference() {
                       })
                     }
                   >
-                    <option value="female">♀ メス</option>
-                    <option value="male">♂ オス</option>
+                    <option value="female">{text.common.female}</option>
+                    <option value="male">{text.common.male}</option>
                   </select>
                 </div>
                 <ColorCombobox
                   id={`kitten-color-${kitten.id}`}
-                  label="子猫カラー"
+                  label={text.kittenForm.kittenCoat}
                   value={kitten.color}
                   onValueChange={(value) => updateKitten(kitten.id, { color: value })}
                   onCommit={(value) => updateKitten(kitten.id, { color: value })}
                   colors={breedFilteredColors}
                   recent={[]}
-                  placeholder="例: Blue Patched Tabby"
+                  placeholder={text.kittenForm.kittenCoatPlaceholder}
                   suggestionLayout="inline"
+                  recentLabel={text.common.recent}
+                  femaleOnlyLabel={text.common.femaleOnly}
                 />
                 <button
                   type="button"
                   className={`${secondaryButtonClass} self-end whitespace-nowrap`}
                   onClick={() => removeKitten(kitten.id)}
                 >
-                  削除
+                  {text.common.delete}
                 </button>
               </div>
             ))}
@@ -371,7 +414,7 @@ export function LitterInference() {
             disabled={!canSubmit}
             className="rounded-md bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "推定中…" : "推定する"}
+            {loading ? text.kittenForm.loading : text.kittenForm.button}
           </button>
         </form>
 
@@ -382,7 +425,7 @@ export function LitterInference() {
         )}
       </section>
 
-      {result && <ResultPanel data={result} />}
+      {result && <ResultPanel data={result} language={language} />}
     </div>
   );
 }

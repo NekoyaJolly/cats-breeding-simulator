@@ -46,7 +46,12 @@ function makeResponse(
 
 describe("ResultsView", () => {
   it("候補があるとき、父×母の見出しと目標カラーを表示する", () => {
-    render(<ResultsView data={makeResponse({ candidates: [makeCandidate()] })} />);
+    render(
+      <ResultsView
+        data={makeResponse({ candidates: [makeCandidate()] })}
+        language="ja"
+      />,
+    );
 
     expect(screen.getByText("青系の父 × 黒系の母")).toBeInTheDocument();
     // 目標サマリー (性別未指定 + 目標カラー) を表示する。
@@ -54,11 +59,11 @@ describe("ResultsView", () => {
   });
 
   it("候補が0件のとき、確認できない旨の案内 (NoCandidateAnalysis) を出す", () => {
-    render(<ResultsView data={makeResponse({ candidates: [] })} />);
+    render(<ResultsView data={makeResponse({ candidates: [] })} language="ja" />);
 
     expect(
       screen.getByText(
-        "現在の登録情報では、目標カラーの成立条件を満たす交配候補を確認できません。",
+        "現在の登録情報では、目標色柄の成立条件を満たす組み合わせ候補を確認できません。",
       ),
     ).toBeInTheDocument();
   });

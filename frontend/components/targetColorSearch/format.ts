@@ -33,8 +33,11 @@ export function targetSexLabel(sex: ReverseLookupResponse["target_sex"]): string
 }
 
 // 目標カラー以外に生まれ得るカラー行を、先頭8件まで「♀ 色 12%」形式で連結する。
-export function colorRows(rows: ResultEntry[]): string {
-  if (rows.length === 0) return "現在の計算範囲では表示できるカラーがありません。";
+export function colorRows(
+  rows: ResultEntry[],
+  emptyText = "現在の計算範囲では表示できるカラーがありません。",
+): string {
+  if (rows.length === 0) return emptyText;
   return rows
     .slice(0, 8)
     .map(
