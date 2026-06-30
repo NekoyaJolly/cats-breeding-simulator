@@ -209,7 +209,7 @@ function SexResultGroup({
   );
 }
 
-// 結果を ♀ / ♂ に分割して表示する。デスクトップは横並び、モバイルは縦積み。
+// 結果を ♂ / ♀ に分割して表示する。デスクトップは横並び、モバイルは縦積み。
 function SexSplitResults({
   rows,
   language,
@@ -223,15 +223,15 @@ function SexSplitResults({
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <SexResultGroup
-        title={text.parentResult.female}
-        accentClass="bg-pink-50 text-pink-800"
-        rows={female}
-        language={language}
-      />
-      <SexResultGroup
         title={text.parentResult.male}
         accentClass="bg-sky-50 text-sky-800"
         rows={male}
+        language={language}
+      />
+      <SexResultGroup
+        title={text.parentResult.female}
+        accentClass="bg-pink-50 text-pink-800"
+        rows={female}
         language={language}
       />
     </div>

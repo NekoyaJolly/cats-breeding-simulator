@@ -32,15 +32,16 @@ function GlobeIcon() {
       className="h-5 w-5"
       fill="none"
       viewBox="0 0 24 24"
-      stroke="currentColor"
       strokeWidth="1.8"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <circle cx="12" cy="12" r="9" />
-      <path d="M3 12h18" />
-      <path d="M12 3a14 14 0 0 1 0 18" />
-      <path d="M12 3a14 14 0 0 0 0 18" />
+      <circle cx="12" cy="12" r="9" fill="#e0f2fe" stroke="#0284c7" />
+      <path d="M3 12h18" stroke="#0891b2" />
+      <path d="M12 3a14 14 0 0 1 0 18" stroke="#2563eb" />
+      <path d="M12 3a14 14 0 0 0 0 18" stroke="#2563eb" />
+      <path d="M5.2 8.5h13.6" stroke="#22c55e" />
+      <path d="M5.2 15.5h13.6" stroke="#22c55e" />
     </svg>
   );
 }
@@ -133,7 +134,7 @@ export default function HomePage() {
           <div className="relative shrink-0" ref={languageMenuRef}>
             <button
               type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-sky-100 bg-white shadow-sm transition hover:bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-300"
               aria-label={text.app.languageLabel}
               aria-expanded={languageMenuOpen}
               onClick={() => setLanguageMenuOpen((open) => !open)}
