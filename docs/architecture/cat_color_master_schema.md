@@ -144,6 +144,7 @@
 
 - `general`: 猫種文脈に依存しない一般概念。
 - 猫種名 (`Oriental` / `Burmese` / `Tonkinese` / `Abyssinian` / `Somali` / `Ragdoll` / `Bengal` / `Birman` / `Siamese` / `Persian` 等): その猫種・団体文脈でのみ用いる呼称。
+- 複数猫種で同じ固有呼称を共有する場合は `/` 区切りで保持する (例: `Abyssinian/Somali` の `Ruddy`)。
 
 CFA/TICA 差・猫種固有呼称の扱い:
 
@@ -155,7 +156,8 @@ CFA/TICA 差・猫種固有呼称の扱い:
   - `Blue Tortie-White` / `Blue Cream-White` = `Dilute Calico` (`dilute_calico`)
   - `Torbie` = `Patched Tabby`
 - **猫種固有呼称は一般カラーとして混ぜない**。`breed_specific` とし `DisplayAllowed=false`。
-  - Abyssinian/Somali: `Ruddy` / `Sorrel`
+  - Abyssinian/Somali: `Ruddy`
+  - Abyssinian: `Sorrel`
   - Burmese: `Sable` / `Champagne` / `Platinum` / `Sepia`
   - Tonkinese: `*Mink` / `*Point` / `*Solid` class 等
   - Oriental: `Ebony` (→ 一般 `Black`) / `Lavender` (→ 一般 `Lilac`) / `Chestnut` (→ 一般 `Chocolate`)

@@ -46,7 +46,7 @@ _TOKEN_KATAKANA: dict[str, str] = {
     "Flame": "フレーム",
     "Cameo": "カメオ",
     "Golden": "ゴールデン",
-    "Ruddy": "ラディー",
+    "Ruddy": "ルディ",
     # パターン・修飾
     "Silver": "シルバー",
     "Smoke": "スモーク",

@@ -222,7 +222,7 @@ ALIAS_TARGETS: dict[str, str] = {
 # 猫種固有呼称の検出: (判定するトークン/部分文字列, BreedContext)
 # 順序が優先度。最初にマッチしたものを採用する。
 BREED_SPECIFIC_RULES: list[tuple[str, str]] = [
-    ("ruddy", "Abyssinian"),
+    ("ruddy", "Abyssinian/Somali"),
     ("usual", "Abyssinian"),
     ("sorrel", "Abyssinian"),
     ("mink", "Tonkinese"),
@@ -1106,7 +1106,7 @@ def write_review(rows, concepts, stats, source, gmap) -> None:
     a("")
     a("- **Pt の扱い**: 元データの `Pt` は全て Tabby 文脈であり `Patched` と解釈した (例: `Blue Pt Tabby-White` → `Blue Patched Tabby-White`)。`Point` は `Point` と明示された名のみ Point 系とした。各行 `Notes` に正規化内容を残している。")
     a("- **CFA/TICA 差**: `Blue Cream`=`Blue Tortie`, `Lilac Cream`=`Lilac Tortie`, `Tortoiseshell-White`/`Mike Tri Color`=`Calico`, `Blue Tortie-White`/`Blue Cream-White`=`Dilute Calico`, `Torbie`=`Patched Tabby` を同一概念の alias として統合した。")
-    a("- **猫種固有呼称**: Ruddy/Sorrel(Aby), Sable/Champagne/Platinum/Sepia(Burmese), 各種 Mink(Tonkinese), Ebony/Chestnut/Lavender(Oriental), Leopard/Snow/Marble(Bengal), Mitted/Bi-Color(Ragdoll) を breed_specific とし `DisplayAllowed=false`。")
+    a("- **猫種固有呼称**: Ruddy(Aby/Somali), Sorrel(Aby), Sable/Champagne/Platinum/Sepia(Burmese), 各種 Mink(Tonkinese), Ebony/Chestnut/Lavender(Oriental), Leopard/Snow/Marble(Bengal), Mitted/Bi-Color(Ragdoll) を breed_specific とし `DisplayAllowed=false`。")
     a("- **白斑**: `Van`(S/S) は一般表示で `-White` に正規化する方針のため `DisplayAllowed=false`。`Mitted`/`Bi-Color` も同様に一般非表示。")
     a("- **遺伝子座**: マップに同一 Code・同一名で存在する座のみ `current_map` として取り込み、それ以外は名前から `inferred`。Point/Mink/Sepia/Shaded/WideBand 系と alias/breed_specific は `review_required`。")
     a("- **既知のマップ不整合 (要確認)**: `Blue Cream`(code31) はマップ上 `O/O` (ホモ接合オレンジ) だがトーティは `O/o` のはず。master では `OrangeState=tortie` に補正した。エンジン側 CSV は本タスクでは変更していない。")

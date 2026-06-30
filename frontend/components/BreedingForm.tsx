@@ -627,7 +627,7 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
                       max={rangeValues.length - 1}
                       step={1}
                       value={selectedIndex}
-                      className="mt-3 w-full accent-slate-800"
+                      className="mt-3 w-full accent-emerald-600"
                       aria-label={`${definition.locus} ${text.parentForm.carrierSelector.selected}`}
                       aria-valuetext={selectedLabel}
                       onChange={(event) => {
@@ -636,9 +636,34 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
                         updateCarrier(carrierModalParent, definition.locus, nextValue);
                       }}
                     />
-                    <div className="mt-1 flex justify-between text-[10px] text-slate-400">
-                      <span>{text.parentForm.carrierSelector.none}</span>
-                      <span>{rangeValues[rangeValues.length - 1]}</span>
+                    <div
+                      className="mt-1 grid gap-1 text-[10px] leading-tight text-slate-400"
+                      style={{
+                        gridTemplateColumns: `repeat(${rangeValues.length}, minmax(0, 1fr))`,
+                      }}
+                    >
+                      {rangeValues.map((value, index) => {
+                        const label =
+                          index === 0 ? text.parentForm.carrierSelector.none : value;
+                        const align =
+                          index === 0
+                            ? "text-left"
+                            : index === rangeValues.length - 1
+                              ? "text-right"
+                              : "text-center";
+                        return (
+                          <span
+                            key={`${definition.locus}-${index}-${value || "none"}`}
+                            className={`min-w-0 break-words ${align} ${
+                              index === selectedIndex
+                                ? "font-semibold text-emerald-700"
+                                : ""
+                            }`}
+                          >
+                            {label}
+                          </span>
+                        );
+                      })}
                     </div>
                   </div>
                 );

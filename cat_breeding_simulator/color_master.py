@@ -59,6 +59,20 @@ def _split_pipe(value: str) -> list[str]:
     return [item.strip() for item in (value or "").split("|") if item.strip()]
 
 
+def breed_context_matches(breed: str | None, context: str) -> bool:
+    """入力猫種が breed_specific の文脈に含まれるかを判定する。
+
+    Ruddy のように複数猫種で共有される固有呼称は `/` 区切りで保持する。
+    Oriental Shorthair などの派生名は、基底文脈 (Oriental) の部分一致で許可する。
+    """
+
+    if not breed or not context or context == "general":
+        return False
+    breed_key = " ".join(breed.split()).casefold()
+    contexts = [part.strip().casefold() for part in context.split("/") if part.strip()]
+    return any(part in breed_key for part in contexts)
+
+
 @dataclass(frozen=True, slots=True)
 class ResolvedColor:
     """入力色名の解決結果。"""

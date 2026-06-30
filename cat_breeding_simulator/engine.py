@@ -26,7 +26,7 @@ from cat_breeding_simulator.master_data import (
     build_parent_genotypes,
     expressed_genotype_key,
 )
-from cat_breeding_simulator.color_master import COLOR_MASTER
+from cat_breeding_simulator.color_master import COLOR_MASTER, breed_context_matches
 from cat_breeding_simulator.phenotype_naming import PhenotypeNamer
 
 
@@ -416,7 +416,9 @@ class CoatColorCalculator:
                     for dam_gamete, dam_probability in dam_gametes.items():
                         kitten = self._combine_gametes(sire_gamete, dam_gamete)
                         weight = sire_probability * dam_probability * pair_weight
-                        phenotype = self._namer.classify_phenotype(kitten, sire_color, dam_color)
+                        phenotype = self._namer.classify_phenotype(
+                            kitten, sire_color, dam_color, breed
+                        )
                         if phenotype is None:
                             # 分類不能を捨てて再正規化せず、未分類率として加算する
                             unmatched_probability += weight
@@ -1111,12 +1113,18 @@ class CoatColorCalculator:
                 raise BreedingCalculationError(
                     f"「{name}」は通常の計算では入力できない色区分です。別の毛色を選んでください。"
                 )
-            if resolved.status == "breed_specific" and not breed:
-                raise BreedingCalculationError(
-                    f"「{name}」は「{resolved.breed_context}」固有の毛色です。"
-                    f"この毛色を使うには猫種に「{resolved.breed_context}」を指定してください"
-                    "（猫種の指定は任意ですが、固有色を使う場合は必要です）。"
-                )
+            if resolved.status == "breed_specific":
+                if not breed:
+                    raise BreedingCalculationError(
+                        f"「{name}」は「{resolved.breed_context}」固有の毛色です。"
+                        f"この毛色を使うには猫種に「{resolved.breed_context}」を指定してください"
+                        "（猫種の指定は任意ですが、固有色を使う場合は必要です）。"
+                    )
+                if not breed_context_matches(breed, resolved.breed_context):
+                    raise BreedingCalculationError(
+                        f"「{name}」は「{resolved.breed_context}」固有の毛色です。"
+                        f"「{breed}」の毛色としては指定できません。"
+                    )
             # canonical 概念を優先して engine 認識名 (PHENOTYPE_GENOTYPES のキー) を探す
             for candidate in resolved.engine_candidate_names:
                 if self._normalize_color_key(candidate) in PHENOTYPE_GENOTYPES:
