@@ -135,7 +135,6 @@ export default function HomePage() {
               type="button"
               className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400"
               aria-label={text.app.languageLabel}
-              aria-haspopup="menu"
               aria-expanded={languageMenuOpen}
               onClick={() => setLanguageMenuOpen((open) => !open)}
             >
@@ -143,7 +142,6 @@ export default function HomePage() {
             </button>
             {languageMenuOpen && (
               <div
-                role="menu"
                 aria-label={text.app.languageLabel}
                 className="absolute right-0 z-30 mt-2 w-40 overflow-hidden rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg"
               >
@@ -151,8 +149,7 @@ export default function HomePage() {
                   <button
                     key={option.value}
                     type="button"
-                    role="menuitemradio"
-                    aria-checked={language === option.value}
+                    aria-pressed={language === option.value}
                     className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left ${
                       language === option.value
                         ? "bg-slate-100 font-semibold text-slate-900"
