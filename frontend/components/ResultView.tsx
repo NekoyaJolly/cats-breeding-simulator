@@ -209,7 +209,7 @@ function SexResultGroup({
   );
 }
 
-// 結果を ♀ / ♂ に分割して表示する。デスクトップは横並び、モバイルは縦積み。
+// 結果を ♂ / ♀ に分割して表示する。デスクトップは横並び、モバイルは縦積み。
 function SexSplitResults({
   rows,
   language,
@@ -223,15 +223,15 @@ function SexSplitResults({
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <SexResultGroup
-        title={text.parentResult.female}
-        accentClass="bg-pink-50 text-pink-800"
-        rows={female}
-        language={language}
-      />
-      <SexResultGroup
         title={text.parentResult.male}
         accentClass="bg-sky-50 text-sky-800"
         rows={male}
+        language={language}
+      />
+      <SexResultGroup
+        title={text.parentResult.female}
+        accentClass="bg-pink-50 text-pink-800"
+        rows={female}
         language={language}
       />
     </div>
@@ -260,11 +260,14 @@ function CarrierScenario({
       {assumed.length > 0 && (
         <ul className="mt-2 space-y-0.5 text-xs text-amber-800">
           {assumed.map(([parent, loci]) => (
-            <li key={parent}>
-              <span className="font-medium">{parent}</span>:{" "}
-              {Object.entries(loci)
-                .map(([locus, genotype]) => `${locus}=${genotype}`)
-                .join(", ")}
+            <li key={parent} className="flex flex-wrap items-center gap-1">
+              <span className="font-medium">{parent}</span>:
+              {Object.entries(loci).map(([locus, genotype]) => (
+                <span key={`${parent}-${locus}`} className="inline-flex items-center gap-0.5">
+                  <LocusChip locus={locus} />
+                  <span>={genotype}</span>
+                </span>
+              ))}
             </li>
           ))}
         </ul>

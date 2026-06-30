@@ -1,7 +1,9 @@
 import type { ReverseLookupCandidate } from "@/lib/schema";
 import { UI_TEXT, type Language } from "@/lib/i18n";
+import { getLocusTone } from "@/lib/lociGlossary";
 import { InfoList } from "./InfoList";
 import { colorRows, formatPct } from "./format";
+import { LocusChip } from "../LocusChip";
 
 // 1 件の交配候補 (父 × 母) を、確率・成立条件・座位別根拠つきで折りたたみ表示する。
 export function CandidateCard({
@@ -32,9 +34,14 @@ export function CandidateCard({
           <h4 className="text-base font-semibold text-slate-800">
             {candidate.sire.name} × {candidate.dam.name}
           </h4>
-          <p className="mt-1 text-xs text-slate-500">
-            {candidate.sire.color} ♂ / {candidate.dam.color} ♀
-          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
+            <span className="rounded bg-sky-50 px-1.5 py-0.5 font-medium text-sky-700">
+              ♂ {candidate.sire.color}
+            </span>
+            <span className="rounded bg-rose-50 px-1.5 py-0.5 font-medium text-rose-700">
+              ♀ {candidate.dam.color}
+            </span>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <span className="rounded bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
@@ -111,17 +118,20 @@ export function CandidateCard({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {candidate.locus_evidence.map((evidence) => (
-                <tr key={evidence.locus}>
-                  <td className="px-3 py-2 font-medium text-slate-700">
-                    {evidence.locus}
-                  </td>
-                  <td className="px-3 py-2 text-slate-600">{evidence.target}</td>
-                  <td className="px-3 py-2 text-slate-600">{evidence.sire}</td>
-                  <td className="px-3 py-2 text-slate-600">{evidence.dam}</td>
-                  <td className="px-3 py-2 text-slate-500">{evidence.note}</td>
-                </tr>
-              ))}
+              {candidate.locus_evidence.map((evidence) => {
+                const tone = getLocusTone(evidence.locus);
+                return (
+                  <tr key={evidence.locus}>
+                    <td className={`px-3 py-2 font-medium ${tone.tableCellClass}`}>
+                      <LocusChip locus={evidence.locus} />
+                    </td>
+                    <td className="px-3 py-2 text-slate-600">{evidence.target}</td>
+                    <td className="px-3 py-2 text-slate-600">{evidence.sire}</td>
+                    <td className="px-3 py-2 text-slate-600">{evidence.dam}</td>
+                    <td className="px-3 py-2 text-slate-500">{evidence.note}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

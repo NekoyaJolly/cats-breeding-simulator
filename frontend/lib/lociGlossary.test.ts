@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { LOCUS_GLOSSARY } from "./lociGlossary";
+import { DEFAULT_LOCUS_TONE, LOCUS_GLOSSARY, getLocusTone } from "./lociGlossary";
 
 describe("LOCUS_GLOSSARY", () => {
   it("主要な遺伝子座を網羅している", () => {
@@ -17,5 +17,18 @@ describe("LOCUS_GLOSSARY", () => {
       expect(info.inheritance.length).toBeGreaterThan(0);
       expect(info.description.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("getLocusTone", () => {
+  it("主要座位にはデフォルト以外のトーンを割り当てる", () => {
+    expect(getLocusTone("A")).not.toBe(DEFAULT_LOCUS_TONE);
+    expect(getLocusTone("A").iconClass).toContain("emerald");
+    expect(getLocusTone("O")).not.toBe(DEFAULT_LOCUS_TONE);
+    expect(getLocusTone("O").iconClass).toContain("orange");
+  });
+
+  it("未知座位はデフォルトトーンへフォールバックする", () => {
+    expect(getLocusTone("Unknown")).toBe(DEFAULT_LOCUS_TONE);
   });
 });

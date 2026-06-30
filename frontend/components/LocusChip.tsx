@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { LOCUS_GLOSSARY } from "@/lib/lociGlossary";
+import { LOCUS_GLOSSARY, getLocusTone } from "@/lib/lociGlossary";
 
 // 診断情報の座位記号 (A / D / Mc …) を、タップ/ホバーで解説ポップオーバーが出る
 // チップにする。普段は1文字だけで邪魔にならず、気になったらその場で読める。
 export function LocusChip({ locus }: { locus: string }) {
   const entry = LOCUS_GLOSSARY[locus];
+  const tone = getLocusTone(locus);
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLSpanElement>(null);
   const tooltipId = useId();
@@ -47,7 +48,7 @@ export function LocusChip({ locus }: { locus: string }) {
         onClick={() => setOpen(true)}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
-        className="cursor-help rounded border border-dashed border-slate-300 px-1 leading-tight text-slate-600 decoration-dotted hover:bg-slate-100"
+        className={`cursor-help rounded border border-dashed px-1 leading-tight decoration-dotted ${tone.chipClass}`}
         aria-expanded={open}
         // describedby は常時付与 (フォーカス瞬間に関連付けが無いと読み上げを取りこぼすため)。
         aria-describedby={tooltipId}
