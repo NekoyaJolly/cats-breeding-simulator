@@ -11,6 +11,7 @@ import {
 import { BREED_READING_JA } from "@/lib/breedReadingJa";
 import { filterColorsByAllowedNames } from "@/lib/colorMatch";
 import { UI_TEXT, type Language } from "@/lib/i18n";
+import { PARENT_FIELD_ACCENT_CLASS } from "@/lib/uiTone";
 import type {
   ColorOption,
   InferenceFinding,
@@ -31,11 +32,6 @@ const inputClass =
 const labelClass = "block text-sm font-medium text-slate-700";
 const secondaryButtonClass =
   "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50";
-const parentFieldAccentClass = {
-  sire: "border-sky-100 bg-sky-50/35 shadow-sky-100/60",
-  dam: "border-rose-100 bg-rose-50/35 shadow-rose-100/60",
-} as const;
-
 function createKittenId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();
@@ -305,7 +301,7 @@ export function LitterInference({ language }: { language: Language }) {
         </h2>
         <form onSubmit={handleSubmit} className="mt-4 space-y-5">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className={`rounded-lg border p-3 shadow-sm ${parentFieldAccentClass.sire}`}>
+            <div className={`rounded-lg border p-3 shadow-sm ${PARENT_FIELD_ACCENT_CLASS.sire}`}>
               <ColorCombobox
                 id="litter-sire-color"
                 label={text.kittenForm.sireCoat}
@@ -320,7 +316,7 @@ export function LitterInference({ language }: { language: Language }) {
                 femaleOnlyLabel={text.common.femaleOnly}
               />
             </div>
-            <div className={`rounded-lg border p-3 shadow-sm ${parentFieldAccentClass.dam}`}>
+            <div className={`rounded-lg border p-3 shadow-sm ${PARENT_FIELD_ACCENT_CLASS.dam}`}>
               <ColorCombobox
                 id="litter-dam-color"
                 label={text.kittenForm.damCoat}

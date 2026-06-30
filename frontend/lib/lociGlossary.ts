@@ -101,7 +101,7 @@ export const LOCUS_GLOSSARY: Record<string, LocusInfo> = {
   },
 };
 
-const DEFAULT_LOCUS_TONE: LocusTone = {
+export const DEFAULT_LOCUS_TONE: LocusTone = {
   iconClass: "bg-slate-100 text-slate-700 ring-1 ring-slate-200",
   chipClass:
     "border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100",

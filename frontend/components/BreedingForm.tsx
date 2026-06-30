@@ -19,6 +19,7 @@ import { BREED_READING_JA } from "@/lib/breedReadingJa";
 import { filterColorsByAllowedNames, normalizeKey } from "@/lib/colorMatch";
 import { UI_TEXT, type Language } from "@/lib/i18n";
 import { getLocusTone } from "@/lib/lociGlossary";
+import { PARENT_FIELD_ACCENT_CLASS } from "@/lib/uiTone";
 import { ColorCombobox } from "./ColorCombobox";
 
 // 計算モード。explicit_carrier のときのみキャリア入力欄を表示する。
@@ -325,10 +326,6 @@ type Props = {
 const inputClass =
   "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500";
 const labelClass = "block text-sm font-medium text-slate-700";
-const parentFieldAccentClass: Record<CarrierParent, string> = {
-  sire: "border-sky-100 bg-sky-50/35 shadow-sky-100/60",
-  dam: "border-rose-100 bg-rose-50/35 shadow-rose-100/60",
-};
 const inactiveCarrierButtonClass: Record<CarrierParent, string> = {
   sire: "border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100",
   dam: "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100",
@@ -605,7 +602,7 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className={`rounded-lg border p-3 shadow-sm ${parentFieldAccentClass.sire}`}>
+        <div className={`rounded-lg border p-3 shadow-sm ${PARENT_FIELD_ACCENT_CLASS.sire}`}>
           <ColorCombobox
             id="sire-color"
             label={text.parentForm.sireCoat}
@@ -621,7 +618,7 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
             femaleOnlyLabel={text.common.femaleOnly}
           />
         </div>
-        <div className={`rounded-lg border p-3 shadow-sm ${parentFieldAccentClass.dam}`}>
+        <div className={`rounded-lg border p-3 shadow-sm ${PARENT_FIELD_ACCENT_CLASS.dam}`}>
           <ColorCombobox
             id="dam-color"
             label={text.parentForm.damCoat}

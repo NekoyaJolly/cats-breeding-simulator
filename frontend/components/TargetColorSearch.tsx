@@ -2,6 +2,7 @@
 
 import type { RegisteredCat } from "@/lib/schema";
 import { UI_TEXT, type Language } from "@/lib/i18n";
+import { PARENT_GROUP_ACCENT_CLASS } from "@/lib/uiTone";
 import { ColorCombobox } from "./ColorCombobox";
 import { ResultsView } from "./targetColorSearch/ResultsView";
 import { carriersText } from "./targetColorSearch/format";
@@ -12,11 +13,6 @@ const inputClass =
 const labelClass = "block text-sm font-medium text-slate-700";
 const secondaryButtonClass =
   "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50";
-const parentGroupAccentClass = {
-  sire: "border-sky-100 bg-sky-50/35",
-  dam: "border-rose-100 bg-rose-50/35",
-} as const;
-
 // 「目標カラーから探す」画面。状態とロジックは useTargetColorSearch に集約し、
 // このコンポーネントは表示と入力ハンドラの結線に専念する。
 export function TargetColorSearch({ language }: { language: Language }) {
@@ -330,7 +326,7 @@ export function TargetColorSearch({ language }: { language: Language }) {
             </p>
           ) : (
             <div className="space-y-2">
-              <details className={`rounded-md border ${parentGroupAccentClass.sire}`}>
+              <details className={`rounded-md border ${PARENT_GROUP_ACCENT_CLASS.sire}`}>
                 <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold text-slate-700">
                   <span>{text.targetForm.sireGroup}</span>
                   <span className="text-slate-400">
@@ -339,7 +335,7 @@ export function TargetColorSearch({ language }: { language: Language }) {
                 </summary>
                 {renderCatList(sires)}
               </details>
-              <details className={`rounded-md border ${parentGroupAccentClass.dam}`}>
+              <details className={`rounded-md border ${PARENT_GROUP_ACCENT_CLASS.dam}`}>
                 <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold text-slate-700">
                   <span>{text.targetForm.damGroup}</span>
                   <span className="text-slate-400">
