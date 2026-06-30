@@ -139,6 +139,12 @@ function optionsForParent(
   return definition.options;
 }
 
+function carrierChoiceGridClass(choiceCount: number): string {
+  if (choiceCount <= 3) return "grid-cols-3";
+  if (choiceCount <= 4) return "grid-cols-2 sm:grid-cols-4";
+  return "grid-cols-2 sm:grid-cols-7";
+}
+
 function hasCarrierSelection(selection: CarrierSelection): boolean {
   return CARRIER_LOCI.some((definition) => Boolean(selection[definition.locus]));
 }
@@ -595,76 +601,95 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
             <div className="max-h-[62vh] space-y-3 overflow-y-auto px-4 py-4">
               {CARRIER_LOCI.map((definition) => {
                 const options = optionsForParent(definition, carrierModalParent);
-                const rangeValues = ["", ...options.map((option) => option.value)];
+                const choices = [
+                  {
+                    value: "",
+                    label: text.parentForm.carrierSelector.none,
+                  },
+                  ...options.map((option) => ({
+                    value: option.value,
+                    label: option.label[language],
+                  })),
+                ];
                 const selectedValue = activeCarrierSelection[definition.locus] ?? "";
-                const selectedIndex = Math.max(0, rangeValues.indexOf(selectedValue));
                 const selectedLabel =
-                  selectedIndex === 0
-                    ? text.parentForm.carrierSelector.none
-                    : options[selectedIndex - 1]?.label[language] ?? selectedValue;
+                  choices.find((choice) => choice.value === selectedValue)?.label ??
+                  selectedValue;
+                const gridClass = carrierChoiceGridClass(choices.length);
+                const groupName = `carrier-${carrierModalParent}-${definition.locus}`;
 
                 return (
                   <div
                     key={definition.locus}
-                    className="rounded-md border border-slate-200 p-3"
+                    className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition hover:border-slate-300"
                   >
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-900 text-xs font-semibold text-white shadow-sm">
+                        {definition.locus}
+                      </div>
                       <div className="min-w-0">
                         <div className="text-sm font-semibold text-slate-900">
-                          {definition.locus}
-                        </div>
-                        <div className="text-xs text-slate-500">
                           {definition.name[language]}
                         </div>
+                        <div className="mt-0.5 text-xs text-slate-500">
+                          {definition.locus}
+                        </div>
                       </div>
-                      <div className="shrink-0 rounded bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
+                      <div
+                        className={`ml-auto shrink-0 rounded-md px-2.5 py-1 text-xs font-semibold ${
+                          selectedValue
+                            ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+                            : "bg-slate-100 text-slate-500"
+                        }`}
+                      >
                         {selectedLabel}
                       </div>
                     </div>
-                    <input
-                      type="range"
-                      min={0}
-                      max={rangeValues.length - 1}
-                      step={1}
-                      value={selectedIndex}
-                      className="mt-3 w-full accent-emerald-600"
-                      aria-label={`${definition.locus} ${text.parentForm.carrierSelector.selected}`}
-                      aria-valuetext={selectedLabel}
-                      onChange={(event) => {
-                        const nextIndex = Number(event.target.value);
-                        const nextValue = rangeValues[nextIndex] ?? "";
-                        updateCarrier(carrierModalParent, definition.locus, nextValue);
-                      }}
-                    />
-                    <div
-                      className="mt-1 grid gap-1 text-[10px] leading-tight text-slate-400"
-                      style={{
-                        gridTemplateColumns: `repeat(${rangeValues.length}, minmax(0, 1fr))`,
-                      }}
-                    >
-                      {rangeValues.map((value, index) => {
-                        const label =
-                          index === 0 ? text.parentForm.carrierSelector.none : value;
-                        const align =
-                          index === 0
-                            ? "text-left"
-                            : index === rangeValues.length - 1
-                              ? "text-right"
-                              : "text-center";
-                        return (
-                          <span
-                            key={`${definition.locus}-${index}-${value || "none"}`}
-                            className={`min-w-0 break-words ${align} ${
-                              index === selectedIndex
-                                ? "font-semibold text-emerald-700"
-                                : ""
-                            }`}
-                          >
-                            {label}
-                          </span>
-                        );
-                      })}
-                    </div>
+                    <fieldset className="mt-3">
+                      <legend className="sr-only">
+                        {definition.locus} {text.parentForm.carrierSelector.selected}
+                      </legend>
+                      <div
+                        className={`grid gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1 shadow-inner ${gridClass}`}
+                      >
+                        {choices.map((choice, index) => {
+                          const isSelected = selectedValue === choice.value;
+                          const inputId = `${groupName}-${index}`;
+
+                          return (
+                            <label
+                              key={`${definition.locus}-${index}-${choice.value || "none"}`}
+                              htmlFor={inputId}
+                              className={`relative flex min-h-9 cursor-pointer items-center justify-center rounded-md px-2 py-2 text-center text-xs font-semibold leading-tight transition focus-within:outline-none focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-1 ${
+                                isSelected
+                                  ? "bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-200"
+                                  : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
+                              }`}
+                            >
+                              <input
+                                id={inputId}
+                                type="radio"
+                                name={groupName}
+                                value={choice.value}
+                                checked={isSelected}
+                                className="sr-only"
+                                aria-label={`${definition.locus} ${choice.label}`}
+                                onChange={() =>
+                                  updateCarrier(
+                                    carrierModalParent,
+                                    definition.locus,
+                                    choice.value,
+                                  )
+                                }
+                              />
+                              <span className="min-w-0 break-words">
+                                {choice.label}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </fieldset>
                   </div>
                 );
               })}
