@@ -260,11 +260,14 @@ function CarrierScenario({
       {assumed.length > 0 && (
         <ul className="mt-2 space-y-0.5 text-xs text-amber-800">
           {assumed.map(([parent, loci]) => (
-            <li key={parent}>
-              <span className="font-medium">{parent}</span>:{" "}
-              {Object.entries(loci)
-                .map(([locus, genotype]) => `${locus}=${genotype}`)
-                .join(", ")}
+            <li key={parent} className="flex flex-wrap items-center gap-1">
+              <span className="font-medium">{parent}</span>:
+              {Object.entries(loci).map(([locus, genotype]) => (
+                <span key={`${parent}-${locus}`} className="inline-flex items-center gap-0.5">
+                  <LocusChip locus={locus} />
+                  <span>={genotype}</span>
+                </span>
+              ))}
             </li>
           ))}
         </ul>

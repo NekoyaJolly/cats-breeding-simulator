@@ -18,6 +18,7 @@ import type { ColorOption } from "@/lib/schema";
 import { BREED_READING_JA } from "@/lib/breedReadingJa";
 import { filterColorsByAllowedNames, normalizeKey } from "@/lib/colorMatch";
 import { UI_TEXT, type Language } from "@/lib/i18n";
+import { getLocusTone } from "@/lib/lociGlossary";
 import { ColorCombobox } from "./ColorCombobox";
 
 // 計算モード。explicit_carrier のときのみキャリア入力欄を表示する。
@@ -324,6 +325,18 @@ type Props = {
 const inputClass =
   "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500";
 const labelClass = "block text-sm font-medium text-slate-700";
+const parentFieldAccentClass: Record<CarrierParent, string> = {
+  sire: "border-sky-100 bg-sky-50/35 shadow-sky-100/60",
+  dam: "border-rose-100 bg-rose-50/35 shadow-rose-100/60",
+};
+const inactiveCarrierButtonClass: Record<CarrierParent, string> = {
+  sire: "border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100",
+  dam: "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100",
+};
+const activeCarrierButtonClass: Record<CarrierParent, string> = {
+  sire: "border-sky-600 bg-sky-600 text-white hover:bg-sky-700",
+  dam: "border-rose-600 bg-rose-600 text-white hover:bg-rose-700",
+};
 
 export function BreedingForm({ onSubmit, loading, language }: Props) {
   const text = UI_TEXT[language];
@@ -572,8 +585,8 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
         type="button"
         className={`inline-flex h-8 items-center gap-1 rounded-full border px-2 text-xs font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-400 ${
           active
-            ? "border-slate-700 bg-slate-800 text-white"
-            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+            ? activeCarrierButtonClass[parent]
+            : inactiveCarrierButtonClass[parent]
         }`}
         aria-label={label}
         title={label}
@@ -592,34 +605,38 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <ColorCombobox
-          id="sire-color"
-          label={text.parentForm.sireCoat}
-          labelAction={renderCarrierButton("sire", sireCarrierCount)}
-          required
-          value={sireColor}
-          onValueChange={setSireColor}
-          onCommit={pushSireRecent}
-          colors={sireColors}
-          recent={sireRecentShown}
-          placeholder={text.parentForm.sirePlaceholder}
-          recentLabel={text.common.recent}
-          femaleOnlyLabel={text.common.femaleOnly}
-        />
-        <ColorCombobox
-          id="dam-color"
-          label={text.parentForm.damCoat}
-          labelAction={renderCarrierButton("dam", damCarrierCount)}
-          required
-          value={damColor}
-          onValueChange={setDamColor}
-          onCommit={pushDamRecent}
-          colors={breedFilteredColors}
-          recent={damRecentShown}
-          placeholder={text.parentForm.damPlaceholder}
-          recentLabel={text.common.recent}
-          femaleOnlyLabel={text.common.femaleOnly}
-        />
+        <div className={`rounded-lg border p-3 shadow-sm ${parentFieldAccentClass.sire}`}>
+          <ColorCombobox
+            id="sire-color"
+            label={text.parentForm.sireCoat}
+            labelAction={renderCarrierButton("sire", sireCarrierCount)}
+            required
+            value={sireColor}
+            onValueChange={setSireColor}
+            onCommit={pushSireRecent}
+            colors={sireColors}
+            recent={sireRecentShown}
+            placeholder={text.parentForm.sirePlaceholder}
+            recentLabel={text.common.recent}
+            femaleOnlyLabel={text.common.femaleOnly}
+          />
+        </div>
+        <div className={`rounded-lg border p-3 shadow-sm ${parentFieldAccentClass.dam}`}>
+          <ColorCombobox
+            id="dam-color"
+            label={text.parentForm.damCoat}
+            labelAction={renderCarrierButton("dam", damCarrierCount)}
+            required
+            value={damColor}
+            onValueChange={setDamColor}
+            onCommit={pushDamRecent}
+            colors={breedFilteredColors}
+            recent={damRecentShown}
+            placeholder={text.parentForm.damPlaceholder}
+            recentLabel={text.common.recent}
+            femaleOnlyLabel={text.common.femaleOnly}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -719,6 +736,7 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
                   ? carrierChoiceDescription(definition.locus, selectedValue, language)
                   : definition.locus;
                 const groupName = `carrier-${carrierModalParent}-${definition.locus}`;
+                const tone = getLocusTone(definition.locus);
 
                 return (
                   <div
@@ -727,7 +745,9 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
                   >
                     <div className="grid grid-cols-[minmax(6.5rem,9rem)_minmax(0,1fr)] items-center gap-2 sm:grid-cols-[minmax(10rem,13rem)_minmax(0,1fr)] sm:gap-3">
                       <div className="flex min-w-0 items-center gap-2">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-900 text-xs font-semibold text-white shadow-sm">
+                        <div
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-xs font-semibold shadow-sm ${tone.iconClass}`}
+                        >
                           {definition.locus}
                         </div>
                         <div className="min-w-0">
@@ -736,7 +756,7 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
                           </div>
                           <div
                             className={`mt-0.5 truncate text-xs ${
-                              selectedValue ? "text-emerald-700" : "text-slate-500"
+                              selectedValue ? tone.textClass : "text-slate-500"
                             }`}
                             title={selectedDescription}
                           >
@@ -778,7 +798,7 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
                             const isSelected = selectedValue === choice.value;
                             const isExplicitChoice = choice.value.length > 0;
                             const selectedClass = isExplicitChoice
-                              ? "bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-200"
+                              ? tone.selectedClass
                               : "bg-white text-slate-600 shadow-sm ring-1 ring-slate-200";
                             const inputId = `${groupName}-${index}`;
 
