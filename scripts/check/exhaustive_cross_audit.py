@@ -10,8 +10,10 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import sys
 import time
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -34,6 +36,8 @@ MODE = "normal"
 BREED = None
 TOTAL_TOLERANCE = 0.01
 ACCOUNTING_TOLERANCE = 0.05
+DEFAULT_JOBS = 1
+DEFAULT_BATCH_SIZE = 100
 FEMALE_ONLY_TOKENS = (
     "Tortie",
     "Tortoiseshell",
@@ -42,8 +46,10 @@ FEMALE_ONLY_TOKENS = (
     "Lilac Cream",
     "Patched",
 )
-SILVER_TOKENS = ("Silver", "Smoke", "Cameo", "Chinchilla", "Shaded", "Shell")
+Pair = tuple[str, str]
+SILVER_TOKENS = ("Silver", "Smoke", "Cameo")
 WHITE_SPOTTING_TOKENS = ("-White", " Van", " Bi-Color", " Mitted")
+GOLDEN_TOKEN = "Golden"
 
 
 @dataclass(frozen=True, slots=True)
@@ -91,6 +97,18 @@ class AuditOptions:
     fail_fast: bool
     progress_every: int
     fail_on_suspicious: bool
+    jobs: int
+    batch_size: int
+
+
+@dataclass(frozen=True, slots=True)
+class AuditBatchResult:
+    """並列監査の 1 バッチ実行結果。"""
+
+    batch_index: int
+    audited_pairs: int
+    failures: list[AuditIssue]
+    suspicious: list[AuditIssue]
 
 
 def parse_args() -> AuditOptions:
@@ -147,6 +165,21 @@ def parse_args() -> AuditOptions:
         action="store_true",
         help="要確認事項だけでも終了コードを 1 にします。",
     )
+    parser.add_argument(
+        "--jobs",
+        type=int,
+        default=DEFAULT_JOBS,
+        help=(
+            "並列実行するプロセス数。既定は1。フル監査を短縮したい場合は "
+            f"{min(8, os.cpu_count() or 1)} などを指定します。"
+        ),
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=DEFAULT_BATCH_SIZE,
+        help=f"並列実行時に1タスクへまとめる交配数。既定: {DEFAULT_BATCH_SIZE}",
+    )
     args = parser.parse_args()
 
     if args.offset < 0:
@@ -155,6 +188,10 @@ def parse_args() -> AuditOptions:
         parser.error("--limit は 1 以上で指定してください。")
     if args.progress_every < 0:
         parser.error("--progress-every は 0 以上で指定してください。")
+    if args.jobs <= 0:
+        parser.error("--jobs は 1 以上で指定してください。")
+    if args.batch_size <= 0:
+        parser.error("--batch-size は 1 以上で指定してください。")
 
     return AuditOptions(
         output_dir=args.out_dir,
@@ -165,6 +202,8 @@ def parse_args() -> AuditOptions:
         fail_fast=args.fail_fast,
         progress_every=args.progress_every,
         fail_on_suspicious=args.fail_on_suspicious,
+        jobs=args.jobs,
+        batch_size=args.batch_size,
     )
 
 
@@ -240,6 +279,30 @@ def iter_pairs(
             yielded += 1
 
 
+def build_batches(
+    sire_colors: list[str],
+    dam_colors: list[str],
+    offset: int,
+    limit: int | None,
+    batch_size: int,
+) -> list[tuple[int, list[Pair]]]:
+    """総当たりペアを並列実行用のバッチへ分割する。"""
+
+    batches: list[tuple[int, list[Pair]]] = []
+    current: list[Pair] = []
+    batch_index = 0
+    for _, sire_color, dam_color in iter_pairs(sire_colors, dam_colors, offset, limit):
+        current.append((sire_color, dam_color))
+        if len(current) < batch_size:
+            continue
+        batches.append((batch_index, current))
+        batch_index += 1
+        current = []
+    if current:
+        batches.append((batch_index, current))
+    return batches
+
+
 def allele_pair_is(loci: dict[str, tuple[str, str]] | None, locus: str, allele: str) -> bool:
     """指定座位が `allele/allele` で固定されているかを判定する。"""
 
@@ -279,6 +342,88 @@ def has_token(value: str, tokens: tuple[str, ...]) -> bool:
     """色名に監査用トークンが含まれるかを判定する。"""
 
     return any(token in value for token in tokens)
+
+
+def has_white_spotting_signal(
+    color: str, loci: dict[str, tuple[str, str]] | None
+) -> bool:
+    """名前または座位から白斑シグナルが読み取れるかを判定する。"""
+
+    return has_token(color, WHITE_SPOTTING_TOKENS) or allele_pair_has(loci, "S", "S")
+
+
+def append_parent_name_loci_mismatch(
+    issues: list[AuditIssue],
+    issue_type: str,
+    sire_color: str,
+    dam_color: str,
+    color: str,
+    loci: dict[str, tuple[str, str]] | None,
+) -> None:
+    """親名に白斑語があるのに S 座位が白斑なしへ解決される場合を要確認にする。"""
+
+    if has_token(color, WHITE_SPOTTING_TOKENS) and allele_pair_is(loci, "S", "s"):
+        issues.append(
+            AuditIssue(
+                issue_type=issue_type,
+                sire_color=sire_color,
+                dam_color=dam_color,
+                color=color,
+                detail="-White / Van 等の名前ですが、S_Locus が s/s として解決されています。",
+            )
+        )
+
+
+def append_golden_loci_mismatch(
+    issues: list[AuditIssue],
+    issue_type: str,
+    sire_color: str,
+    dam_color: str,
+    sex: str,
+    color: str,
+    probability_pct: str,
+    loci: dict[str, tuple[str, str]] | None,
+) -> None:
+    """Golden 名が V9 の Wb/tipping 前提と座位上も整合しているか確認する。"""
+
+    if GOLDEN_TOKEN not in color or loci is None:
+        return
+    if allele_pair_has(loci, "I", "I"):
+        issues.append(
+            AuditIssue(
+                issue_type=issue_type,
+                sire_color=sire_color,
+                dam_color=dam_color,
+                sex=sex,
+                color=color,
+                probability_pct=probability_pct,
+                detail="Golden 名ですが I_Locus に I を含みます。V9 では Golden は非シルバー i/i + Wb/tipping 文脈です。",
+            )
+        )
+    if not allele_pair_has(loci, "Wb", "Wb"):
+        issues.append(
+            AuditIssue(
+                issue_type=issue_type,
+                sire_color=sire_color,
+                dam_color=dam_color,
+                sex=sex,
+                color=color,
+                probability_pct=probability_pct,
+                detail="Golden 名ですが Wb_Locus に Wb を含みません。",
+            )
+        )
+    if not allele_pair_has(loci, "A", "A"):
+        issues.append(
+            AuditIssue(
+                issue_type=issue_type,
+                sire_color=sire_color,
+                dam_color=dam_color,
+                sex=sex,
+                color=color,
+                probability_pct=probability_pct,
+                detail="Golden 名ですが A_Locus に A を含みません。V9 では非オレンジ・アグーチ背景で tipping として発現します。",
+            )
+        )
 
 
 def validate_report(
@@ -374,10 +519,31 @@ def validate_report(
                 detail="母色の基準座位を解決できません。",
             )
         )
+    append_parent_name_loci_mismatch(
+        suspicious,
+        "sire_white_name_loci_mismatch",
+        sire_color,
+        dam_color,
+        sire_color,
+        sire_loci,
+    )
+    append_parent_name_loci_mismatch(
+        suspicious,
+        "dam_white_name_loci_mismatch",
+        sire_color,
+        dam_color,
+        dam_color,
+        dam_loci,
+    )
 
     parents_dilute = allele_pair_is(sire_loci, "D", "d") and allele_pair_is(dam_loci, "D", "d")
     parents_non_silver = allele_pair_is(sire_loci, "I", "i") and allele_pair_is(dam_loci, "I", "i")
-    parents_no_spotting = allele_pair_is(sire_loci, "S", "s") and allele_pair_is(dam_loci, "S", "s")
+    parents_no_spotting = (
+        sire_loci is not None
+        and dam_loci is not None
+        and not has_white_spotting_signal(sire_color, sire_loci)
+        and not has_white_spotting_signal(dam_color, dam_loci)
+    )
     parents_no_dominant_white = allele_pair_is(sire_loci, "W", "w") and allele_pair_is(dam_loci, "W", "w")
     parents_point = allele_pair_is(sire_loci, "C", "cs") and allele_pair_is(dam_loci, "C", "cs")
 
@@ -447,7 +613,7 @@ def validate_report(
                         detail=f"猫種なし結果に猫種固有色 ({resolved.breed_context}) が出ています。",
                     )
                 )
-            if resolved.status in ("excluded", "review") or not resolved.display_allowed:
+            if resolved.status in ("excluded", "review") or not resolved.input_allowed:
                 failures.append(
                     AuditIssue(
                         issue_type="display_disallowed_output",
@@ -457,6 +623,21 @@ def validate_report(
                         color=result.color,
                         probability_pct=f"{result.probability_pct:.4f}",
                         detail="通常表示できない区分の色が出力されています。",
+                    )
+                )
+            elif not resolved.display_allowed:
+                suspicious.append(
+                    AuditIssue(
+                        issue_type="display_policy_review",
+                        sire_color=sire_color,
+                        dam_color=dam_color,
+                        sex=result.sex,
+                        color=result.color,
+                        probability_pct=f"{result.probability_pct:.4f}",
+                        detail=(
+                            "DisplayAllowed=false ですが InputAllowed=true のため、"
+                            f"表示ポリシー確認対象です。status={resolved.status}"
+                        ),
                     )
                 )
 
@@ -476,6 +657,16 @@ def validate_report(
         loci = result_loci(calculator, result, loci_cache)
         if loci is None:
             continue
+        append_golden_loci_mismatch(
+            suspicious,
+            "golden_loci_mismatch",
+            sire_color,
+            dam_color,
+            result.sex,
+            result.color,
+            f"{result.probability_pct:.4f}",
+            loci,
+        )
 
         if parents_dilute and allele_pair_has(loci, "D", "D"):
             failures.append(
@@ -489,9 +680,7 @@ def validate_report(
                     detail="d/d x d/d から D を含む濃色結果が出ています。",
                 )
             )
-        if parents_non_silver and (
-            allele_pair_has(loci, "I", "I") or has_token(result.color, SILVER_TOKENS)
-        ):
+        if parents_non_silver and has_token(result.color, SILVER_TOKENS):
             failures.append(
                 AuditIssue(
                     issue_type="silver_from_non_silver_parents",
@@ -543,6 +732,58 @@ def validate_report(
             )
 
     return failures, suspicious
+
+
+def audit_pair_batch(batch_index: int, pairs: list[Pair]) -> AuditBatchResult:
+    """1プロセス内で複数ペアを監査する。"""
+
+    calculator = CoatColorCalculator()
+    loci_cache: dict[tuple[str, str], dict[str, tuple[str, str]] | None] = {}
+    failures: list[AuditIssue] = []
+    suspicious: list[AuditIssue] = []
+
+    for sire_color, dam_color in pairs:
+        try:
+            report = calculator.calculate_report(sire_color, dam_color, BREED, MODE)
+        except BreedingCalculationError as error:
+            failures.append(
+                AuditIssue(
+                    issue_type="calculation_error",
+                    sire_color=sire_color,
+                    dam_color=dam_color,
+                    detail=str(error),
+                )
+            )
+            continue
+
+        pair_failures, pair_suspicious = validate_report(
+            calculator, sire_color, dam_color, report, loci_cache
+        )
+        failures.extend(pair_failures)
+        suspicious.extend(pair_suspicious)
+
+    return AuditBatchResult(
+        batch_index=batch_index,
+        audited_pairs=len(pairs),
+        failures=failures,
+        suspicious=suspicious,
+    )
+
+
+def sort_issues(issues: list[AuditIssue]) -> list[AuditIssue]:
+    """並列実行でもレビューしやすいよう、出力順を安定させる。"""
+
+    return sorted(
+        issues,
+        key=lambda issue: (
+            issue.sire_color,
+            issue.dam_color,
+            issue.issue_type,
+            issue.sex,
+            issue.color,
+            issue.detail,
+        ),
+    )
 
 
 def write_csv(path: Path, rows: list[object], fieldnames: list[str]) -> None:
@@ -606,53 +847,81 @@ def run_audit(options: AuditOptions) -> int:
     if options.limit is not None:
         planned_pairs = min(planned_pairs, options.limit)
 
+    audited_pairs = 0
     failures: list[AuditIssue] = []
     suspicious: list[AuditIssue] = []
-    loci_cache: dict[tuple[str, str], dict[str, tuple[str, str]] | None] = {}
-    audited_pairs = 0
 
     print(
         "監査開始: "
         f"mode={MODE}, breed=None, sire={len(sire_colors)}, dam={len(dam_colors)}, "
-        f"planned_pairs={planned_pairs}"
+        f"planned_pairs={planned_pairs}, jobs={options.jobs}"
     )
 
-    for _, sire_color, dam_color in iter_pairs(
-        sire_colors, dam_colors, options.offset, options.limit
-    ):
-        audited_pairs += 1
-        try:
-            report = calculator.calculate_report(sire_color, dam_color, BREED, MODE)
-        except BreedingCalculationError as error:
-            failures.append(
-                AuditIssue(
-                    issue_type="calculation_error",
-                    sire_color=sire_color,
-                    dam_color=dam_color,
-                    detail=str(error),
+    if options.jobs == 1 or options.fail_fast:
+        loci_cache: dict[tuple[str, str], dict[str, tuple[str, str]] | None] = {}
+        for _, sire_color, dam_color in iter_pairs(
+            sire_colors, dam_colors, options.offset, options.limit
+        ):
+            audited_pairs += 1
+            try:
+                report = calculator.calculate_report(sire_color, dam_color, BREED, MODE)
+            except BreedingCalculationError as error:
+                failures.append(
+                    AuditIssue(
+                        issue_type="calculation_error",
+                        sire_color=sire_color,
+                        dam_color=dam_color,
+                        detail=str(error),
+                    )
                 )
+                if options.fail_fast:
+                    break
+                continue
+
+            pair_failures, pair_suspicious = validate_report(
+                calculator, sire_color, dam_color, report, loci_cache
             )
-            if options.fail_fast:
+            failures.extend(pair_failures)
+            suspicious.extend(pair_suspicious)
+
+            if options.fail_fast and pair_failures:
                 break
-            continue
-
-        pair_failures, pair_suspicious = validate_report(
-            calculator, sire_color, dam_color, report, loci_cache
+            if options.progress_every and audited_pairs % options.progress_every == 0:
+                print(
+                    f"進捗: {audited_pairs}/{planned_pairs} "
+                    f"failures={len(failures)} suspicious={len(suspicious)}",
+                    flush=True,
+                )
+    else:
+        batches = build_batches(
+            sire_colors,
+            dam_colors,
+            options.offset,
+            options.limit,
+            options.batch_size,
         )
-        failures.extend(pair_failures)
-        suspicious.extend(pair_suspicious)
-
-        if options.fail_fast and pair_failures:
-            break
-        if options.progress_every and audited_pairs % options.progress_every == 0:
-            print(
-                f"進捗: {audited_pairs}/{planned_pairs} "
-                f"failures={len(failures)} suspicious={len(suspicious)}"
-            )
+        with ProcessPoolExecutor(max_workers=options.jobs) as executor:
+            futures = [
+                executor.submit(audit_pair_batch, batch_index, pairs)
+                for batch_index, pairs in batches
+            ]
+            for future in as_completed(futures):
+                batch_result = future.result()
+                audited_pairs += batch_result.audited_pairs
+                failures.extend(batch_result.failures)
+                suspicious.extend(batch_result.suspicious)
+                if options.progress_every and audited_pairs % options.progress_every < options.batch_size:
+                    print(
+                        f"進捗: {audited_pairs}/{planned_pairs} "
+                        f"failures={len(failures)} suspicious={len(suspicious)}",
+                        flush=True,
+                    )
 
     elapsed_seconds = round(time.perf_counter() - started, 3)
     finished_at = datetime.now(timezone.utc).isoformat()
     exit_code = 1 if failures or (options.fail_on_suspicious and suspicious) else 0
+    failures = sort_issues(failures)
+    suspicious = sort_issues(suspicious)
     summary: dict[str, object] = {
         "mode": MODE,
         "breed": BREED,
@@ -671,6 +940,8 @@ def run_audit(options: AuditOptions) -> int:
         "suspicious_count": len(suspicious),
         "fail_fast": options.fail_fast,
         "fail_on_suspicious": options.fail_on_suspicious,
+        "jobs": options.jobs,
+        "batch_size": options.batch_size,
         "output_dir": str(options.output_dir),
         "exit_code": exit_code,
     }

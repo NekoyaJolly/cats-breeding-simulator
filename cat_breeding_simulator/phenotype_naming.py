@@ -100,8 +100,8 @@ class PhenotypeNamer:
 
         if dom_white == "white":
             return "White"
-        # 通常モードの構築対象外 (点紋系) は未分類に回す
-        if c_state != "full":
+        # Mink / Sepia は猫種・表示文脈の影響が強いため、現段階では未分類に回して検出する。
+        if c_state not in ("full", "point"):
             return None
 
         is_dilute = dilute == "dilute"
@@ -114,51 +114,20 @@ class PhenotypeNamer:
             tipped = "Silver" if is_silver else "Golden"
             base_prefix = self._wideband_base_prefix(base, is_dilute)
             name = f"{base_prefix}{degree}{tipped}"
+            if c_state == "point":
+                name = f"{name} Lynx Point"
             if spotting in ("white", "high_white"):
                 name = f"{name}-White"
             return name
 
-        # 通常モードの構築対象外 (チョコ/シナモン) は、Wb の命名を済ませた後に未分類へ回す。
-        if base != "black":
-            return None
-
         if orange == "tortie":
-            if is_agouti:
-                if is_silver:
-                    stem = "Blue Silver" if is_dilute else "Silver"
-                else:
-                    stem = "Blue" if is_dilute else "Brown"
-                name = f"{stem} Patched Tabby"
-            else:
-                if is_silver:
-                    name = "Blue Cream Smoke" if is_dilute else "Tortie Smoke"
-                else:
-                    name = "Blue Cream" if is_dilute else "Tortoiseshell"
+            name = self._tortie_name(base, is_dilute, is_agouti, is_silver, c_state)
         else:
             is_orange = orange == "orange"
-            if is_agouti:
-                if is_orange:
-                    if is_silver:
-                        stem = "Cream Cameo" if is_dilute else "Cameo"
-                    else:
-                        stem = "Cream" if is_dilute else "Red"
-                else:
-                    if is_silver:
-                        stem = "Blue Silver" if is_dilute else "Silver"
-                    else:
-                        stem = "Blue" if is_dilute else "Brown"
-                name = f"{stem} Tabby"
+            if is_orange:
+                name = self._orange_name(is_dilute, is_agouti, is_silver, c_state)
             else:
-                if is_orange:
-                    if is_silver:
-                        name = "Cream Smoke" if is_dilute else "Cameo"
-                    else:
-                        name = "Cream" if is_dilute else "Red"
-                else:
-                    if is_silver:
-                        name = "Blue Smoke" if is_dilute else "Black Smoke"
-                    else:
-                        name = "Blue" if is_dilute else "Black"
+                name = self._non_orange_name(base, is_dilute, is_agouti, is_silver, c_state)
 
         if spotting in ("white", "high_white"):
             # 通常モードでは Van を出さず -White に正規化 (データ正本 §5.2)
@@ -181,6 +150,142 @@ class PhenotypeNamer:
         if base == "cinnamon":
             return "Fawn " if is_dilute else "Cinnamon "
         return ""
+
+    @staticmethod
+    def _base_color_name(base: str, is_dilute: bool) -> str:
+        """B/D座位からフルカラーの基色名を返す。"""
+
+        if base == "black":
+            return "Blue" if is_dilute else "Black"
+        if base == "chocolate":
+            return "Lilac" if is_dilute else "Chocolate"
+        if base == "cinnamon":
+            return "Fawn" if is_dilute else "Cinnamon"
+        return "Blue" if is_dilute else "Black"
+
+    @staticmethod
+    def _tabby_base_stem(base: str, is_dilute: bool) -> str:
+        """タビー表示で使う基色名を返す (黒系は Brown 表記)。"""
+
+        if base == "black":
+            return "Blue" if is_dilute else "Brown"
+        return PhenotypeNamer._base_color_name(base, is_dilute)
+
+    @staticmethod
+    def _silver_tabby_stem(base: str, is_dilute: bool) -> str:
+        """Silver Tabby / Lynx Point 系の基色付き stem を返す。"""
+
+        if base == "black":
+            return "Blue Silver" if is_dilute else "Silver"
+        return f"{PhenotypeNamer._base_color_name(base, is_dilute)} Silver"
+
+    @staticmethod
+    def _point_base_stem(base: str, is_dilute: bool) -> str:
+        """Point 系で使う基色名を返す (黒系濃色は Seal)。"""
+
+        if base == "black":
+            return "Blue" if is_dilute else "Seal"
+        return PhenotypeNamer._base_color_name(base, is_dilute)
+
+    @staticmethod
+    def _tortie_solid_stem(base: str, is_dilute: bool, is_silver: bool) -> str:
+        """トーティ/スモーク系の solid stem を返す。"""
+
+        if base == "black":
+            if is_silver:
+                return "Blue Cream Smoke" if is_dilute else "Tortie Smoke"
+            return "Blue Cream" if is_dilute else "Tortoiseshell"
+        stem = PhenotypeNamer._base_color_name(base, is_dilute)
+        if is_silver:
+            return f"{stem} Cream Smoke" if is_dilute else f"{stem} Tortie Smoke"
+        return f"{stem} Cream" if is_dilute else f"{stem} Tortie"
+
+    @staticmethod
+    def _tortie_tabby_stem(base: str, is_dilute: bool, is_silver: bool) -> str:
+        """Patched Tabby 系の stem を返す。"""
+
+        if is_silver:
+            return f"{PhenotypeNamer._silver_tabby_stem(base, is_dilute)} Patched"
+        return f"{PhenotypeNamer._tabby_base_stem(base, is_dilute)} Patched"
+
+    @staticmethod
+    def _tortie_point_stem(base: str, is_dilute: bool, is_silver: bool) -> str:
+        """Tortie Point 系の stem を返す。"""
+
+        if base == "black":
+            if is_silver:
+                return "Blue Silver Cream" if is_dilute else "Silver Tortie"
+            return "Blue Cream" if is_dilute else "Seal Tortie"
+        stem = PhenotypeNamer._base_color_name(base, is_dilute)
+        if is_silver:
+            return f"{stem} Silver Cream" if is_dilute else f"{stem} Silver Tortie"
+        return f"{stem} Cream" if is_dilute else f"{stem} Tortie"
+
+    @staticmethod
+    def _non_orange_name(
+        base: str,
+        is_dilute: bool,
+        is_agouti: bool,
+        is_silver: bool,
+        c_state: str,
+    ) -> str:
+        """非オレンジ個体の標準名を構築する。"""
+
+        if c_state == "point":
+            stem = (
+                PhenotypeNamer._silver_tabby_stem(base, is_dilute)
+                if is_silver and is_agouti
+                else PhenotypeNamer._point_base_stem(base, is_dilute)
+            )
+            return f"{stem} Lynx Point" if is_agouti else f"{stem} Point"
+
+        if is_agouti:
+            stem = (
+                PhenotypeNamer._silver_tabby_stem(base, is_dilute)
+                if is_silver
+                else PhenotypeNamer._tabby_base_stem(base, is_dilute)
+            )
+            return f"{stem} Tabby"
+        if is_silver:
+            return f"{PhenotypeNamer._base_color_name(base, is_dilute)} Smoke"
+        return PhenotypeNamer._base_color_name(base, is_dilute)
+
+    @staticmethod
+    def _orange_name(
+        is_dilute: bool,
+        is_agouti: bool,
+        is_silver: bool,
+        c_state: str,
+    ) -> str:
+        """オレンジ個体の標準名を構築する。B座位は赤系表現では表示名に出さない。"""
+
+        stem = "Cream" if is_dilute else "Red"
+        if c_state == "point":
+            return f"{stem} Lynx Point" if is_agouti else f"{stem} Point"
+        if is_agouti:
+            if is_silver:
+                stem = "Cream Cameo" if is_dilute else "Cameo"
+            return f"{stem} Tabby"
+        if is_silver:
+            return "Cream Smoke" if is_dilute else "Cameo"
+        return stem
+
+    @staticmethod
+    def _tortie_name(
+        base: str,
+        is_dilute: bool,
+        is_agouti: bool,
+        is_silver: bool,
+        c_state: str,
+    ) -> str:
+        """トーティ個体の標準名を構築する。"""
+
+        if c_state == "point":
+            stem = PhenotypeNamer._tortie_point_stem(base, is_dilute, is_silver)
+            return f"{stem} Lynx Point" if is_agouti else f"{stem} Point"
+        if is_agouti:
+            return f"{PhenotypeNamer._tortie_tabby_stem(base, is_dilute, is_silver)} Tabby"
+        return PhenotypeNamer._tortie_solid_stem(base, is_dilute, is_silver)
 
     @staticmethod
     def _tipping_degree(sire_color: str, dam_color: str) -> str:

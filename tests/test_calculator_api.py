@@ -540,6 +540,40 @@ def test_breed_colors_endpoint_unknown_breed_returns_422() -> None:
     assert "未対応の猫種" in response.json()["detail"]
 
 
+def test_golden_locus_data_contract() -> None:
+    """Golden 系は V9 正本どおり non_silver + agouti + Wb/tipping として保持する。"""
+
+    wrong: list[tuple[str, dict[str, tuple[str, str]]]] = []
+    for name, bases in COLOR_BASE_LOCI.items():
+        if "Golden" not in name:
+            continue
+        for base in bases:
+            autosomal = base.autosomal
+            if (
+                autosomal.get("A") != ("A", "A")
+                or autosomal.get("I") != ("i", "i")
+                or autosomal.get("Wb") != ("Wb", "Wb")
+            ):
+                wrong.append((name, autosomal))
+
+    assert not wrong, f"Golden 系なのに A/A + i/i + Wb/Wb でない行: {wrong}"
+
+
+def test_cream_tortie_o_locus_data_contract() -> None:
+    """Blue/Lilac/Chocolate Cream 系はトーティ表現なので O/o として保持する。"""
+
+    tortie_cream_markers = ("Blue Cream", "Lilac Cream", "Choco Cream", "Chocolate Cream")
+    wrong: list[tuple[str, tuple[str, str]]] = []
+    for name, bases in COLOR_BASE_LOCI.items():
+        if not any(marker in name for marker in tortie_cream_markers):
+            continue
+        for base in bases:
+            if base.o != ("O", "o"):
+                wrong.append((name, base.o))
+
+    assert not wrong, f"Cream 系トーティ名なのに O/o でない行: {wrong}"
+
+
 # --- Sp (スポテッド) 座位: 座位マスタ正本 V9 §5.11 / §7 Phase B ---
 
 
