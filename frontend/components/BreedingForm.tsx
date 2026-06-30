@@ -139,12 +139,6 @@ function optionsForParent(
   return definition.options;
 }
 
-function carrierChoiceGridClass(choiceCount: number): string {
-  if (choiceCount <= 3) return "grid-cols-3";
-  if (choiceCount <= 4) return "grid-cols-2 sm:grid-cols-4";
-  return "grid-cols-2 sm:grid-cols-7";
-}
-
 function hasCarrierSelection(selection: CarrierSelection): boolean {
   return CARRIER_LOCI.some((definition) => Boolean(selection[definition.locus]));
 }
@@ -612,84 +606,75 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
                   })),
                 ];
                 const selectedValue = activeCarrierSelection[definition.locus] ?? "";
-                const selectedLabel =
-                  choices.find((choice) => choice.value === selectedValue)?.label ??
-                  selectedValue;
-                const gridClass = carrierChoiceGridClass(choices.length);
                 const groupName = `carrier-${carrierModalParent}-${definition.locus}`;
 
                 return (
                   <div
                     key={definition.locus}
-                    className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition hover:border-slate-300"
+                    className="rounded-lg border border-slate-200 bg-white p-2.5 shadow-sm transition hover:border-slate-300"
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-900 text-xs font-semibold text-white shadow-sm">
-                        {definition.locus}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-sm font-semibold text-slate-900">
-                          {definition.name[language]}
-                        </div>
-                        <div className="mt-0.5 text-xs text-slate-500">
+                    <div className="grid grid-cols-[minmax(6.5rem,9rem)_minmax(0,1fr)] items-center gap-2 sm:grid-cols-[minmax(10rem,13rem)_minmax(0,1fr)] sm:gap-3">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-900 text-xs font-semibold text-white shadow-sm">
                           {definition.locus}
                         </div>
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-semibold text-slate-900">
+                            {definition.name[language]}
+                          </div>
+                          <div className="mt-0.5 text-xs text-slate-500">
+                            {definition.locus}
+                          </div>
+                        </div>
                       </div>
-                      <div
-                        className={`ml-auto shrink-0 rounded-md px-2.5 py-1 text-xs font-semibold ${
-                          selectedValue
-                            ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
-                            : "bg-slate-100 text-slate-500"
-                        }`}
-                      >
-                        {selectedLabel}
-                      </div>
-                    </div>
-                    <fieldset className="mt-3">
-                      <legend className="sr-only">
-                        {definition.locus} {text.parentForm.carrierSelector.selected}
-                      </legend>
-                      <div
-                        className={`grid gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1 shadow-inner ${gridClass}`}
-                      >
-                        {choices.map((choice, index) => {
-                          const isSelected = selectedValue === choice.value;
-                          const inputId = `${groupName}-${index}`;
+                      <fieldset className="min-w-0">
+                        <legend className="sr-only">
+                          {definition.locus} {text.parentForm.carrierSelector.selected}
+                        </legend>
+                        <div className="inline-flex max-w-full flex-wrap gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1 shadow-inner">
+                          {choices.map((choice, index) => {
+                            const isSelected = selectedValue === choice.value;
+                            const isExplicitChoice = choice.value.length > 0;
+                            const selectedClass = isExplicitChoice
+                              ? "bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-200"
+                              : "bg-white text-slate-600 shadow-sm ring-1 ring-slate-200";
+                            const inputId = `${groupName}-${index}`;
 
-                          return (
-                            <label
-                              key={`${definition.locus}-${index}-${choice.value || "none"}`}
-                              htmlFor={inputId}
-                              className={`relative flex min-h-9 cursor-pointer items-center justify-center rounded-md px-2 py-2 text-center text-xs font-semibold leading-tight transition focus-within:outline-none focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-1 ${
-                                isSelected
-                                  ? "bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-200"
-                                  : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
-                              }`}
-                            >
-                              <input
-                                id={inputId}
-                                type="radio"
-                                name={groupName}
-                                value={choice.value}
-                                checked={isSelected}
-                                className="sr-only"
-                                aria-label={`${definition.locus} ${choice.label}`}
-                                onChange={() =>
-                                  updateCarrier(
-                                    carrierModalParent,
-                                    definition.locus,
-                                    choice.value,
-                                  )
-                                }
-                              />
-                              <span className="min-w-0 break-words">
-                                {choice.label}
-                              </span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    </fieldset>
+                            return (
+                              <label
+                                key={`${definition.locus}-${index}-${choice.value || "none"}`}
+                                htmlFor={inputId}
+                                className={`relative flex min-h-8 min-w-12 cursor-pointer items-center justify-center rounded-md px-2 text-center text-xs font-semibold leading-tight transition focus-within:outline-none focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-1 ${
+                                  isSelected
+                                    ? selectedClass
+                                    : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
+                                }`}
+                              >
+                                <input
+                                  id={inputId}
+                                  type="radio"
+                                  name={groupName}
+                                  value={choice.value}
+                                  checked={isSelected}
+                                  className="sr-only"
+                                  aria-label={`${definition.locus} ${choice.label}`}
+                                  onChange={() =>
+                                    updateCarrier(
+                                      carrierModalParent,
+                                      definition.locus,
+                                      choice.value,
+                                    )
+                                  }
+                                />
+                                <span className="min-w-0 break-words">
+                                  {choice.label}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </fieldset>
+                    </div>
                   </div>
                 );
               })}
