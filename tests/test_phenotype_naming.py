@@ -90,6 +90,41 @@ def test_construct_fallback_name_black() -> None:
     assert namer.construct_fallback_name(kitten) == "Brown Tabby"
 
 
+def test_matching_color_does_not_leak_ruddy_without_breed_context() -> None:
+    """同一遺伝子型の先頭候補が Ruddy でも、文脈外では一般タビー名にする。"""
+
+    namer = PhenotypeNamer()
+    loci = {
+        "B": ("B", "B"),
+        "D": ("D", "D"),
+        "A": ("A", "A"),
+        "C": ("C", "C"),
+        "W": ("w", "w"),
+        "S": ("s", "s"),
+        "Mc": ("Mc", "Mc"),
+        "Ta": ("Ta", "Ta"),
+        "Sp": ("sp", "sp"),
+        "I": ("i", "i"),
+        "Wb": ("wb", "wb"),
+        "O": ("o", "Y"),
+    }
+    kitten = KittenGenotype(sex="Male", loci=loci)
+
+    assert (
+        namer.find_matching_color(kitten, "Blue Silver", "Silver", None)
+        == "Brown Tabby"
+    )
+    assert (
+        namer.find_matching_color(kitten, "Blue Silver", "Silver", "Persian")
+        == "Brown Tabby"
+    )
+    assert (
+        namer.find_matching_color(kitten, "Blue Silver", "Silver", "Abyssinian")
+        == "Ruddy"
+    )
+    assert namer.find_matching_color(kitten, "Blue Silver", "Silver", "Somali") == "Ruddy"
+
+
 def test_construct_fallback_dominant_white_is_white() -> None:
     """優性白 (W/-) は遺伝背景に依らず "White"。"""
 

@@ -35,6 +35,7 @@ def test_colors_endpoint_returns_input_colors() -> None:
 def test_reading_ja_compositional() -> None:
     assert reading_ja("Brown Tabby") == "ブラウンタビー"
     assert reading_ja("Blue Patched Spotted Tabby") == "ブルーパッチドスポッテッドタビー"
+    assert reading_ja("Ruddy") == "ルディ"
     # 括弧注記は読みから除外される。
     assert reading_ja("Black(AOC)") == "ブラック"
 
@@ -70,3 +71,14 @@ def test_breed_context_general_normalized_to_empty() -> None:
     assert colors["Black"]["breed_context"] == ""
     # どの色も "general" がそのまま漏れない。非空なら実際の猫種名のみ。
     assert all(color["breed_context"] != "general" for color in colors.values())
+
+
+def test_ruddy_reading_and_breed_context_exposed() -> None:
+    """Ruddy はルディ読みで、Abyssinian/Somali 共有の固有呼称として返す。"""
+
+    colors = _colors_by_value()
+    ruddy = colors["Ruddy"]
+    assert ruddy["reading_ja"] == "ルディ"
+    assert "ルディ" in ruddy["keywords"]
+    assert "Abyssinian" in str(ruddy["breed_context"])
+    assert "Somali" in str(ruddy["breed_context"])

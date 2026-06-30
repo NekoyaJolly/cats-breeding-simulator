@@ -17,7 +17,7 @@ from cat_breeding_simulator.master_data import (
     KittenGenotype,
     expressed_genotype_key,
 )
-from cat_breeding_simulator.color_master import COLOR_MASTER
+from cat_breeding_simulator.color_master import COLOR_MASTER, breed_context_matches
 from cat_breeding_simulator.display_alias_map import DISPLAY_ALIAS_MAP
 
 
@@ -64,10 +64,14 @@ class PhenotypeNamer:
     """子猫の遺伝子型から表示色名を決める (CSV 逆引き → フォールバック構築 → 後処理)。"""
 
     def classify_phenotype(
-        self, kitten: KittenGenotype, sire_color: str = "", dam_color: str = ""
+        self,
+        kitten: KittenGenotype,
+        sire_color: str = "",
+        dam_color: str = "",
+        breed: str | None = None,
     ) -> str | None:
         if sire_color and dam_color:
-            matched = self.find_matching_color(kitten, sire_color, dam_color)
+            matched = self.find_matching_color(kitten, sire_color, dam_color, breed)
             if matched:
                 return matched
         # CSV逆引きに名前が無い遺伝子型は標準表現型から構築する (V9 §6.1 step1)。
@@ -195,10 +199,24 @@ class PhenotypeNamer:
         return ""
 
     def find_matching_color(
-        self, kitten: KittenGenotype, sire_color: str, dam_color: str
+        self,
+        kitten: KittenGenotype,
+        sire_color: str,
+        dam_color: str,
+        breed: str | None = None,
     ) -> str | None:
         key = expressed_genotype_key(kitten.loci, kitten.sex)
         candidates = list(GENOTYPE_TO_COLOR_MAP.get((kitten.sex.lower(), key), []))
+        if not candidates:
+            return None
+
+        # Ruddy 等の猫種固有名は、同じ遺伝子型の一般名より先にCSV逆引きへ入ることがある。
+        # 猫種文脈が合わない場合は候補から外し、一般結果へ固有呼称を漏らさない。
+        candidates = [
+            candidate
+            for candidate in candidates
+            if self._candidate_allowed_in_breed_context(candidate, breed)
+        ]
         if not candidates:
             return None
 
@@ -239,6 +257,19 @@ class PhenotypeNamer:
 
         candidates.sort(key=score, reverse=True)
         return candidates[0]
+
+    @staticmethod
+    def _candidate_allowed_in_breed_context(name: str, breed: str | None) -> bool:
+        """CSV逆引き候補を、猫種固有呼称の表示文脈で絞り込む。"""
+
+        resolved = COLOR_MASTER.resolve(name)
+        if resolved is None or resolved.status != "breed_specific":
+            return True
+        if breed_context_matches(breed, resolved.breed_context):
+            return True
+        if breed and DISPLAY_ALIAS_MAP.resolve_display_name(name, breed) != name:
+            return True
+        return False
 
     def post_process_color_name(
         self, name: str, sire_color: str, dam_color: str, breed: str | None

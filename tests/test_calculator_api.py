@@ -209,6 +209,25 @@ def test_abyssinian_ruddy_preserved() -> None:
         assert "Ruddy" in colors, f"{breed} で Ruddy が出力されない: {colors}"
 
 
+def test_breed_specific_input_requires_matching_breed_context() -> None:
+    """breed_specific 色は、猫種指定があっても文脈不一致なら拒否する。"""
+
+    calculator = CoatColorCalculator()
+    with pytest.raises(BreedingCalculationError):
+        calculator.calculate("Ruddy", "Ruddy", breed="Persian")
+
+
+def test_blue_silver_x_silver_patched_outputs_red_family_not_ruddy() -> None:
+    """Blue Silver × Silver Patched Tabby の一般結果に Ruddy を混ぜない。"""
+
+    calculator = CoatColorCalculator()
+    report = calculator.calculate_report("Blue Silver", "Silver Patched Tabby")
+    colors = _colors(report)
+    assert "Ruddy" not in colors
+    assert {"Cameo Tabby", "Red Tabby", "Cream Cameo Tabby", "Cream Tabby"} & colors
+    assert report.unmatched_probability == 0
+
+
 def test_display_map_van_normalized_to_white_in_general() -> None:
     """一般表示では Van を -White に正規化する (データ正本 §5.2)。"""
 
