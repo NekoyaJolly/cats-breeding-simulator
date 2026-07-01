@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Cat Coat Planner PWA icon</title>
+  <desc id="desc">向き合う2匹の猫のシルエットが中央で融合し、1つの大きな猫の形になるテラコッタ色のアプリアイコン。</desc>
+  <defs>
+    <linearGradient id="background" x1="64" y1="48" x2="448" y2="464" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff8ec"/>
+      <stop offset="0.55" stop-color="#f9e2c7"/>
+      <stop offset="1" stop-color="#ead4b7"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="48%" r="58%">
+      <stop offset="0" stop-color="#fff3df" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#fff3df" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="fusion" x1="154" y1="122" x2="358" y2="394" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#b8644b"/>
+      <stop offset="0.48" stop-color="#ca7654"/>
+      <stop offset="1" stop-color="#9f563f"/>
+    </linearGradient>
+    <linearGradient id="leftBlend" x1="144" y1="178" x2="268" y2="338" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2f5860" stop-opacity="0.52"/>
+      <stop offset="1" stop-color="#ca7654" stop-opacity="0.05"/>
+    </linearGradient>
+    <linearGradient id="rightBlend" x1="368" y1="178" x2="244" y2="338" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#e3aa62" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ca7654" stop-opacity="0.04"/>
+    </linearGradient>
+    <filter id="softShadow" x="-18%" y="-18%" width="136%" height="142%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#4d2c22" flood-opacity="0.20"/>
+    </filter>
+    <filter id="innerLift" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#ffffff" flood-opacity="0.24"/>
+    </filter>
+    <clipPath id="fusionClip">
+      <path d="M256 96c-14-18-34-29-58-33l-12 67c-20 16-32 40-32 69-24 22-37 55-37 92 0 75 57 132 139 132s139-57 139-132c0-37-13-70-37-92 0-29-12-53-32-69l-12-67c-24 4-44 15-58 33Z"/>
+    </clipPath>
+  </defs>
+
+  <rect x="24" y="24" width="464" height="464" rx="112" fill="url(#background)"/>
+  <rect x="24" y="24" width="464" height="464" rx="112" fill="url(#glow)"/>
+
+  <path d="M87 389c-23-34-28-76-16-115 9-31 30-54 59-68-12-29-6-64 16-86l-6-67c30 12 52 34 66 66 16-2 31 1 45 9-21 16-35 38-40 64 21 8 38 25 46 47-25-5-51 2-70 19-23 21-32 54-20 84-35 4-62 20-80 47Z" fill="#2f5860" opacity="0.98" filter="url(#softShadow)"/>
+  <path d="M425 389c23-34 28-76 16-115-9-31-30-54-59-68 12-29 6-64-16-86l6-67c-30 12-52 34-66 66-16-2-31 1-45 9 21 16 35 38 40 64-21 8-38 25-46 47 25-5 51 2 70 19 23 21 32 54 20 84 35 4 62 20 80 47Z" fill="#e3aa62" opacity="0.98" filter="url(#softShadow)"/>
+
+  <path d="M256 96c-14-18-34-29-58-33l-12 67c-20 16-32 40-32 69-24 22-37 55-37 92 0 75 57 132 139 132s139-57 139-132c0-37-13-70-37-92 0-29-12-53-32-69l-12-67c-24 4-44 15-58 33Z" fill="url(#fusion)" filter="url(#softShadow)"/>
+  <g clip-path="url(#fusionClip)">
+    <path d="M124 376c17-91 65-153 144-188 10 70-12 135-67 195-27 2-52 0-77-7Z" fill="url(#leftBlend)"/>
+    <path d="M388 376c-17-91-65-153-144-188-10 70 12 135 67 195 27 2 52 0 77-7Z" fill="url(#rightBlend)"/>
+    <path d="M256 100c-7 41-7 284 0 320" fill="none" stroke="#fff0de" stroke-width="7" stroke-linecap="round" opacity="0.34"/>
+  </g>
+
+  <path d="M179 182c-8 20-7 45 4 66 13-24 34-40 60-44-13-17-36-26-64-22Z" fill="#2a4e55" opacity="0.58"/>
+  <path d="M333 182c8 20 7 45-4 66-13-24-34-40-60-44 13-17 36-26 64-22Z" fill="#b87a43" opacity="0.52"/>
+
+  <path d="M172 339c17 30 48 49 84 49s67-19 84-49" fill="none" stroke="#fff1de" stroke-width="11" stroke-linecap="round" opacity="0.52" filter="url(#innerLift)"/>
+  <path d="M108 388c38 26 91 41 148 41s110-15 148-41" fill="none" stroke="#5b3629" stroke-width="10" stroke-linecap="round" opacity="0.13"/>
+</svg>
