@@ -7,6 +7,23 @@ export const metadata: Metadata = {
   title: "Cat Coat Planner",
   description: "Kitten coat color & pattern simulator / 猫の色柄シミュレーター",
   applicationName: "Cat Coat Planner",
+  icons: {
+    icon: [
+      {
+        url: "/icons/app-icon.svg",
+        type: "image/svg+xml",
+        sizes: "any",
+      },
+    ],
+    shortcut: [
+      {
+        url: "/icons/app-icon.svg",
+        type: "image/svg+xml",
+        sizes: "any",
+      },
+    ],
+  },
+  manifest: "/manifest.webmanifest",
   appleWebApp: {
     title: "Coat Planner",
   },
