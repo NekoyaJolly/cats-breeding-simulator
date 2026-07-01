@@ -48,3 +48,7 @@ AliasId,CanonicalPhenotype,GeneralDisplayName,Breed,BreedSpecificDisplayName,Reg
 47,Sable,Sable,Tonkinese,Natural Solid,,official,breed_specific,20,Tonkinese の Solid class 呼称。一般表示は CanonicalPhenotype のまま。
 48,Champagne,Champagne,Tonkinese,Champagne Solid,,official,breed_specific,20,Tonkinese の Solid class 呼称。一般表示は CanonicalPhenotype のまま。
 49,Platinum,Platinum,Tonkinese,Platinum Solid,,official,breed_specific,20,Tonkinese の Solid class 呼称。一般表示は CanonicalPhenotype のまま。
+50,Van Calico,Calico,Any,,,derived,general,30,一般表示では Van を出さず Calico へ寄せる。Calico は白斑を含む三毛呼称。
+51,Dilute Calico Van,Dilute Calico,Any,,,derived,general,30,一般表示では Van を出さず Dilute Calico へ寄せる。Dilute Calico は白斑を含む三毛呼称。
+52,Tortoiseshell-White Van,Calico,Any,,,derived,general,30,一般表示では Van を出さず Calico へ寄せる。
+53,Blue Cream-White Van,Dilute Calico,Any,,,derived,general,30,一般表示では Van を出さず Dilute Calico へ寄せる。

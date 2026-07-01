@@ -364,12 +364,33 @@ def has_token(value: str, tokens: tuple[str, ...]) -> bool:
     return any(token in value for token in tokens)
 
 
+def is_point_name(color: str) -> bool:
+    """色名が Point 系として表示されているかを判定する。"""
+
+    return "Point" in color
+
+
 def has_white_spotting_signal(
     color: str, loci: dict[str, tuple[str, str]] | None
 ) -> bool:
     """名前または座位から白斑シグナルが読み取れるかを判定する。"""
 
     return has_token(color, WHITE_SPOTTING_TOKENS) or allele_pair_has(loci, "S", "S")
+
+
+def is_confirmed_point_result(
+    color: str,
+    loci: dict[str, tuple[str, str]] | None,
+) -> bool:
+    """Point 名が、DisplayAllowed=false でも結果表示として妥当かを判定する。
+
+    master 上の Point 系は一般候補として常時出さないため DisplayAllowed=false のままにする。
+    ただし計算結果として Point 名が出ること自体は、親入力や猫種固定などで `cs/cs` が
+    成立している場合に妥当。genetic map 未収載の Point-White 等は座位解決できないため、
+    名称上 Point であれば表示ポリシーの過検知から外す。
+    """
+
+    return is_point_name(color) and (loci is None or allele_pair_is(loci, "C", "cs"))
 
 
 def append_parent_name_loci_mismatch(
@@ -595,6 +616,7 @@ def validate_report(
                 )
             )
 
+        loci = result_loci(calculator, result, loci_cache)
         resolved = resolved_output(result.color)
         if resolved is None:
             suspicious.append(
@@ -645,7 +667,7 @@ def validate_report(
                         detail="通常表示できない区分の色が出力されています。",
                     )
                 )
-            elif not resolved.display_allowed:
+            elif not resolved.display_allowed and not is_confirmed_point_result(result.color, loci):
                 suspicious.append(
                     AuditIssue(
                         issue_type="display_policy_review",
@@ -674,7 +696,32 @@ def validate_report(
                 )
             )
 
-        loci = result_loci(calculator, result, loci_cache)
+        if parents_point:
+            if not is_point_name(result.color):
+                failures.append(
+                    AuditIssue(
+                        issue_type="full_color_from_point_parents",
+                        sire_color=sire_color,
+                        dam_color=dam_color,
+                        sex=result.sex,
+                        color=result.color,
+                        probability_pct=f"{result.probability_pct:.4f}",
+                        detail="cs/cs x cs/cs から Point 名ではない結果が出ています。",
+                    )
+                )
+            elif loci is not None and not allele_pair_is(loci, "C", "cs"):
+                failures.append(
+                    AuditIssue(
+                        issue_type="full_color_from_point_parents",
+                        sire_color=sire_color,
+                        dam_color=dam_color,
+                        sex=result.sex,
+                        color=result.color,
+                        probability_pct=f"{result.probability_pct:.4f}",
+                        detail="cs/cs x cs/cs から C 座位が Point 固定ではない結果が出ています。",
+                    )
+                )
+
         if loci is None:
             continue
         append_golden_loci_mismatch(
@@ -736,18 +783,6 @@ def validate_report(
                     color=result.color,
                     probability_pct=f"{result.probability_pct:.4f}",
                     detail="w/w x w/w から W を含む優性白結果が出ています。",
-                )
-            )
-        if parents_point and not allele_pair_is(loci, "C", "cs"):
-            failures.append(
-                AuditIssue(
-                    issue_type="full_color_from_point_parents",
-                    sire_color=sire_color,
-                    dam_color=dam_color,
-                    sex=result.sex,
-                    color=result.color,
-                    probability_pct=f"{result.probability_pct:.4f}",
-                    detail="cs/cs x cs/cs から Point 以外の C 座位結果が出ています。",
                 )
             )
 

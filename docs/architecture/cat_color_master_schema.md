@@ -127,7 +127,7 @@
 
 両者は独立である。例:
 
-- `Seal Point` … `InputAllowed=true` (Point の親を入力できる) かつ `DisplayAllowed=false` (一般出力には出さない。Point は C キャリア規則によりエンジンが `normal_mode` で非表示にする)。
+- `Seal Point` … `InputAllowed=true` (Point の親を入力できる) かつ `DisplayAllowed=false` (一般候補として常時は出さない。親入力・猫種固定・明示キャリアで `cs/cs` が確定した結果としては出力され得る)。
 - `Blue Tortie` (alias) … `InputAllowed=true` (入力名として受理) かつ `DisplayAllowed=false` (出力は canonical の `Blue Cream` に寄せる。希釈トーティの正規名は Cream)。
 
 `DisplayAllowed=false` の主な構造:

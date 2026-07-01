@@ -398,6 +398,8 @@ class PhenotypeNamer:
         if name in _VALID_COLOR_NAMES:
             return name
 
+        name = re.sub(r"\bSilver(?:\s+Silver)+\b", "Silver", name)
+
         is_silver = "Silver" in name and "Tabby" in name
         if is_silver:
             if name.startswith("Black Pt "):
@@ -412,13 +414,13 @@ class PhenotypeNamer:
                 name = name.replace("Red ", "Cameo ").replace(" Silver Tabby", " Tabby")
             elif name.startswith("Cream "):
                 name = name.replace("Cream ", "Cream Cameo ").replace(" Silver Tabby", " Tabby")
-            elif name.startswith("Chocolate "):
+            elif name.startswith("Chocolate ") and not name.startswith("Chocolate Silver "):
                 name = name.replace("Chocolate ", "Chocolate Silver ").replace(" Silver Tabby", " Tabby")
-            elif name.startswith("Lilac "):
+            elif name.startswith("Lilac ") and not name.startswith("Lilac Silver "):
                 name = name.replace("Lilac ", "Lilac Silver ").replace(" Silver Tabby", " Tabby")
-            elif name.startswith("Cinnamon "):
+            elif name.startswith("Cinnamon ") and not name.startswith("Cinnamon Silver "):
                 name = name.replace("Cinnamon ", "Cinnamon Silver ").replace(" Silver Tabby", " Tabby")
-            elif name.startswith("Fawn "):
+            elif name.startswith("Fawn ") and not name.startswith("Fawn Silver "):
                 name = name.replace("Fawn ", "Fawn Silver ").replace(" Silver Tabby", " Tabby")
         else:
             if "Tabby" in name:

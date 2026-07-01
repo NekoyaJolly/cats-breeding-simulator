@@ -232,10 +232,24 @@ def test_display_map_van_normalized_to_white_in_general() -> None:
     """一般表示では Van を -White に正規化する (データ正本 §5.2)。"""
 
     assert DISPLAY_ALIAS_MAP.resolve_display_name("Black-White Van", None) == "Black-White"
-    assert (
-        DISPLAY_ALIAS_MAP.resolve_display_name("Tortoiseshell-White Van", None)
-        == "Tortoiseshell-White"
-    )
+    assert DISPLAY_ALIAS_MAP.resolve_display_name("Van Calico", None) == "Calico"
+    assert DISPLAY_ALIAS_MAP.resolve_display_name("Dilute Calico Van", None) == "Dilute Calico"
+    assert DISPLAY_ALIAS_MAP.resolve_display_name("Tortoiseshell-White Van", None) == "Calico"
+    assert DISPLAY_ALIAS_MAP.resolve_display_name("Blue Cream-White Van", None) == "Dilute Calico"
+
+
+def test_general_output_collapses_van_tortie_white_aliases() -> None:
+    """一般結果では Van/トーティ白斑の alias を表示用 canonical 名へ寄せる。"""
+
+    calculator = CoatColorCalculator()
+    report = calculator.calculate_report("Black Smoke-White", "Blue Cream Point-White")
+    colors = _colors(report)
+
+    assert "Van Calico" not in colors
+    assert "Blue Cream-White" not in colors
+    assert "Calico" in colors
+    assert "Dilute Calico" in colors
+    assert report.unmatched_probability == 0
 
 
 def test_display_map_breed_name_composes_with_white_suffix() -> None:
@@ -595,6 +609,110 @@ def test_white_spotting_locus_data_contract() -> None:
 
     assert not wrong_bicolor, f"-White/-W/Bi-Color/Mitted 名なのに S/s でない行: {wrong_bicolor}"
     assert not wrong_van, f"Van 名なのに S/S でない行: {wrong_van}"
+
+
+@pytest.mark.parametrize(
+    "color_name",
+    [
+        "Blue Chinchilla Golden-White",
+        "Blue Chinchilla Silver-White",
+        "Blue Golden",
+        "Blue Golden-White",
+        "Blue Shaded Golden-White",
+        "Blue Shaded Silver-White",
+    ],
+)
+def test_tipping_fallback_outputs_exist_in_master(color_name: str) -> None:
+    """Wb/tipping fallback が出す汎用名は master で通常表示できる。"""
+
+    resolved = COLOR_MASTER.resolve(color_name)
+    assert resolved is not None
+    assert resolved.primary_name == color_name
+    assert resolved.display_allowed is True
+    assert resolved.input_allowed is True
+
+
+@pytest.mark.parametrize(
+    "color_name",
+    [
+        "Chocolate Tabby-White",
+        "Chocolate Silver Tabby-White",
+        "Lilac Silver Tabby",
+        "Chocolate Silver Patched Tabby",
+        "Chocolate Silver Patched Tabby-White",
+        "Lilac Patched Tabby-White",
+        "Lilac Silver Patched Tabby",
+        "Lilac Silver Patched Tabby-White",
+    ],
+)
+def test_chocolate_lilac_fallback_outputs_exist_in_master(color_name: str) -> None:
+    """Chocolate/Lilac 系 fallback が出す標準名は master で通常表示できる。"""
+
+    resolved = COLOR_MASTER.resolve(color_name)
+    assert resolved is not None
+    assert resolved.primary_name == color_name
+    assert resolved.display_allowed is True
+    assert resolved.input_allowed is True
+
+
+def test_point_white_fallback_output_exists_in_master_but_not_general_display() -> None:
+    """Point-White 補完名は入力可だが、一般候補としては常時表示しない。"""
+
+    resolved = COLOR_MASTER.resolve("Cream Lynx Point-White")
+    assert resolved is not None
+    assert resolved.primary_name == "Cream Lynx Point-White"
+    assert resolved.display_allowed is False
+    assert resolved.input_allowed is True
+
+
+@pytest.mark.parametrize(
+    "color_name",
+    [
+        "Blue Silver Lynx Point",
+        "Blue Silver Lynx Point-White",
+        "Silver Lynx Point-White",
+        "Lilac Lynx Point-White",
+        "Blue Silver Cream Lynx Point",
+        "Silver Tortie Lynx Point",
+        "Blue Silver Cream Lynx Point-White",
+        "Chocolate Silver Lynx Point",
+        "Lilac Silver Lynx Point",
+        "Lilac Silver Lynx Point-White",
+        "Blue Shaded Golden Lynx Point",
+        "Blue Shaded Golden Lynx Point-White",
+        "Blue Shaded Silver Lynx Point",
+        "Blue Shaded Silver Lynx Point-White",
+        "Shaded Golden Lynx Point",
+        "Shaded Golden Lynx Point-White",
+        "Shaded Silver Lynx Point",
+        "Shaded Silver Lynx Point-White",
+        "Silver Tortie Lynx Point-White",
+        "Chocolate Silver Tortie Lynx Point-White",
+        "Lilac Silver Cream Lynx Point",
+        "Lilac Silver Cream Lynx Point-White",
+        "Lilac Cream Lynx Point-White",
+        "Chocolate Tortie Point-White",
+    ],
+)
+def test_point_audit_outputs_exist_in_master_but_not_general_display(color_name: str) -> None:
+    """監査で出る Point 系補完名は入力可だが、一般候補としては常時表示しない。"""
+
+    resolved = COLOR_MASTER.resolve(color_name)
+    assert resolved is not None
+    assert resolved.primary_name == color_name
+    assert resolved.display_allowed is False
+    assert resolved.input_allowed is True
+
+
+@pytest.mark.parametrize("color_name", ["Lilac Cream-White", "Chocolate Tortie-White"])
+def test_tortie_white_fallback_outputs_exist_in_master(color_name: str) -> None:
+    """非Pointのトーティ白斑補完名は master で通常表示できる。"""
+
+    resolved = COLOR_MASTER.resolve(color_name)
+    assert resolved is not None
+    assert resolved.primary_name == color_name
+    assert resolved.display_allowed is True
+    assert resolved.input_allowed is True
 
 
 # --- Sp (スポテッド) 座位: 座位マスタ正本 V9 §5.11 / §7 Phase B ---

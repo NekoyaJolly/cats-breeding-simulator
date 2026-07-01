@@ -234,7 +234,11 @@ def test_construct_fallback_tipping_degree_from_parents() -> None:
         ("Red Silver Tabby", "Cameo Tabby"),
         ("Cream Silver Tabby", "Cream Cameo Tabby"),
         ("Chocolate Silver Tabby", "Chocolate Silver Tabby"),
+        ("Chocolate Silver Patched Tabby", "Chocolate Silver Patched Tabby"),
+        ("Chocolate Silver Silver Patched Tabby", "Chocolate Silver Patched Tabby"),
         ("Lilac Silver Tabby", "Lilac Silver Tabby"),
+        ("Lilac Silver Patched Tabby", "Lilac Silver Patched Tabby"),
+        ("Lilac Silver Silver Patched Tabby", "Lilac Silver Patched Tabby"),
         ("Cinnamon Silver Tabby", "Cinnamon Silver Tabby"),
         ("Fawn Silver Tabby", "Fawn Silver Tabby"),
         # 非シルバーのタビーは Black → Brown へ正規化
