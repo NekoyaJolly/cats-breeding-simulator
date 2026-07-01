@@ -292,8 +292,8 @@ export function LitterInference({ language }: { language: Language }) {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <section className="relative rounded-lg border border-slate-200 bg-white px-4 pb-4 pt-6 shadow-sm sm:px-6 sm:pb-6 sm:pt-7">
-        <h2 className="absolute -top-3 left-4 bg-white px-1 text-lg font-semibold leading-6 text-slate-800 sm:left-6">
+      <section className="relative rounded-lg border border-slate-200 bg-white px-4 pb-4 pt-5 shadow-sm sm:px-6 sm:pb-6 sm:pt-6">
+        <h2 className="absolute -top-2.5 left-4 bg-white px-1 text-sm font-semibold leading-5 text-slate-700 sm:left-6">
           {text.kittenForm.sectionTitle}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
@@ -339,7 +339,7 @@ export function LitterInference({ language }: { language: Language }) {
             femaleOnlyLabel={text.common.femaleOnly}
           />
 
-          <section className="relative rounded-md border border-slate-200 p-2.5 pt-5 sm:p-3 sm:pt-5">
+          <section className="relative rounded-md border border-slate-200 px-2.5 pb-2.5 pt-5 sm:px-3 sm:pb-3 sm:pt-5">
             <h3 className="absolute -top-2.5 left-3 bg-white px-1 text-sm font-semibold leading-5 text-slate-700">
               {text.kittenForm.kittenSection}
             </h3>
@@ -347,7 +347,7 @@ export function LitterInference({ language }: { language: Language }) {
               {kittens.map((kitten, index) => (
                 <div
                   key={kitten.id}
-                  className="grid grid-cols-1 gap-3 rounded-md border border-slate-200 p-2.5 sm:p-3 md:grid-cols-[1fr_130px_1.4fr]"
+                  className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_130px_1.4fr]"
                 >
                   <div className="grid grid-cols-[minmax(0,1fr)_7.5rem] gap-2 md:contents">
                     <FloatingTextInput
