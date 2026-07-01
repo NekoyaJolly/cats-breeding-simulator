@@ -11,6 +11,7 @@ import argparse
 import csv
 import json
 import os
+import re
 import sys
 import time
 from collections import Counter
@@ -51,6 +52,15 @@ Pair = tuple[str, str]
 SILVER_TOKENS = ("Silver", "Smoke", "Cameo")
 WHITE_SPOTTING_TOKENS = ("-White", " Van", " Bi-Color", " Mitted")
 GOLDEN_TOKEN = "Golden"
+POINT_DISPLAY_FORBIDDEN_TOKENS = (
+    "Silver",
+    "Golden",
+    "Shaded",
+    "Chinchilla",
+    "Shell",
+    "Cameo",
+    "Smoke",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -368,6 +378,14 @@ def is_point_name(color: str) -> bool:
     """色名が Point 系として表示されているかを判定する。"""
 
     return "Point" in color
+
+
+def has_point_display_forbidden_token(color: str) -> bool:
+    """Point 表示名に出さない Silver/Golden/tipping 系の語が含まれるかを判定する。"""
+
+    if not is_point_name(color):
+        return False
+    return any(re.search(rf"\b{re.escape(token)}\b", color) for token in POINT_DISPLAY_FORBIDDEN_TOKENS)
 
 
 def has_white_spotting_signal(
@@ -721,6 +739,22 @@ def validate_report(
                         detail="cs/cs x cs/cs から C 座位が Point 固定ではない結果が出ています。",
                     )
                 )
+
+        if has_point_display_forbidden_token(result.color):
+            failures.append(
+                AuditIssue(
+                    issue_type="point_display_has_silver_or_tipping_token",
+                    sire_color=sire_color,
+                    dam_color=dam_color,
+                    sex=result.sex,
+                    color=result.color,
+                    probability_pct=f"{result.probability_pct:.4f}",
+                    detail=(
+                        "Point 結果名に Silver/Golden/Shaded/Chinchilla/Shell/Cameo/Smoke "
+                        "系の語が残っています。"
+                    ),
+                )
+            )
 
         if loci is None:
             continue

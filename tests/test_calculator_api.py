@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -671,7 +673,6 @@ def test_point_white_fallback_output_exists_in_master_but_not_general_display() 
         "Blue Silver Lynx Point",
         "Blue Silver Lynx Point-White",
         "Silver Lynx Point-White",
-        "Lilac Lynx Point-White",
         "Blue Silver Cream Lynx Point",
         "Silver Tortie Lynx Point",
         "Blue Silver Cream Lynx Point-White",
@@ -690,18 +691,45 @@ def test_point_white_fallback_output_exists_in_master_but_not_general_display() 
         "Chocolate Silver Tortie Lynx Point-White",
         "Lilac Silver Cream Lynx Point",
         "Lilac Silver Cream Lynx Point-White",
-        "Lilac Cream Lynx Point-White",
-        "Chocolate Tortie Point-White",
     ],
 )
-def test_point_audit_outputs_exist_in_master_but_not_general_display(color_name: str) -> None:
-    """監査で出る Point 系補完名は入力可だが、一般候補としては常時表示しない。"""
+def test_point_silver_and_tipping_outputs_are_not_added_to_master(color_name: str) -> None:
+    """Point 表示で丸める Silver/Golden/tipping 系の補完名は master へ追加しない。"""
+
+    assert COLOR_MASTER.resolve(color_name) is None
+
+
+@pytest.mark.parametrize(
+    "color_name",
+    ["Lilac Lynx Point-White", "Lilac Cream Lynx Point-White", "Chocolate Tortie Point-White"],
+)
+def test_point_non_silver_fallback_outputs_exist_in_master_but_not_general_display(
+    color_name: str,
+) -> None:
+    """Silver/Golden/tipping を含まない Point 補完名は入力可だが、一般候補としては常時表示しない。"""
 
     resolved = COLOR_MASTER.resolve(color_name)
     assert resolved is not None
     assert resolved.primary_name == color_name
     assert resolved.display_allowed is False
     assert resolved.input_allowed is True
+
+
+def test_point_results_do_not_display_silver_or_tipping_terms() -> None:
+    """Point 結果名には Silver/Golden/tipping 系の語を残さない。"""
+
+    calculator = CoatColorCalculator()
+    report = calculator.calculate_report("Blue Lynx Point", "Shaded Tortie Lynx Point-White")
+    forbidden = ("Silver", "Golden", "Shaded", "Chinchilla", "Shell", "Cameo", "Smoke")
+    offenders = [
+        result.color
+        for result in report.results
+        if "Point" in result.color
+        and any(re.search(rf"\b{re.escape(token)}\b", result.color) for token in forbidden)
+    ]
+
+    assert not offenders
+    assert report.unmatched_probability == 0
 
 
 @pytest.mark.parametrize("color_name", ["Lilac Cream-White", "Chocolate Tortie-White"])

@@ -108,14 +108,26 @@ class PhenotypeNamer:
         is_agouti = agouti == "agouti"
         is_silver = silver == "silver"
 
+        # Point 表示では I/Wb/tipping 系の語を出さず、基底の Point 名へ寄せる。
+        # 理由: Point は C座位の発色制限で体色差が隠れるため、Silver/Golden/Shaded 等を
+        # 一般出力名に載せると実務上の色名として過剰分類になる。
+        if c_state == "point":
+            if orange == "tortie":
+                name = self._tortie_name(base, is_dilute, is_agouti, False, c_state)
+            elif orange == "orange":
+                name = self._orange_name(is_dilute, is_agouti, False, c_state)
+            else:
+                name = self._non_orange_name(base, is_dilute, is_agouti, False, c_state)
+            if spotting in ("white", "high_white"):
+                name = f"{name}-White"
+            return name
+
         # ワイドバンド: 非オレンジ・アグーチでのみ tipping として命名する (それ以外は通常命名)。
         if wideband == "wide" and is_agouti and orange == "non_orange":
             degree = self._tipping_degree(sire_color, dam_color)
             tipped = "Silver" if is_silver else "Golden"
             base_prefix = self._wideband_base_prefix(base, is_dilute)
             name = f"{base_prefix}{degree}{tipped}"
-            if c_state == "point":
-                name = f"{name} Lynx Point"
             if spotting in ("white", "high_white"):
                 name = f"{name}-White"
             return name
@@ -386,12 +398,34 @@ class PhenotypeNamer:
         # 出力色名を cat_color_master.csv の canonical PrimaryName へ正規化する
         # (alias 統合・略記展開)。集計はこの canonical 名で行われ自動的にマージされる。
         name = COLOR_MASTER.canonical_name(name)
+        name = self.normalize_point_display_name(name)
+        name = COLOR_MASTER.canonical_name(name)
         # 猫種別表示名 (Abyssinian の Ruddy、Oriental の Ebony 等) と一般 Van 正規化を
         # cat_color_display_alias_map.csv 駆動で適用する (データ正本 §4 / §1.1)。
         # canonical 正規化の「後」に置く: Ebony/Chestnut/Lavender は master では alias のため、
         # 先に canonical 化しないと猫種別呼称が一般名へ戻ってしまう。
         name = DISPLAY_ALIAS_MAP.resolve_display_name(name, breed)
         return name
+
+    @staticmethod
+    def normalize_point_display_name(name: str) -> str:
+        """Point 系の表示名から Silver/Golden/tipping 系の過剰分類を落とす。"""
+
+        if "Point" not in name:
+            return name
+
+        suffix = ""
+        core = name
+        if core.endswith("-White"):
+            core = core[: -len("-White")]
+            suffix = "-White"
+
+        core = re.sub(r"\b(?:Chinchilla|Shaded|Shell|Golden|Silver|Cameo|Smoke)\b\s*", "", core)
+        core = " ".join(core.split())
+        if core in ("Point", "Lynx Point") or core.startswith("Tortie "):
+            core = f"Seal {core}"
+
+        return f"{core}{suffix}"
 
     def clean_phenotype_name(self, name: str) -> str:
         # すでにCSVに存在する正式なカラー名である場合は、誤置換を防ぐためそのまま返す
