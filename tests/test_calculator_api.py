@@ -574,6 +574,29 @@ def test_cream_tortie_o_locus_data_contract() -> None:
     assert not wrong, f"Cream 系トーティ名なのに O/o でない行: {wrong}"
 
 
+def test_white_spotting_locus_data_contract() -> None:
+    """白斑名は V9 正本どおり -White=S/s、Van=S/S として保持する。"""
+
+    bicolor_markers = ("-White", "-W", " Bi-Color", " Bi-C", " Mitted")
+    wrong_bicolor: list[tuple[str, tuple[str, str] | None]] = []
+    wrong_van: list[tuple[str, tuple[str, str] | None]] = []
+    for name, bases in COLOR_BASE_LOCI.items():
+        is_van = " Van" in name
+        is_bicolor = any(marker in name for marker in bicolor_markers)
+        if not is_van and not is_bicolor:
+            continue
+        for base in bases:
+            s_locus = base.autosomal.get("S")
+            if is_van:
+                if s_locus != ("S", "S"):
+                    wrong_van.append((name, s_locus))
+            elif s_locus != ("S", "s"):
+                wrong_bicolor.append((name, s_locus))
+
+    assert not wrong_bicolor, f"-White/-W/Bi-Color/Mitted 名なのに S/s でない行: {wrong_bicolor}"
+    assert not wrong_van, f"Van 名なのに S/S でない行: {wrong_van}"
+
+
 # --- Sp (スポテッド) 座位: 座位マスタ正本 V9 §5.11 / §7 Phase B ---
 
 

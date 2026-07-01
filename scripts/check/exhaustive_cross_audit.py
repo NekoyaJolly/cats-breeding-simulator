@@ -13,6 +13,7 @@ import json
 import os
 import sys
 import time
+from collections import Counter
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
@@ -109,6 +110,25 @@ class AuditBatchResult:
     audited_pairs: int
     failures: list[AuditIssue]
     suspicious: list[AuditIssue]
+
+
+@dataclass(frozen=True, slots=True)
+class IssueReviewSummary:
+    """同じ要因の監査指摘をレビュー用にまとめた行。"""
+
+    issue_type: str
+    color: str
+    detail: str
+    count: int
+    sexes: str
+    example_sire_color: str
+    example_dam_color: str
+    max_probability_pct: str
+    master_status: str
+    master_display_allowed: str
+    master_input_allowed: str
+    master_breed_context: str
+    master_primary_name: str
 
 
 def parse_args() -> AuditOptions:
@@ -796,6 +816,90 @@ def write_csv(path: Path, rows: list[object], fieldnames: list[str]) -> None:
             writer.writerow(asdict(row))
 
 
+def issue_type_counts(issues: list[AuditIssue]) -> dict[str, int]:
+    """指摘種別ごとの件数を summary.json 用に集計する。"""
+
+    counts = Counter(issue.issue_type for issue in issues)
+    return {
+        issue_type: count
+        for issue_type, count in sorted(
+            counts.items(),
+            key=lambda item: (-item[1], item[0]),
+        )
+    }
+
+
+def probability_as_float(value: str) -> float:
+    """空文字を含む確率文字列を比較用の数値へ変換する。"""
+
+    if not value:
+        return 0.0
+    try:
+        return float(value)
+    except ValueError:
+        return 0.0
+
+
+def master_review_fields(color: str) -> tuple[str, str, str, str, str]:
+    """レビュー集計行に載せる master 側の状態を取り出す。"""
+
+    if not color:
+        return "", "", "", "", ""
+    resolved = resolved_output(color)
+    if resolved is None:
+        return "not_found", "", "", "", ""
+    return (
+        resolved.status,
+        str(resolved.display_allowed).lower(),
+        str(resolved.input_allowed).lower(),
+        resolved.breed_context,
+        resolved.primary_name,
+    )
+
+
+def summarize_issues_for_review(issues: list[AuditIssue]) -> list[IssueReviewSummary]:
+    """大量の指摘を、手で確認できる単位へ集約する。"""
+
+    grouped: dict[tuple[str, str, str], list[AuditIssue]] = {}
+    for issue in issues:
+        key = (issue.issue_type, issue.color, issue.detail)
+        grouped.setdefault(key, []).append(issue)
+
+    summaries: list[IssueReviewSummary] = []
+    for (issue_type, color, detail), group in grouped.items():
+        first = group[0]
+        max_probability = max(
+            (probability_as_float(issue.probability_pct) for issue in group),
+            default=0.0,
+        )
+        sexes = " / ".join(sorted({issue.sex for issue in group if issue.sex}))
+        master_status, display_allowed, input_allowed, breed_context, primary_name = (
+            master_review_fields(color)
+        )
+        summaries.append(
+            IssueReviewSummary(
+                issue_type=issue_type,
+                color=color,
+                detail=detail,
+                count=len(group),
+                sexes=sexes,
+                example_sire_color=first.sire_color,
+                example_dam_color=first.dam_color,
+                max_probability_pct=f"{max_probability:.4f}" if max_probability else "",
+                master_status=master_status,
+                master_display_allowed=display_allowed,
+                master_input_allowed=input_allowed,
+                master_breed_context=breed_context,
+                master_primary_name=primary_name,
+            )
+        )
+
+    return sorted(
+        summaries,
+        key=lambda row: (-row.count, row.issue_type, row.color, row.detail),
+    )
+
+
 def write_outputs(
     options: AuditOptions,
     summary: dict[str, object],
@@ -816,8 +920,33 @@ def write_outputs(
         "detail",
     ]
     skipped_fields = ["parent", "color", "status", "breed_context", "reason"]
+    review_fields = [
+        "issue_type",
+        "color",
+        "detail",
+        "count",
+        "sexes",
+        "example_sire_color",
+        "example_dam_color",
+        "max_probability_pct",
+        "master_status",
+        "master_display_allowed",
+        "master_input_allowed",
+        "master_breed_context",
+        "master_primary_name",
+    ]
     write_csv(options.output_dir / "failures.csv", failures, issue_fields)
     write_csv(options.output_dir / "suspicious.csv", suspicious, issue_fields)
+    write_csv(
+        options.output_dir / "failure_review.csv",
+        summarize_issues_for_review(failures),
+        review_fields,
+    )
+    write_csv(
+        options.output_dir / "suspicious_review.csv",
+        summarize_issues_for_review(suspicious),
+        review_fields,
+    )
     write_csv(options.output_dir / "skipped_inputs.csv", skipped_inputs, skipped_fields)
     (options.output_dir / "summary.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=2) + "\n",
@@ -938,6 +1067,8 @@ def run_audit(options: AuditOptions) -> int:
         "audited_pairs": audited_pairs,
         "failure_count": len(failures),
         "suspicious_count": len(suspicious),
+        "failure_by_type": issue_type_counts(failures),
+        "suspicious_by_type": issue_type_counts(suspicious),
         "fail_fast": options.fail_fast,
         "fail_on_suspicious": options.fail_on_suspicious,
         "jobs": options.jobs,

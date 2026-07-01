@@ -247,3 +247,18 @@ def test_clean_phenotype_name_silver_and_tabby_normalization(raw: str, expected:
 
     namer = PhenotypeNamer()
     assert namer.clean_phenotype_name(raw) == expected
+
+
+def test_post_process_recleans_silver_tabby_after_pattern_simplification() -> None:
+    """猫種なしで Spotted を外した後も黒系 Silver Tabby を一般名へ寄せる。"""
+
+    namer = PhenotypeNamer()
+    assert (
+        namer.post_process_color_name(
+            "Black Silver Spotted Tabby",
+            "Black",
+            "Blue Silver Patched Tabby",
+            breed=None,
+        )
+        == "Silver Tabby"
+    )

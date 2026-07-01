@@ -381,6 +381,8 @@ class PhenotypeNamer:
     ) -> str:
         name = self.clean_phenotype_name(name)
         name = self.simplify_patterns(name, sire_color, dam_color, breed)
+        # パターン簡略化後に "Black Silver Tabby" などの中間名が生じるため再度正規化する。
+        name = self.clean_phenotype_name(name)
         # 出力色名を cat_color_master.csv の canonical PrimaryName へ正規化する
         # (alias 統合・略記展開)。集計はこの canonical 名で行われ自動的にマージされる。
         name = COLOR_MASTER.canonical_name(name)
