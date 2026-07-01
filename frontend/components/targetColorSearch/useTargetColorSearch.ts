@@ -26,6 +26,7 @@ import type {
 import {
   carrierSelectionFromInput,
   carrierSelectionToInput,
+  clearSexDependentCarrierSelection,
   type CarrierSelection,
 } from "../CarrierSelector";
 
@@ -94,7 +95,7 @@ function canonicalColorEntries(entries: string[], colors: ColorOption[]): string
 export function useTargetColorSearch(geneticsAffectsLabel = "遺伝に影響") {
   const [cats, setCats] = useState<RegisteredCat[]>([]);
   const [name, setName] = useState("");
-  const [sex, setSex] = useState<RegisteredCat["sex"]>("female");
+  const [sex, setSexState] = useState<RegisteredCat["sex"]>("female");
   const [color, setColor] = useState("");
   const [additionalColors, setAdditionalColors] = useState<AdditionalColorInput[]>([]);
   const [breed, setBreed] = useState("");
@@ -103,7 +104,7 @@ export function useTargetColorSearch(geneticsAffectsLabel = "遺伝に影響") {
   const [targetSex, setTargetSex] = useState<TargetSex>("any");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
-  const [editSex, setEditSex] = useState<RegisteredCat["sex"]>("female");
+  const [editSex, setEditSexState] = useState<RegisteredCat["sex"]>("female");
   const [editColor, setEditColor] = useState("");
   const [editBreed, setEditBreed] = useState("");
   const [editCarrierSelection, setEditCarrierSelection] = useState<CarrierSelection>({});
@@ -241,6 +242,20 @@ export function useTargetColorSearch(geneticsAffectsLabel = "遺伝に影響") {
     setResult(null);
   }
 
+  function setSex(nextSex: RegisteredCat["sex"]) {
+    if (nextSex !== sex) {
+      setCarrierSelection((selection) => clearSexDependentCarrierSelection(selection));
+    }
+    setSexState(nextSex);
+  }
+
+  function setEditSex(nextSex: RegisteredCat["sex"]) {
+    if (nextSex !== editSex) {
+      setEditCarrierSelection((selection) => clearSexDependentCarrierSelection(selection));
+    }
+    setEditSexState(nextSex);
+  }
+
   // 父猫にメス限定カラーが含まれていないか検証する。問題があれば日本語メッセージを返す。
   function maleRestrictedMessage(
     selectedSex: RegisteredCat["sex"],
@@ -317,7 +332,7 @@ export function useTargetColorSearch(geneticsAffectsLabel = "遺伝に影響") {
   function startEdit(cat: RegisteredCat) {
     setEditingId(cat.id);
     setEditName(cat.name);
-    setEditSex(cat.sex);
+    setEditSexState(cat.sex);
     setEditColor(cat.color);
     setEditBreed(cat.breed ?? "");
     setEditCarrierSelection(carrierSelectionFromInput(cat.carriers));

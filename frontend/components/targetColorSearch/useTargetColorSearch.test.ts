@@ -44,6 +44,34 @@ describe("useTargetColorSearch", () => {
     expect(result.current.color).toBe("");
   });
 
+  it("登録フォームで性別を変更するとO座位の確認済み因子をクリアする", async () => {
+    const { result } = await renderFlushed();
+
+    act(() => result.current.setCarrierSelection({ O: "O/O", D: "D/d" }));
+    act(() => result.current.setSex("male"));
+
+    expect(result.current.carrierSelection.O).toBeUndefined();
+    expect(result.current.carrierSelection.D).toBe("D/d");
+  });
+
+  it("編集フォームで性別を変更するとO座位の確認済み因子をクリアする", async () => {
+    const { result } = await renderFlushed();
+
+    act(() =>
+      result.current.startEdit({
+        id: "cat-1",
+        name: "赤の父",
+        sex: "male",
+        color: "Red",
+        carriers: { O: "O/Y", D: "D/d" },
+      }),
+    );
+    act(() => result.current.setEditSex("female"));
+
+    expect(result.current.editCarrierSelection.O).toBeUndefined();
+    expect(result.current.editCarrierSelection.D).toBe("D/d");
+  });
+
   it("登録猫が無くても目標条件案内を検索 API から取得する", async () => {
     const response: ReverseLookupResponse = {
       status: "ok",

@@ -240,6 +240,15 @@ export function carrierSelectionFromInput(
   return selection;
 }
 
+export function clearSexDependentCarrierSelection(
+  selection: CarrierSelection,
+): CarrierSelection {
+  const nextSelection: CarrierSelection = { ...selection };
+  // O座位は父猫/母猫で選択肢が異なるため、性別変更時は不整合を避ける。
+  delete nextSelection.O;
+  return nextSelection;
+}
+
 export function CarrierSelectorButton({
   parent,
   value,

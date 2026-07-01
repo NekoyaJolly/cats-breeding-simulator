@@ -176,7 +176,11 @@ export function ColorCombobox({
             setOpen(true);
             setActiveIndex(-1);
           }}
-          onBlur={() => setFocused(false)}
+          onBlur={() => {
+            setFocused(false);
+            setOpen(false);
+            setActiveIndex(-1);
+          }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           autoComplete="off"
