@@ -1,15 +1,17 @@
-"""CSV ローダーの Fail-Fast 検証。
+"""CSV ローダーの Fail-Fast とマスター契約の検証。
 
 マスタ CSV の欠落・破損時に、空データで起動を続けず RuntimeError で即座に落ちること
 (= Docker のコピー漏れ等を起動時に露見させる) を保証する。
 """
 
+import csv
 import os
 from pathlib import Path
 
 import pytest
 
 from cat_breeding_simulator import breed_color_policy, color_master, display_alias_map, master_data
+from scripts.build_cat_color_master import load_source_colors, validate
 
 # (ローダー関数, 期待されるファイル名)。エラーメッセージにファイル名が含まれることも確認する。
 LOADERS = [
@@ -79,3 +81,15 @@ def test_dockerfile_copies_all_fail_fast_csv_files() -> None:
         "Dockerfile に同梱されていない Fail-Fast CSV があります: "
         + ", ".join(missing_filenames)
     )
+
+
+def test_cat_color_master_matches_schema_and_v9_contract() -> None:
+    """cat_color_master.csv がスキーマと V9 の表示/入力契約に合っている。"""
+
+    master_path = Path("docs/architecture/cat_color_master.csv")
+    with master_path.open(encoding="utf-8-sig", newline="") as csv_file:
+        rows = list(csv.DictReader(csv_file))
+
+    errors = validate(rows, set(load_source_colors().keys()))
+
+    assert errors == []

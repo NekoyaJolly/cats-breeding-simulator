@@ -52,6 +52,43 @@ MASTER_COLUMNS = [
     "GeneticRuleSource", "Notes",
 ]
 
+MASTER_ENUM_VALUES: dict[str, set[str]] = {
+    "Status": {"canonical", "alias", "breed_specific", "excluded", "review"},
+    "ColorGroup": {
+        "solid",
+        "tabby",
+        "silver_tabby",
+        "patched_tabby",
+        "tortie",
+        "calico",
+        "smoke",
+        "shaded",
+        "point",
+        "mink",
+        "sepia",
+    },
+    "BaseSeries": {"black", "chocolate", "cinnamon", "red", "unknown"},
+    "OrangeState": {"non_orange", "orange", "tortie", "unknown"},
+    "Dilution": {"dense", "dilute", "unknown"},
+    "AgoutiState": {"agouti", "solid", "not_applicable", "unknown"},
+    "SilverState": {"silver", "smoke", "cameo", "non_silver", "unknown"},
+    "WhiteState": {"none", "white", "high_white", "mitted", "bicolor", "van", "unknown"},
+    "PointState": {"full", "point", "mink", "sepia", "unknown"},
+    "PatternState": {
+        "none",
+        "tabby",
+        "mackerel",
+        "classic",
+        "spotted",
+        "ticked",
+        "shaded",
+        "shell",
+        "unknown",
+    },
+    "SexRestriction": {"unrestricted", "female_only", "male_only"},
+    "GeneticRuleSource": {"current_map", "inferred", "review_required"},
+}
+
 
 # ---------------------------------------------------------------------------
 # 1. 入力ファイルの読み込み (UTF-8 BOM を考慮)
@@ -160,10 +197,33 @@ def make_color_id(name: str) -> str:
 # "smoke" 単独は基色を持たないカテゴリ名のため excluded (追加レビュー判断: Smoke系)。
 EXCLUDED_CONCEPTS = {"any other color", "aov", "smoke"}
 
-# 元データに直接の行は無いが、alias 解決先として必要な canonical 概念
-# (追加レビュー判断 #7)。現在は空: 旧 Blue Tortie Smoke 系を合成 canonical にしていたが、
-# Cream 正規化に伴い Blue Cream Smoke 系 (元データ行 74/53/280 を持つ) を canonical にしたため不要。
-SYNTHESIZED_CANONICALS: list[str] = []
+# 元データに直接の行は無いが、計算エンジンの fallback が到達し得るため
+# master へ保持する canonical 概念。手編集ではなく生成器から再現できる状態を保つ。
+SYNTHESIZED_CANONICALS: list[str] = [
+    # Chocolate / Lilac 系 fallback
+    "Chocolate Tabby-White",
+    "Chocolate Silver Tabby-White",
+    "Chocolate Silver Patched Tabby",
+    "Chocolate Silver Patched Tabby-White",
+    "Lilac Silver Tabby",
+    "Lilac Patched Tabby-White",
+    "Lilac Silver Patched Tabby",
+    "Lilac Silver Patched Tabby-White",
+    # Wb / tipping fallback
+    "Blue Chinchilla Golden-White",
+    "Blue Chinchilla Silver-White",
+    "Blue Golden",
+    "Blue Golden-White",
+    "Blue Shaded Golden-White",
+    "Blue Shaded Silver-White",
+    # Point / Tortie-White fallback
+    "Cream Lynx Point-White",
+    "Lilac Lynx Point-White",
+    "Lilac Cream Lynx Point-White",
+    "Chocolate Tortie Point-White",
+    "Lilac Cream-White",
+    "Chocolate Tortie-White",
+]
 
 # 別名 → canonical 概念名。CFA/TICA/日本実務/猫種呼称差の同一概念統合。
 # resolves_to は対象概念の ColorId を後段で算出する。
@@ -313,7 +373,7 @@ def derive_attributes(name: str, loci: dict[str, str]) -> dict[str, str]:
     has_mackerel = "mackerel" in tok
     has_classic = "classic" in tok or "marble" in cn or "marbled" in cn
 
-    is_tortie = is_calico or any(
+    is_tortie = is_calico or is_patched or any(
         w in cn for w in ("tortie", "tortoiseshell", "torbie")
     ) or ("cream" in tok and any(w in cn for w in ("blue cream", "lilac cream", "choco cream", "chocolate cream")))
 
@@ -454,7 +514,7 @@ def derive_attributes(name: str, loci: dict[str, str]) -> dict[str, str]:
         group = "patched_tabby"
     elif is_smoke:
         group = "smoke"
-    elif is_shaded or is_shell or is_chinchilla:
+    elif is_shaded or is_shell or is_chinchilla or is_golden:
         group = "shaded"
     elif is_tortie:
         group = "tortie"
@@ -742,9 +802,10 @@ def build_concepts(
         sc = Concept(name)
         sc.synthetic = True
         sc.synthetic_note = (
-            "元データに直接の行は無い canonical (alias 解決先として追加: 追加レビュー判断 #7)。"
-            "SourceCode/Name は対応する Blue Cream Smoke 系 alias 行が保持し喪失しない。"
+            "元データに直接の行は無いが、計算エンジンの fallback が生成し得るため "
+            "canonical として保持する。"
         )
+        sc.source_names.append(name)
         concepts[cl] = sc
         synthesized.append(name)
 
@@ -855,11 +916,37 @@ def build_rows(concepts: dict[str, Concept]) -> list[dict[str, str]]:
 # ---------------------------------------------------------------------------
 # 8. バリデーション
 # ---------------------------------------------------------------------------
+def has_word(value: str, word: str) -> bool:
+    """色名に単語として対象語が含まれるかを判定する。"""
+
+    return re.search(rf"\b{re.escape(word)}\b", value) is not None
+
+
+def is_female_limited_concept(row: dict[str, str]) -> bool:
+    """トーティ/キャリコ/パッチド系など、通常XYオスに出さない概念かを判定する。"""
+
+    return row["OrangeState"] == "tortie" or row["ColorGroup"] in {
+        "tortie",
+        "calico",
+        "patched_tabby",
+    }
+
+
 def validate(rows: list[dict[str, str]], source_codes: set[int]) -> list[str]:
     errors: list[str] = []
+    if not rows:
+        return ["cat_color_master.csv に有効行がありません。"]
+
+    for index, row in enumerate(rows, start=2):
+        missing_columns = [column for column in MASTER_COLUMNS if column not in row]
+        if missing_columns:
+            errors.append(
+                f"必須カラム不足: 行{index} -> " + ", ".join(missing_columns)
+            )
+    if errors:
+        return errors
+
     seen_ids: set[str] = set()
-    allowed_status = {"canonical", "alias", "breed_specific", "excluded", "review"}
-    allowed_sex = {"unrestricted", "female_only", "male_only"}
     snake = re.compile(r"^[a-z0-9_]+$")
 
     all_ids = {r["ColorId"] for r in rows}
@@ -867,6 +954,7 @@ def validate(rows: list[dict[str, str]], source_codes: set[int]) -> list[str]:
     # breed_specific も alias の解決先になり得る (例: 重複呼称 Blue Tortie Point Bi-Color →
     # 同一概念の breed_specific 行 Blue Cream Point Bi-Color へ統合)。
     breed_specific_ids = {r["ColorId"] for r in rows if r["Status"] == "breed_specific"}
+    by_id = {r["ColorId"]: r for r in rows}
 
     for r in rows:
         cid = r["ColorId"]
@@ -877,14 +965,17 @@ def validate(rows: list[dict[str, str]], source_codes: set[int]) -> list[str]:
             errors.append(f"ColorId が snake_case でない: {cid}")
         if not r["PrimaryName"]:
             errors.append(f"PrimaryName 空: {cid}")
-        if r["Status"] not in allowed_status:
-            errors.append(f"Status 不正: {cid} -> {r['Status']}")
+        for column, allowed_values in MASTER_ENUM_VALUES.items():
+            if r[column] not in allowed_values:
+                errors.append(f"{column} 不正: {cid} -> {r[column]}")
         if r["DisplayAllowed"] not in ("true", "false"):
             errors.append(f"DisplayAllowed 不正: {cid}")
         if r["InputAllowed"] not in ("true", "false"):
             errors.append(f"InputAllowed 不正: {cid}")
-        if r["SexRestriction"] not in allowed_sex:
-            errors.append(f"SexRestriction 不正: {cid} -> {r['SexRestriction']}")
+        try:
+            int(r["OutputPriority"])
+        except ValueError:
+            errors.append(f"OutputPriority が整数でない: {cid} -> {r['OutputPriority']}")
         # SourceNames は SourceCodes を持つ行 (元データ直結) でのみ必須。
         # 合成 canonical (alias 解決先として追加) は SourceCodes を持たないため空欄可。
         # ただし由来を Notes に必ず記録する (元データ名は対応 alias 行が保持)。
@@ -895,6 +986,62 @@ def validate(rows: list[dict[str, str]], source_codes: set[int]) -> list[str]:
         # breed_specific で DisplayAllowed=true は Notes に理由が必要
         if r["Status"] == "breed_specific" and r["DisplayAllowed"] == "true" and "理由" not in r["Notes"]:
             errors.append(f"breed_specific なのに DisplayAllowed=true (理由未記載): {cid}")
+
+        # --- Status と表示/入力許可の契約 (schema §5〜§6) ---
+        if r["DisplayAllowed"] == "true" and r["Status"] != "canonical":
+            errors.append(f"DisplayAllowed=true だが canonical ではない: {cid}")
+        if r["DisplayAllowed"] == "true" and r["InputAllowed"] != "true":
+            errors.append(f"DisplayAllowed=true だが InputAllowed=true ではない: {cid}")
+        if r["Status"] in ("alias", "breed_specific"):
+            if r["DisplayAllowed"] != "false":
+                errors.append(f"{r['Status']} なのに DisplayAllowed=false ではない: {cid}")
+            if r["InputAllowed"] != "true":
+                errors.append(f"{r['Status']} なのに InputAllowed=true ではない: {cid}")
+        if r["Status"] in ("excluded", "review"):
+            if r["DisplayAllowed"] != "false" or r["InputAllowed"] != "false":
+                errors.append(f"{r['Status']} なのに表示/入力が許可されています: {cid}")
+        if r["BreedContext"] != "general" and r["DisplayAllowed"] == "true":
+            errors.append(f"猫種文脈行なのに一般表示が許可されています: {cid}")
+
+        # --- 正本由来の一般表示禁止条件 (Point / Van / Mitted / Bi-Color) ---
+        if r["PointState"] in ("point", "mink", "sepia") and r["DisplayAllowed"] != "false":
+            errors.append(f"C系制限色なのに一般表示が許可されています: {cid}")
+        if r["WhiteState"] in ("van", "mitted", "bicolor") and r["DisplayAllowed"] != "false":
+            errors.append(f"一般非表示の白斑レベルなのに表示許可されています: {cid}")
+
+        # --- Point/Mink/Sepia の ColorGroup は C座位分類と矛盾させない ---
+        # Burmese/Tonkinese の Solid class は C座位上 sepia でも表示カテゴリは solid のため、
+        # ColorGroup が C系カテゴリを名乗る場合だけ一致を要求する。
+        if r["ColorGroup"] in ("point", "mink", "sepia") and r["PointState"] != r["ColorGroup"]:
+            errors.append(
+                f"ColorGroup と PointState が不整合: {cid} "
+                f"({r['ColorGroup']} vs {r['PointState']})"
+            )
+
+        # --- メス限定概念 (schema §8 / シミュレーター正本 §4.3) ---
+        female_limited = is_female_limited_concept(r)
+        if female_limited and r["SexRestriction"] != "female_only":
+            errors.append(f"メス限定概念なのに SexRestriction=female_only ではない: {cid}")
+        if not female_limited and r["SexRestriction"] == "female_only":
+            errors.append(f"メス限定概念ではないのに SexRestriction=female_only: {cid}")
+        if r["ColorGroup"] in ("tortie", "calico", "patched_tabby") and r["OrangeState"] != "tortie":
+            errors.append(f"トーティ系グループなのに OrangeState=tortie ではない: {cid}")
+
+        # --- Golden / Smoke の V9 契約 (schema §12.4〜§12.5) ---
+        if has_word(r["PrimaryName"], "Golden"):
+            if r["ColorGroup"] != "shaded":
+                errors.append(f"Golden 系なのに ColorGroup=shaded ではない: {cid}")
+            if r["SilverState"] != "non_silver":
+                errors.append(f"Golden 系なのに SilverState=non_silver ではない: {cid}")
+            if r["AgoutiState"] != "agouti":
+                errors.append(f"Golden 系なのに AgoutiState=agouti ではない: {cid}")
+            if r["PatternState"] not in ("shell", "shaded"):
+                errors.append(f"Golden 系なのに PatternState が shell/shaded ではない: {cid}")
+            if r["GeneticRuleSource"] != "review_required":
+                errors.append(f"Golden 系なのに GeneticRuleSource=review_required ではない: {cid}")
+        if has_word(r["PrimaryName"], "Smoke"):
+            if r["AgoutiState"] != "solid" or r["SilverState"] != "smoke":
+                errors.append(f"Smoke 系なのに solid + smoke として分類されていません: {cid}")
 
         # --- CanonicalColorId 検証 ---
         canon = r["CanonicalColorId"]
@@ -930,6 +1077,10 @@ def validate(rows: list[dict[str, str]], source_codes: set[int]) -> list[str]:
         # V7: breed_specific は通常表示に混ざらない (DisplayAllowed=false)
         if r["Status"] == "breed_specific" and r["DisplayAllowed"] != "false":
             errors.append(f"breed_specific が通常表示可能 (DisplayAllowed!=false): {cid}")
+
+        # Van は S/S の独立概念なので、CanonicalColorId で -White(S/s) 側へ collapse しない。
+        if r["WhiteState"] == "van" and canon in by_id and by_id[canon]["WhiteState"] != "van":
+            errors.append(f"Van 概念が非Van概念へ CanonicalColorId 解決されています: {cid} -> {canon}")
 
         # V8: Any という語が「自分で付与する分類値カラム」に残っていないか。
         # 元データ名 (PrimaryName/Aliases/SourceNames/RegistryNotes/Notes) に含まれる
@@ -1098,7 +1249,7 @@ def write_review(rows, concepts, stats, source, gmap) -> None:
 
     a("## 8. 遺伝子ルールがまだ不確かな項目 (GeneticRuleSource=review_required)")
     a("")
-    a(f"計 {len(review_required)} 件。代表: ")
+    a(f"計 {len(review_required)} 件。代表:")
     a(", ".join(f"{r['PrimaryName']}" for r in review_required[:60]) + (" ..." if len(review_required) > 60 else ""))
     a("")
 
