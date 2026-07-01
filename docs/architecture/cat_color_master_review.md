@@ -11,19 +11,19 @@
 ## 1. 件数サマリー
 
 - 元データ件数 (色柄データUTF8Ver.csv, 名前あり): **407**
-- 現行正本件数 (cat_color_genetic_map.csv): **348**
-- 生成した色柄概念 (ColorId) 件数: **400**
+- 現行正本件数 (cat_color_genetic_map.csv): **349**
+- 生成した色柄概念 (ColorId) 件数: **420**
 
 | Status | 件数 |
 |---|---|
-| canonical | 283 |
+| canonical | 302 |
 | alias | 43 |
-| breed_specific | 71 |
+| breed_specific | 72 |
 | excluded | 3 |
 | review | 0 |
-| **合計** | **400** |
+| **合計** | **420** |
 
-- `GeneticRuleSource=review_required` (遺伝子ルール要確認): **166** 件
+- `GeneticRuleSource=review_required` (遺伝子ルール要確認): **177** 件
 - 正規化 (略称・タイポ展開) を適用した概念: **86** 件
 
 ### 1.1 CanonicalColorId と元データカバレッジ
@@ -36,9 +36,9 @@
 
 ## 2. 差分: 元データ ↔ 現行正本
 
-### 2.1 元データにあるが現行マップに無い Code (76)
+### 2.1 元データにあるが現行マップに無い Code (75)
 
-313:Smoke Dilute Calico, 314:Red Point Bi-Color, 315:Cream Point Bi-Color, 316:Silver Classic Tobie, 317:Silver Mackerel Tobie, 318:Brown Mackerel Tobie, 319:Blue Tortie Point Mitted, 320:Lilac Point Mitted, 321:Blue Tortie Point Bi-Color, 322:Blue Silver Mc Tabby-White, 323:Red Point Mitted, 324:Smoke, 325:Ebony Silver, 326:Shaded Chocolate, 327:Chocolate Tortie, 328:Lilac Tortie, 329:Cream Cameo Tabby, 330:Cream Cameo Mc Tabby, 331:Cream Cameo Tabby-White, 332:Cream Cameo Mc Tabby-W, 333:Blue Silver Tabby-W Van, 334:Chocolate Lynx Point-White, 335:Cream Cameo, 336:Seal Tortie Point Bi-Color, 337:Seal Tortie Point Mitted, 338:Browm Classic Torbie-White, 339:Platinum Mink(Lilac Mink), 340:Blue Silver Classic Tabby, 341:Cream Shell Cameo, 342:Flame Lynx Point, 343:Shell Cream, 344:Shaded Cream, 345:Tortie Point Mitted, 346:Seal Tortie Point, 347:Blue Cream Point Bi-Color, 348:Sable Ticked Tabby, 349:Chocolate Cream P Bi-Color, 350:Shell Blue(Blue Chinchilla), 351:Seal Point (A.O.C), 391:Red Lynx Point-White, 392:Chocolate Silver Spotted Tabby, 393:Ebony Silver Ticked T, 394:Shaded Tortie-White, 395:Black Brown Spotted Tabby, 396:Ebony Silver Mc Tabby, 397:Red Silver(Cameo)Tabby-W, 399:Blue Silver Spotted Tabby, 400:Cinnamon-White, 401:Blue Ticked Tabby-White, 402:Chestnut Tortie, 403:Flame Point Mitted, 404:Chestnut Tortie-White, 405:Chestnut Tortie Point-W, 406:Choco Silver Tortie Lynx Point, 407:Brown Sp Tabby (Rosettes), 408:Choco Tortie Lynx Point Mitted, 409:Shell Cameo-White, 410:Ebony Smoke, 411:Ebony Tabby, 412:Ebony Mackerel Tabby, 413:Red Point-White, 414:Chinchilla Silver-White, 415:Chinchilla Golden-White, 416:Red Ticked Tabby, 417:Cream Ticked Tabby, 418:Chocolate Lynx Point (AOC), 419:Chocolate Pt Tabby-White, 420:Cream Silver Tabby-White, 421:Smoke Calico Van, 422:Cameo Spotted Tabby, 423:Blue Silver Pt Sp Tabby, 424:Ebony Silver Spotted Tabby, 425:Silver Marbled Tabby, 426:Blue Silver Sp Tabby-W, 427:Cream Point-White, 428:Lilac-White
+313:Smoke Dilute Calico, 314:Red Point Bi-Color, 315:Cream Point Bi-Color, 316:Silver Classic Tobie, 317:Silver Mackerel Tobie, 318:Brown Mackerel Tobie, 319:Blue Tortie Point Mitted, 320:Lilac Point Mitted, 321:Blue Tortie Point Bi-Color, 322:Blue Silver Mc Tabby-White, 323:Red Point Mitted, 324:Smoke, 325:Ebony Silver, 326:Shaded Chocolate, 327:Chocolate Tortie, 328:Lilac Tortie, 329:Cream Cameo Tabby, 330:Cream Cameo Mc Tabby, 331:Cream Cameo Tabby-White, 332:Cream Cameo Mc Tabby-W, 333:Blue Silver Tabby-W Van, 334:Chocolate Lynx Point-White, 335:Cream Cameo, 336:Seal Tortie Point Bi-Color, 337:Seal Tortie Point Mitted, 338:Browm Classic Torbie-White, 340:Blue Silver Classic Tabby, 341:Cream Shell Cameo, 342:Flame Lynx Point, 343:Shell Cream, 344:Shaded Cream, 345:Tortie Point Mitted, 346:Seal Tortie Point, 347:Blue Cream Point Bi-Color, 348:Sable Ticked Tabby, 349:Chocolate Cream P Bi-Color, 350:Shell Blue(Blue Chinchilla), 351:Seal Point (A.O.C), 391:Red Lynx Point-White, 392:Chocolate Silver Spotted Tabby, 393:Ebony Silver Ticked T, 394:Shaded Tortie-White, 395:Black Brown Spotted Tabby, 396:Ebony Silver Mc Tabby, 397:Red Silver(Cameo)Tabby-W, 399:Blue Silver Spotted Tabby, 400:Cinnamon-White, 401:Blue Ticked Tabby-White, 402:Chestnut Tortie, 403:Flame Point Mitted, 404:Chestnut Tortie-White, 405:Chestnut Tortie Point-W, 406:Choco Silver Tortie Lynx Point, 407:Brown Sp Tabby (Rosettes), 408:Choco Tortie Lynx Point Mitted, 409:Shell Cameo-White, 410:Ebony Smoke, 411:Ebony Tabby, 412:Ebony Mackerel Tabby, 413:Red Point-White, 414:Chinchilla Silver-White, 415:Chinchilla Golden-White, 416:Red Ticked Tabby, 417:Cream Ticked Tabby, 418:Chocolate Lynx Point (AOC), 419:Chocolate Pt Tabby-White, 420:Cream Silver Tabby-White, 421:Smoke Calico Van, 422:Cameo Spotted Tabby, 423:Blue Silver Pt Sp Tabby, 424:Ebony Silver Spotted Tabby, 425:Silver Marbled Tabby, 426:Blue Silver Sp Tabby-W, 427:Cream Point-White, 428:Lilac-White
 
 ### 2.2 現行マップにあるが元データに無い Code (17)
 
@@ -139,7 +139,6 @@
 | Chocolate Patched Tabby-White | Chocolate Pt Tabby-White | Pt→Patched (Point ではない) |
 | Cream Mackerel Tabby-White | Cream Mc Tabby-White | Mc→Mackerel |
 | Cream Spotted Tabby-White | Cream Sp Tabby-White | Sp→Spotted |
-| Golden Mackerel Tabby | Golden Mc Tabby | Mc→Mackerel |
 | Red Mackerel Tabby-White | Red Mc Tabby-White | Mc→Mackerel |
 | Red Spotted Tabby-White | Red Sp Tabby-White | Sp→Spotted |
 | Blue Silver Mackerel Tabby | Blue Silver Mc Tabby | Mc→Mackerel |
@@ -163,6 +162,7 @@
 | Silver Patched Ticked Tabby-White | Silver Pt Tc Tabby-White | Pt→Patched (Point ではない), Tc→Ticked |
 | Silver Spotted Tabby-White | Silver Sp Tabby-White | Sp→Spotted |
 | Silver Ticked Tabby-White | Silver Tc Tabby-White, Silver Ticked Tabby-White | Tc→Ticked |
+| Golden Mackerel Tabby | Golden Mc Tabby | Mc→Mackerel |
 | Chocolate Cream Lynx Point-White | Choco Cream Lynx Point-W | -W→-White, Choco→Chocolate |
 | Chocolate Cream Point | Choco Cream Point | Choco→Chocolate |
 | Chocolate Silver Lynx Point-White | Choco Silver Lynx Point-W | -W→-White, Choco→Chocolate |
@@ -213,14 +213,14 @@ AOV (`aov`), Any Other Color (`any_other_color`), Smoke (`smoke`)
 
 ## 8. 遺伝子ルールがまだ不確かな項目 (GeneticRuleSource=review_required)
 
-計 166 件。代表: 
-Golden Mackerel Tabby, Golden Tabby, Blue Chinchilla Golden, Blue Chinchilla Silver, Blue Shaded, Blue Shaded Golden, Blue Shaded Silver, Chinchilla Golden, Chinchilla Golden-White, Chinchilla Silver, Chinchilla Silver-White, Cream Shell Cameo, Shaded Cameo, Shaded Cameo-White, Shaded Chocolate, Shaded Cream, Shaded Golden, Shaded Golden-White, Shaded Silver, Shaded Silver-White, Shaded Tortie, Shaded Tortie-White, Shell Cameo, Shell Cameo-White, Shell Cream, Shell Tortoiseshell, Shell Tortoiseshell-White, Blue Cream Lynx Point, Blue Cream Lynx Point-White, Blue Cream Point, Blue Cream Point-White, Blue Lynx Point, Blue Lynx Point-White, Blue Point, Blue Point-White, Brown Lynx Point, Chocolate Cream Lynx Point-White, Chocolate Cream Point, Chocolate Lynx Point, Chocolate Lynx Point-White, Chocolate Point, Chocolate Point-White, Chocolate Silver Lynx Point-White, Chocolate Silver Tortie Lynx Point, Chocolate Tortie Lynx Point, Chocolate Tortie Lynx Point-White, Chocolate Tortie Point, Cream Lynx Point, Cream Point, Cream Point-White, Flame Lynx Point, Flame Point, Flame Point-White, Lilac Cream Lynx Point, Lilac Cream Point, Lilac Cream Point-White, Lilac Lynx Point, Lilac Point, Lilac Point-White, Red Lynx Point ...
+計 177 件。代表:
+Blue Chinchilla Golden, Blue Chinchilla Golden-White, Blue Chinchilla Silver, Blue Chinchilla Silver-White, Blue Golden, Blue Golden-White, Blue Shaded, Blue Shaded Golden, Blue Shaded Golden-White, Blue Shaded Silver, Blue Shaded Silver-White, Chinchilla Golden, Chinchilla Golden-White, Chinchilla Silver, Chinchilla Silver-White, Cream Shell Cameo, Golden Mackerel Tabby, Golden Tabby, Shaded Cameo, Shaded Cameo-White, Shaded Chocolate, Shaded Cream, Shaded Golden, Shaded Golden-White, Shaded Silver, Shaded Silver-White, Shaded Tortie, Shaded Tortie-White, Shell Cameo, Shell Cameo-White, Shell Cream, Shell Tortoiseshell, Shell Tortoiseshell-White, Blue Cream Lynx Point, Blue Cream Lynx Point-White, Blue Cream Point, Blue Cream Point-White, Blue Lynx Point, Blue Lynx Point-White, Blue Point, Blue Point-White, Brown Lynx Point, Chocolate Cream Lynx Point-White, Chocolate Cream Point, Chocolate Lynx Point, Chocolate Lynx Point-White, Chocolate Point, Chocolate Point-White, Chocolate Silver Lynx Point-White, Chocolate Silver Tortie Lynx Point, Chocolate Tortie Lynx Point, Chocolate Tortie Lynx Point-White, Chocolate Tortie Point, Chocolate Tortie Point-White, Cream Lynx Point, Cream Lynx Point-White, Cream Point, Cream Point-White, Flame Lynx Point, Flame Point ...
 
 ## 9. 判断の根拠と不確かな点
 
 - **Pt の扱い**: 元データの `Pt` は全て Tabby 文脈であり `Patched` と解釈した (例: `Blue Pt Tabby-White` → `Blue Patched Tabby-White`)。`Point` は `Point` と明示された名のみ Point 系とした。各行 `Notes` に正規化内容を残している。
 - **CFA/TICA 差**: `Blue Cream`=`Blue Tortie`, `Lilac Cream`=`Lilac Tortie`, `Tortoiseshell-White`/`Mike Tri Color`=`Calico`, `Blue Tortie-White`/`Blue Cream-White`=`Dilute Calico`, `Torbie`=`Patched Tabby` を同一概念の alias として統合した。
-- **猫種固有呼称**: Ruddy(Aby/Somali), Sorrel(Aby), Sable/Champagne/Platinum/Sepia(Burmese), 各種 Mink/Point/Solid class(Tonkinese), Ebony/Chestnut/Lavender(Oriental), Leopard/Snow/Marble(Bengal), Mitted/Bi-Color(Ragdoll) を breed_specific とし `DisplayAllowed=false`。
+- **猫種固有呼称**: Ruddy(Aby/Somali), Sorrel(Aby), Sable/Champagne/Platinum/Sepia(Burmese), 各種 Mink(Tonkinese), Ebony/Chestnut/Lavender(Oriental), Leopard/Snow/Marble(Bengal), Mitted/Bi-Color(Ragdoll) を breed_specific とし `DisplayAllowed=false`。
 - **白斑**: `Van`(S/S) は一般表示で `-White` に正規化する方針のため `DisplayAllowed=false`。`Mitted`/`Bi-Color` も同様に一般非表示。
 - **遺伝子座**: マップに同一 Code・同一名で存在する座のみ `current_map` として取り込み、それ以外は名前から `inferred`。Point/Mink/Sepia/Shaded/WideBand 系と alias/breed_specific は `review_required`。
 - **既知のマップ不整合 (要確認)**: `Blue Cream`(code31) はマップ上 `O/O` (ホモ接合オレンジ) だがトーティは `O/o` のはず。master では `OrangeState=tortie` に補正した。エンジン側 CSV は本タスクでは変更していない。
