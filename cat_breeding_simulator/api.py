@@ -163,7 +163,7 @@ class ReverseLookupRequest(BaseModel):
 
     target_color: str = Field(min_length=1)
     target_sex: Literal["male", "female"] | None = None
-    cats: list[RegisteredCatInput] = Field(min_length=2)
+    cats: list[RegisteredCatInput] = Field(default_factory=list)
     limit: int = Field(default=20, ge=1, le=100)
 
     @field_validator("cats")

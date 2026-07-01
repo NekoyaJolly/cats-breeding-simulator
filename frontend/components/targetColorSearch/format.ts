@@ -20,9 +20,9 @@ export function formatPct(value: number): string {
   return `${value.toFixed(value % 1 === 0 ? 0 : 1)}%`;
 }
 
-// 登録猫の性別を、父候補/母候補のラベルに変換する。
+// 登録猫の性別を、入力欄と同じ性別ラベルに変換する。
 export function sexLabel(sex: RegisteredCat["sex"]): string {
-  return sex === "male" ? "♂ 父猫候補" : "♀ 母猫候補";
+  return sex === "male" ? "♂ オス" : "♀ メス";
 }
 
 // 目標とする子猫の性別ラベル (未指定は「指定なし」)。

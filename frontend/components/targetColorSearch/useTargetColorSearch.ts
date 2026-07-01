@@ -9,7 +9,6 @@ import {
   type ReverseLookupOutcome,
 } from "@/lib/api";
 import { BREED_READING_JA } from "@/lib/breedReadingJa";
-import { parseCarriers } from "@/lib/carriers";
 import {
   createLocalRegisteredCatRepository,
   type RegisteredCatRepository,
@@ -24,7 +23,11 @@ import type {
   RegisteredCat,
   ReverseLookupResponse,
 } from "@/lib/schema";
-import { carriersText } from "./format";
+import {
+  carrierSelectionFromInput,
+  carrierSelectionToInput,
+  type CarrierSelection,
+} from "../CarrierSelector";
 
 // 目標カラーの子猫性別。"any" は未指定。
 export type TargetSex = "any" | RegisteredCat["sex"];
@@ -95,7 +98,7 @@ export function useTargetColorSearch(geneticsAffectsLabel = "遺伝に影響") {
   const [color, setColor] = useState("");
   const [additionalColors, setAdditionalColors] = useState<AdditionalColorInput[]>([]);
   const [breed, setBreed] = useState("");
-  const [carriers, setCarriers] = useState("");
+  const [carrierSelection, setCarrierSelection] = useState<CarrierSelection>({});
   const [targetColor, setTargetColor] = useState("");
   const [targetSex, setTargetSex] = useState<TargetSex>("any");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -103,7 +106,7 @@ export function useTargetColorSearch(geneticsAffectsLabel = "遺伝に影響") {
   const [editSex, setEditSex] = useState<RegisteredCat["sex"]>("female");
   const [editColor, setEditColor] = useState("");
   const [editBreed, setEditBreed] = useState("");
-  const [editCarriers, setEditCarriers] = useState("");
+  const [editCarrierSelection, setEditCarrierSelection] = useState<CarrierSelection>({});
   const [colors, setColors] = useState<ColorOption[]>([]);
   const [breedItems, setBreedItems] = useState<ColorOption[]>([]);
   const [registrationBreedAllowedColors, setRegistrationBreedAllowedColors] = useState<string[]>([]);
@@ -238,7 +241,7 @@ export function useTargetColorSearch(geneticsAffectsLabel = "遺伝に影響") {
     setResult(null);
   }
 
-  // 父候補にメス限定カラーが含まれていないか検証する。問題があれば日本語メッセージを返す。
+  // 父猫にメス限定カラーが含まれていないか検証する。問題があれば日本語メッセージを返す。
   function maleRestrictedMessage(
     selectedSex: RegisteredCat["sex"],
     entries: string[],
@@ -252,7 +255,7 @@ export function useTargetColorSearch(geneticsAffectsLabel = "遺伝に影響") {
       }
     }
     if (invalidColors.length === 0) return null;
-    return `父候補には指定できないメス限定カラーがあります: ${[...new Set(invalidColors)].join(", ")}`;
+    return `父猫には指定できないメス限定カラーがあります: ${[...new Set(invalidColors)].join(", ")}`;
   }
 
   function handleAddCat(event: FormEvent<HTMLFormElement>) {
@@ -266,7 +269,7 @@ export function useTargetColorSearch(geneticsAffectsLabel = "遺伝に影響") {
     }
 
     const trimmedBreed = breed.trim();
-    const parsedCarriers = parseCarriers(carriers);
+    const parsedCarriers = carrierSelectionToInput(carrierSelection);
     const usedNames = new Set(cats.map((cat) => cat.name));
     const trimmedName = name.trim();
     const nextCats = canonicalColors.map((entryColor) => {
@@ -286,7 +289,7 @@ export function useTargetColorSearch(geneticsAffectsLabel = "遺伝に影響") {
     setColor("");
     setAdditionalColors([]);
     setBreed("");
-    setCarriers("");
+    setCarrierSelection({});
   }
 
   function addColorInput() {
@@ -317,7 +320,7 @@ export function useTargetColorSearch(geneticsAffectsLabel = "遺伝に影響") {
     setEditSex(cat.sex);
     setEditColor(cat.color);
     setEditBreed(cat.breed ?? "");
-    setEditCarriers(carriersText(cat.carriers));
+    setEditCarrierSelection(carrierSelectionFromInput(cat.carriers));
   }
 
   function cancelEdit() {
@@ -325,7 +328,7 @@ export function useTargetColorSearch(geneticsAffectsLabel = "遺伝に影響") {
     setEditName("");
     setEditColor("");
     setEditBreed("");
-    setEditCarriers("");
+    setEditCarrierSelection({});
   }
 
   function handleSaveEdit(event: FormEvent<HTMLFormElement>) {
@@ -349,7 +352,7 @@ export function useTargetColorSearch(geneticsAffectsLabel = "遺伝に影響") {
     };
     const trimmedBreed = editBreed.trim();
     if (trimmedBreed) updatedCat.breed = trimmedBreed;
-    const parsedCarriers = parseCarriers(editCarriers);
+    const parsedCarriers = carrierSelectionToInput(editCarrierSelection);
     if (parsedCarriers) updatedCat.carriers = parsedCarriers;
 
     saveCats(cats.map((cat) => (cat.id === editingId ? updatedCat : cat)));
@@ -357,7 +360,7 @@ export function useTargetColorSearch(geneticsAffectsLabel = "遺伝に影響") {
   }
 
   async function handleSearch() {
-    if (!targetColor.trim() || cats.length < 2) return;
+    if (!targetColor.trim()) return;
     setLoading(true);
     setError(null);
     const targetSexValue = targetSex === "any" ? undefined : targetSex;
@@ -390,8 +393,8 @@ export function useTargetColorSearch(geneticsAffectsLabel = "遺伝に影響") {
     removeAdditionalColor,
     breed,
     setBreed,
-    carriers,
-    setCarriers,
+    carrierSelection,
+    setCarrierSelection,
     colorsToRegister,
     registrationColors,
     handleAddCat,
@@ -410,8 +413,8 @@ export function useTargetColorSearch(geneticsAffectsLabel = "遺伝に影響") {
     setEditColor,
     editBreed,
     setEditBreed,
-    editCarriers,
-    setEditCarriers,
+    editCarrierSelection,
+    setEditCarrierSelection,
     editColors,
     startEdit,
     cancelEdit,
