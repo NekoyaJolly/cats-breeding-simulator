@@ -11,7 +11,6 @@ import {
 import { BREED_READING_JA } from "@/lib/breedReadingJa";
 import { filterColorsByAllowedNames } from "@/lib/colorMatch";
 import { UI_TEXT, type Language } from "@/lib/i18n";
-import { PARENT_FIELD_ACCENT_CLASS } from "@/lib/uiTone";
 import type {
   ColorOption,
   InferenceFinding,
@@ -299,36 +298,32 @@ export function LitterInference({ language }: { language: Language }) {
         </h2>
         <form onSubmit={handleSubmit} className="mt-3 space-y-3 sm:mt-4 sm:space-y-5">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
-            <div className={`rounded-lg border p-2.5 shadow-sm sm:p-3 ${PARENT_FIELD_ACCENT_CLASS.sire}`}>
-              <ColorCombobox
-                id="litter-sire-color"
-                label={text.kittenForm.sireCoat}
-                value={sireColor}
-                onValueChange={setSireColor}
-                onCommit={setSireColor}
-                colors={breedFilteredColors}
-                recent={[]}
-                placeholder={text.kittenForm.sirePlaceholder}
-                suggestionLayout="inline"
-                recentLabel={text.common.recent}
-                femaleOnlyLabel={text.common.femaleOnly}
-              />
-            </div>
-            <div className={`rounded-lg border p-2.5 shadow-sm sm:p-3 ${PARENT_FIELD_ACCENT_CLASS.dam}`}>
-              <ColorCombobox
-                id="litter-dam-color"
-                label={text.kittenForm.damCoat}
-                value={damColor}
-                onValueChange={setDamColor}
-                onCommit={setDamColor}
-                colors={breedFilteredColors}
-                recent={[]}
-                placeholder={text.kittenForm.damPlaceholder}
-                suggestionLayout="inline"
-                recentLabel={text.common.recent}
-                femaleOnlyLabel={text.common.femaleOnly}
-              />
-            </div>
+            <ColorCombobox
+              id="litter-sire-color"
+              label={text.kittenForm.sireCoat}
+              value={sireColor}
+              onValueChange={setSireColor}
+              onCommit={setSireColor}
+              colors={breedFilteredColors}
+              recent={[]}
+              placeholder={text.kittenForm.sirePlaceholder}
+              suggestionLayout="inline"
+              recentLabel={text.common.recent}
+              femaleOnlyLabel={text.common.femaleOnly}
+            />
+            <ColorCombobox
+              id="litter-dam-color"
+              label={text.kittenForm.damCoat}
+              value={damColor}
+              onValueChange={setDamColor}
+              onCommit={setDamColor}
+              colors={breedFilteredColors}
+              recent={[]}
+              placeholder={text.kittenForm.damPlaceholder}
+              suggestionLayout="inline"
+              recentLabel={text.common.recent}
+              femaleOnlyLabel={text.common.femaleOnly}
+            />
           </div>
 
           <ColorCombobox

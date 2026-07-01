@@ -20,7 +20,6 @@ import { BREED_READING_JA } from "@/lib/breedReadingJa";
 import { filterColorsByAllowedNames, normalizeKey } from "@/lib/colorMatch";
 import { UI_TEXT, type Language } from "@/lib/i18n";
 import { getLocusTone } from "@/lib/lociGlossary";
-import { PARENT_FIELD_ACCENT_CLASS } from "@/lib/uiTone";
 import { ColorCombobox } from "./ColorCombobox";
 import { FloatingSelect } from "./FloatingField";
 
@@ -579,38 +578,34 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-        <div className={`rounded-lg border p-2.5 shadow-sm sm:p-3 ${PARENT_FIELD_ACCENT_CLASS.sire}`}>
-          <ColorCombobox
-            id="sire-color"
-            label={text.parentForm.sireCoat}
-            labelAction={renderCarrierButton("sire", sireCarrierCount)}
-            required
-            value={sireColor}
-            onValueChange={setSireColor}
-            onCommit={pushSireRecent}
-            colors={sireColors}
-            recent={sireRecentShown}
-            placeholder={text.parentForm.sirePlaceholder}
-            recentLabel={text.common.recent}
-            femaleOnlyLabel={text.common.femaleOnly}
-          />
-        </div>
-        <div className={`rounded-lg border p-2.5 shadow-sm sm:p-3 ${PARENT_FIELD_ACCENT_CLASS.dam}`}>
-          <ColorCombobox
-            id="dam-color"
-            label={text.parentForm.damCoat}
-            labelAction={renderCarrierButton("dam", damCarrierCount)}
-            required
-            value={damColor}
-            onValueChange={setDamColor}
-            onCommit={pushDamRecent}
-            colors={breedFilteredColors}
-            recent={damRecentShown}
-            placeholder={text.parentForm.damPlaceholder}
-            recentLabel={text.common.recent}
-            femaleOnlyLabel={text.common.femaleOnly}
-          />
-        </div>
+        <ColorCombobox
+          id="sire-color"
+          label={text.parentForm.sireCoat}
+          labelAction={renderCarrierButton("sire", sireCarrierCount)}
+          required
+          value={sireColor}
+          onValueChange={setSireColor}
+          onCommit={pushSireRecent}
+          colors={sireColors}
+          recent={sireRecentShown}
+          placeholder={text.parentForm.sirePlaceholder}
+          recentLabel={text.common.recent}
+          femaleOnlyLabel={text.common.femaleOnly}
+        />
+        <ColorCombobox
+          id="dam-color"
+          label={text.parentForm.damCoat}
+          labelAction={renderCarrierButton("dam", damCarrierCount)}
+          required
+          value={damColor}
+          onValueChange={setDamColor}
+          onCommit={pushDamRecent}
+          colors={breedFilteredColors}
+          recent={damRecentShown}
+          placeholder={text.parentForm.damPlaceholder}
+          recentLabel={text.common.recent}
+          femaleOnlyLabel={text.common.femaleOnly}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
