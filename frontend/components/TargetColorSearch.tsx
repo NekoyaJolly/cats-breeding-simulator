@@ -4,13 +4,11 @@ import type { RegisteredCat } from "@/lib/schema";
 import { UI_TEXT, type Language } from "@/lib/i18n";
 import { PARENT_GROUP_ACCENT_CLASS } from "@/lib/uiTone";
 import { ColorCombobox } from "./ColorCombobox";
+import { FloatingSelect, FloatingTextInput } from "./FloatingField";
 import { ResultsView } from "./targetColorSearch/ResultsView";
 import { carriersText } from "./targetColorSearch/format";
 import { useTargetColorSearch } from "./targetColorSearch/useTargetColorSearch";
 
-const inputClass =
-  "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500";
-const labelClass = "block text-sm font-medium text-slate-700";
 const secondaryButtonClass =
   "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50";
 // 「目標カラーから探す」画面。状態とロジックは useTargetColorSearch に集約し、
@@ -87,31 +85,21 @@ export function TargetColorSearch({ language }: { language: Language }) {
           <li key={cat.id} className="px-4 py-3 text-sm">
             {editingId === cat.id ? (
               <form onSubmit={handleSaveEdit} className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                <div className="space-y-1">
-                  <label htmlFor={`edit-name-${cat.id}`} className={labelClass}>
-                    {text.targetForm.name}
-                  </label>
-                  <input
-                    id={`edit-name-${cat.id}`}
-                    className={inputClass}
-                    value={editName}
-                    onChange={(event) => setEditName(event.target.value)}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label htmlFor={`edit-sex-${cat.id}`} className={labelClass}>
-                    {text.common.sex}
-                  </label>
-                  <select
-                    id={`edit-sex-${cat.id}`}
-                    className={inputClass}
-                    value={editSex}
-                    onChange={(event) => setEditSex(event.target.value === "male" ? "male" : "female")}
-                  >
-                    <option value="female">{text.common.femaleCandidate}</option>
-                    <option value="male">{text.common.maleCandidate}</option>
-                  </select>
-                </div>
+                <FloatingTextInput
+                  id={`edit-name-${cat.id}`}
+                  label={text.targetForm.name}
+                  value={editName}
+                  onChange={(event) => setEditName(event.target.value)}
+                />
+                <FloatingSelect
+                  id={`edit-sex-${cat.id}`}
+                  label={text.common.sex}
+                  value={editSex}
+                  onChange={(event) => setEditSex(event.target.value === "male" ? "male" : "female")}
+                >
+                  <option value="female">{text.common.femaleCandidate}</option>
+                  <option value="male">{text.common.maleCandidate}</option>
+                </FloatingSelect>
                 <ColorCombobox
                   id={`edit-color-${cat.id}`}
                   label={text.targetForm.coat}
@@ -135,16 +123,13 @@ export function TargetColorSearch({ language }: { language: Language }) {
                   recentLabel={text.common.recent}
                   femaleOnlyLabel={text.common.femaleOnly}
                 />
-                <div className="space-y-1 md:col-span-2">
-                  <label htmlFor={`edit-carriers-${cat.id}`} className={labelClass}>
-                    {text.targetForm.carriers}
-                  </label>
-                  <input
+                <div className="md:col-span-2">
+                  <FloatingTextInput
                     id={`edit-carriers-${cat.id}`}
-                    className={inputClass}
+                    label={text.targetForm.carriers}
                     value={editCarriers}
                     onChange={(event) => setEditCarriers(event.target.value)}
-                    placeholder="例: B:B/b, D:D/d"
+                    placeholder={text.targetForm.carriersPlaceholder}
                   />
                 </div>
                 <div className="flex gap-2 md:col-span-2">
@@ -191,40 +176,30 @@ export function TargetColorSearch({ language }: { language: Language }) {
   }
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+    <div className="space-y-4 sm:space-y-6">
+      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <h2 className="text-lg font-semibold text-slate-800">
           {text.targetForm.registrationTitle}
         </h2>
-        <form onSubmit={handleAddCat} className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="space-y-1">
-            <label htmlFor="registered-cat-name" className={labelClass}>
-              {text.targetForm.name}
-            </label>
-            <input
-              id="registered-cat-name"
-              className={inputClass}
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder={text.targetForm.namePlaceholder}
-            />
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="registered-cat-sex" className={labelClass}>
-              {text.common.sex}
-            </label>
-            <select
-              id="registered-cat-sex"
-              className={inputClass}
-              value={sex}
-              onChange={(event) => setSex(event.target.value === "male" ? "male" : "female")}
-            >
-              <option value="female">{text.common.femaleCandidate}</option>
-              <option value="male">{text.common.maleCandidate}</option>
-            </select>
-          </div>
+        <form onSubmit={handleAddCat} className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2 sm:mt-4">
+          <FloatingTextInput
+            id="registered-cat-name"
+            label={text.targetForm.name}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder={text.targetForm.namePlaceholder}
+          />
+          <FloatingSelect
+            id="registered-cat-sex"
+            label={text.common.sex}
+            value={sex}
+            onChange={(event) => setSex(event.target.value === "male" ? "male" : "female")}
+          >
+            <option value="female">{text.common.femaleCandidate}</option>
+            <option value="male">{text.common.maleCandidate}</option>
+          </FloatingSelect>
           <div className="space-y-3 md:col-span-2">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
                 <ColorCombobox
                   id="registered-cat-color"
@@ -241,7 +216,7 @@ export function TargetColorSearch({ language }: { language: Language }) {
                 />
                 <button
                   type="button"
-                  className={`${secondaryButtonClass} mt-6 whitespace-nowrap`}
+                  className={`${secondaryButtonClass} h-11 whitespace-nowrap`}
                   onClick={addColorInput}
                 >
                   {text.targetForm.addCoat}
@@ -273,14 +248,14 @@ export function TargetColorSearch({ language }: { language: Language }) {
                   onCommit={(value) => updateAdditionalColor(entryColor.id, value)}
                   colors={registrationColors}
                   recent={[]}
-                  placeholder={language === "ja" ? "例: Lilac" : "e.g. Lilac"}
+                  placeholder={text.targetForm.coatPlaceholder}
                   suggestionLayout="inline"
                   recentLabel={text.common.recent}
                   femaleOnlyLabel={text.common.femaleOnly}
                 />
                 <button
                   type="button"
-                  className={`${secondaryButtonClass} mt-6 whitespace-nowrap`}
+                  className={`${secondaryButtonClass} h-11 whitespace-nowrap`}
                   onClick={() => removeAdditionalColor(entryColor.id)}
                 >
                   {text.common.delete}
@@ -288,13 +263,10 @@ export function TargetColorSearch({ language }: { language: Language }) {
               </div>
             ))}
           </div>
-          <div className="space-y-1 md:col-span-2">
-            <label htmlFor="registered-cat-carriers" className={labelClass}>
-              {text.targetForm.carriers}
-            </label>
-            <input
+          <div className="md:col-span-2">
+            <FloatingTextInput
               id="registered-cat-carriers"
-              className={inputClass}
+              label={text.targetForm.carriers}
               value={carriers}
               onChange={(event) => setCarriers(event.target.value)}
               placeholder={text.targetForm.carriersPlaceholder}
@@ -349,11 +321,11 @@ export function TargetColorSearch({ language }: { language: Language }) {
         </div>
       </section>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <h2 className="text-lg font-semibold text-slate-800">
           {text.targetForm.targetTitle}
         </h2>
-        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-[1fr_180px_auto] md:items-end">
+        <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-[1fr_180px_auto] md:items-start sm:mt-4">
           <ColorCombobox
             id="target-color"
             label={text.targetForm.targetCoat}
@@ -366,29 +338,24 @@ export function TargetColorSearch({ language }: { language: Language }) {
             recentLabel={text.common.recent}
             femaleOnlyLabel={text.common.femaleOnly}
           />
-          <div className="space-y-1">
-            <label htmlFor="target-sex" className={labelClass}>
-              {text.targetForm.targetSex}
-            </label>
-            <select
-              id="target-sex"
-              className={inputClass}
-              value={targetSex}
-              onChange={(event) => {
-                const value = event.target.value;
-                setTargetSex(value === "male" || value === "female" ? value : "any");
-              }}
-            >
-              <option value="any">{text.common.any}</option>
-              <option value="male">{text.common.male}</option>
-              <option value="female">{text.common.female}</option>
-            </select>
-          </div>
+          <FloatingSelect
+            id="target-sex"
+            label={text.targetForm.targetSex}
+            value={targetSex}
+            onChange={(event) => {
+              const value = event.target.value;
+              setTargetSex(value === "male" || value === "female" ? value : "any");
+            }}
+          >
+            <option value="any">{text.common.any}</option>
+            <option value="male">{text.common.male}</option>
+            <option value="female">{text.common.female}</option>
+          </FloatingSelect>
           <button
             type="button"
             onClick={handleSearch}
             disabled={!targetColor.trim() || cats.length < 2 || loading}
-            className="rounded-md bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 rounded-md bg-slate-800 px-4 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? text.targetForm.loading : text.targetForm.button}
           </button>
@@ -401,7 +368,7 @@ export function TargetColorSearch({ language }: { language: Language }) {
       </section>
 
       {result && (
-        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <ResultsView data={result} language={language} />
         </section>
       )}

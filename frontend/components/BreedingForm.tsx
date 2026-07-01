@@ -22,6 +22,7 @@ import { UI_TEXT, type Language } from "@/lib/i18n";
 import { getLocusTone } from "@/lib/lociGlossary";
 import { PARENT_FIELD_ACCENT_CLASS } from "@/lib/uiTone";
 import { ColorCombobox } from "./ColorCombobox";
+import { FloatingSelect } from "./FloatingField";
 
 // 計算モード。explicit_carrier のときのみキャリア入力欄を表示する。
 const MODES = [
@@ -302,9 +303,6 @@ type Props = {
   language: Language;
 };
 
-const inputClass =
-  "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500";
-const labelClass = "block text-sm font-medium text-slate-700";
 const inactiveCarrierButtonClass: Record<CarrierParent, string> = {
   sire: "border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100",
   dam: "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100",
@@ -579,9 +577,9 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className={`rounded-lg border p-3 shadow-sm ${PARENT_FIELD_ACCENT_CLASS.sire}`}>
+    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+        <div className={`rounded-lg border p-2.5 shadow-sm sm:p-3 ${PARENT_FIELD_ACCENT_CLASS.sire}`}>
           <ColorCombobox
             id="sire-color"
             label={text.parentForm.sireCoat}
@@ -597,7 +595,7 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
             femaleOnlyLabel={text.common.femaleOnly}
           />
         </div>
-        <div className={`rounded-lg border p-3 shadow-sm ${PARENT_FIELD_ACCENT_CLASS.dam}`}>
+        <div className={`rounded-lg border p-2.5 shadow-sm sm:p-3 ${PARENT_FIELD_ACCENT_CLASS.dam}`}>
           <ColorCombobox
             id="dam-color"
             label={text.parentForm.damCoat}
@@ -615,7 +613,7 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
         {/* 猫種は任意。ColorCombobox を再利用 (候補=猫種、日本語名で絞り込み可)。 */}
         <ColorCombobox
           id="breed"
@@ -629,27 +627,22 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
           recentLabel={text.common.recent}
           femaleOnlyLabel={text.common.femaleOnly}
         />
-        <div className="space-y-1">
-          <label htmlFor="mode" className={labelClass}>
-            {text.parentForm.mode}
-          </label>
-          <select
-            id="mode"
-            className={inputClass}
-            value={mode}
-            onChange={(event) => {
-              if (isCalculationMode(event.target.value)) {
-                setMode(event.target.value);
-              }
-            }}
-          >
-            {MODES.map((option) => (
-              <option key={option.value} value={option.value}>
-                {text.parentForm.modes[option.labelKey]}
-              </option>
-            ))}
-          </select>
-        </div>
+        <FloatingSelect
+          id="mode"
+          label={text.parentForm.mode}
+          value={mode}
+          onChange={(event) => {
+            if (isCalculationMode(event.target.value)) {
+              setMode(event.target.value);
+            }
+          }}
+        >
+          {MODES.map((option) => (
+            <option key={option.value} value={option.value}>
+              {text.parentForm.modes[option.labelKey]}
+            </option>
+          ))}
+        </FloatingSelect>
       </div>
 
       {hasExplicitCarriers && (
