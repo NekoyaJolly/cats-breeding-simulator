@@ -284,7 +284,8 @@ def apply_filters(colors: list[str], filters: tuple[str, ...], label: str) -> li
             f"{label} フィルタに、猫種なし normal の親入力として使えない色があります: "
             + ", ".join(missing)
         )
-    return [color for color in colors if color in set(filters)]
+    filter_set = set(filters)
+    return [color for color in colors if color in filter_set]
 
 
 def iter_pairs(

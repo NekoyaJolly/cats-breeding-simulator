@@ -75,7 +75,7 @@ class PhenotypeNamer:
             if matched:
                 return matched
         # CSV逆引きに名前が無い遺伝子型は標準表現型から構築する (V9 §6.1 step1)。
-        # 構築できないもの (点紋/チョコ等の想定外) のみ None = 未分類として検出する。
+        # 対応外の C 系 (Mink/Sepia) など、構築できないもののみ None = 未分類として検出する。
         return self.construct_fallback_name(kitten, sire_color, dam_color)
 
     def construct_fallback_name(
@@ -83,9 +83,9 @@ class PhenotypeNamer:
     ) -> str | None:
         """CSV逆引きに無い遺伝子型を、標準表現型から構築して命名する (V9 §6.1)。
 
-        通常モードでは B(チョコ系) と C(点紋系) を展開しないため、ここで扱うのは
-        黒系(B/B)・フルカラー(C/C) の組み合わせに限られる。点紋・チョコ・シナモン等の
-        想定外は None を返し、未分類として検出させる。
+        黒系だけでなく Chocolate/Cinnamon 系、親入力や猫種固定などで到達する Point 系も
+        標準名へ落とし込む。Mink / Sepia は猫種・表示文脈の影響が強いため現段階では
+        None を返し、未分類として検出させる。
 
         ワイドバンド (Wb/-) は「非オレンジ・アグーチ」背景でのみ tipping (Shell/Shaded/
         Chinchilla/Golden) として発現する。その場合はここで命名し、未分類にしない。
