@@ -49,6 +49,7 @@ class DisplayAliasRow:
     """表示名マスタ 1 行 (使用カラムのみ)。"""
 
     canonical_phenotype: str
+    general_display_name: str
     breed: str
     breed_specific_display_name: str
     display_context: str
@@ -58,6 +59,8 @@ class DisplayAliasMap:
     """cat_color_display_alias_map.csv を索引し、表示名解決を提供する。"""
 
     def __init__(self, rows: list[dict[str, str]]):
+        # CanonicalPhenotype キー -> 一般表示名。Van/団体差など、猫種なしでも寄せる表示名を収録する。
+        self._general: dict[str, str] = {}
         # (CanonicalPhenotype キー, Breed キー) -> 猫種別表示名。breed_specific 行のみ収録する。
         self._breed_specific: dict[tuple[str, str], str] = {}
         # CSV に現れる Breed 値の一覧 (入力 breed への部分一致照合に使う)。
@@ -67,10 +70,14 @@ class DisplayAliasMap:
         for raw in rows:
             row = DisplayAliasRow(
                 canonical_phenotype=raw.get("CanonicalPhenotype", "").strip(),
+                general_display_name=raw.get("GeneralDisplayName", "").strip(),
                 breed=raw.get("Breed", "").strip(),
                 breed_specific_display_name=raw.get("BreedSpecificDisplayName", "").strip(),
                 display_context=raw.get("DisplayContext", "").strip(),
             )
+            if row.display_context == "general" and row.canonical_phenotype and row.general_display_name:
+                self._general[_key(row.canonical_phenotype)] = row.general_display_name
+                continue
             if row.display_context != "breed_specific":
                 continue
             if not (row.canonical_phenotype and row.breed and row.breed_specific_display_name):
@@ -97,16 +104,27 @@ class DisplayAliasMap:
                 return display
         return None
 
+    def _resolve_general(self, name: str) -> str | None:
+        """一般表示名を完全名で解決する。未登録なら None。"""
+
+        return self._general.get(_key(name))
+
     def resolve_display_name(self, name: str, breed: str | None) -> str:
         """内部表現型名 (canonical 形) を表示名へ解決する。
 
         手順:
-          1. 猫種指定があれば、白斑込みの完全名を猫種別呼称へ変換する。
-          2. 白斑接尾辞 (-White / -White Van) を分離する。
-          3. 猫種指定があれば、基底名 (接尾辞除去後) を猫種別呼称へ変換する。
-          4. 一般表示の Van 正規化 (§5.2): 猫種が Van を許可しない限り Van を落として -White にする。
-          5. 接尾辞を再付与して返す。
+          1. 白斑込みの完全名を general 表示名へ変換する (Van Calico -> Calico 等)。
+          2. 猫種指定があれば、白斑込みの完全名を猫種別呼称へ変換する。
+          3. 白斑接尾辞 (-White / -White Van) を分離する。
+          4. 猫種指定があれば、基底名 (接尾辞除去後) を猫種別呼称へ変換する。
+          5. 一般表示の Van 正規化 (§5.2): -White Van 接尾辞を -White にする。
+          6. 接尾辞を再付与した後、general 表示名を再解決する。
+          7. 猫種指定があれば、再解決後の表示名を猫種別呼称へ変換して返す。
         """
+
+        general = self._resolve_general(name)
+        if general is not None:
+            name = general
 
         if breed:
             display = self._resolve_breed_specific(name, breed)
@@ -125,7 +143,17 @@ class DisplayAliasMap:
         if suffix == "-White Van":
             suffix = "-White"
 
-        return f"{core}{suffix}"
+        resolved = f"{core}{suffix}"
+        general = self._resolve_general(resolved)
+        if general is not None:
+            resolved = general
+
+        if breed:
+            display = self._resolve_breed_specific(resolved, breed)
+            if display is not None:
+                return display
+
+        return resolved
 
 
 def _load_map_rows() -> list[dict[str, str]]:

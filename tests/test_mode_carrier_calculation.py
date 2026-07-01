@@ -211,10 +211,22 @@ def test_black_pair_normal_does_not_invent_closed_or_unexpressed_loci(calc) -> N
     assert report.unmatched_probability == 0
 
 
-def test_c_locus_point_pair_never_returns_full_color(calc) -> None:
+@pytest.mark.parametrize(
+    ("sire_color", "dam_color"),
+    [
+        ("Seal Point", "Seal Point"),
+        ("Blue Lynx Point", "Flame Point-White"),
+        ("Chocolate Point", "Lilac Cream Point-White"),
+    ],
+)
+def test_c_locus_point_pair_never_returns_full_color(
+    calc,
+    sire_color: str,
+    dam_color: str,
+) -> None:
     """cs/cs × cs/cs は C/- のフルカラーへ戻らず、全出力が Point 系になる。"""
 
-    report = calc.calculate_report("Seal Point", "Seal Point", breed=None, mode="normal")
+    report = calc.calculate_report(sire_color, dam_color, breed=None, mode="normal")
     assert report.results
     assert all("Point" in result.color for result in report.results)
     assert report.unmatched_probability == 0

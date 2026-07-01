@@ -75,7 +75,7 @@ class PhenotypeNamer:
             if matched:
                 return matched
         # CSV逆引きに名前が無い遺伝子型は標準表現型から構築する (V9 §6.1 step1)。
-        # 構築できないもの (点紋/チョコ等の想定外) のみ None = 未分類として検出する。
+        # 対応外の C 系 (Mink/Sepia) など、構築できないもののみ None = 未分類として検出する。
         return self.construct_fallback_name(kitten, sire_color, dam_color)
 
     def construct_fallback_name(
@@ -83,9 +83,9 @@ class PhenotypeNamer:
     ) -> str | None:
         """CSV逆引きに無い遺伝子型を、標準表現型から構築して命名する (V9 §6.1)。
 
-        通常モードでは B(チョコ系) と C(点紋系) を展開しないため、ここで扱うのは
-        黒系(B/B)・フルカラー(C/C) の組み合わせに限られる。点紋・チョコ・シナモン等の
-        想定外は None を返し、未分類として検出させる。
+        黒系だけでなく Chocolate/Cinnamon 系、親入力や猫種固定などで到達する Point 系も
+        標準名へ落とし込む。Mink / Sepia は猫種・表示文脈の影響が強いため現段階では
+        None を返し、未分類として検出させる。
 
         ワイドバンド (Wb/-) は「非オレンジ・アグーチ」背景でのみ tipping (Shell/Shaded/
         Chinchilla/Golden) として発現する。その場合はここで命名し、未分類にしない。
@@ -100,13 +100,27 @@ class PhenotypeNamer:
 
         if dom_white == "white":
             return "White"
-        # 通常モードの構築対象外 (点紋系) は未分類に回す
-        if c_state != "full":
+        # Mink / Sepia は猫種・表示文脈の影響が強いため、現段階では未分類に回して検出する。
+        if c_state not in ("full", "point"):
             return None
 
         is_dilute = dilute == "dilute"
         is_agouti = agouti == "agouti"
         is_silver = silver == "silver"
+
+        # Point 表示では I/Wb/tipping 系の語を出さず、基底の Point 名へ寄せる。
+        # 理由: Point は C座位の発色制限で体色差が隠れるため、Silver/Golden/Shaded 等を
+        # 一般出力名に載せると実務上の色名として過剰分類になる。
+        if c_state == "point":
+            if orange == "tortie":
+                name = self._tortie_name(base, is_dilute, is_agouti, False, c_state)
+            elif orange == "orange":
+                name = self._orange_name(is_dilute, is_agouti, False, c_state)
+            else:
+                name = self._non_orange_name(base, is_dilute, is_agouti, False, c_state)
+            if spotting in ("white", "high_white"):
+                name = f"{name}-White"
+            return name
 
         # ワイドバンド: 非オレンジ・アグーチでのみ tipping として命名する (それ以外は通常命名)。
         if wideband == "wide" and is_agouti and orange == "non_orange":
@@ -118,47 +132,14 @@ class PhenotypeNamer:
                 name = f"{name}-White"
             return name
 
-        # 通常モードの構築対象外 (チョコ/シナモン) は、Wb の命名を済ませた後に未分類へ回す。
-        if base != "black":
-            return None
-
         if orange == "tortie":
-            if is_agouti:
-                if is_silver:
-                    stem = "Blue Silver" if is_dilute else "Silver"
-                else:
-                    stem = "Blue" if is_dilute else "Brown"
-                name = f"{stem} Patched Tabby"
-            else:
-                if is_silver:
-                    name = "Blue Cream Smoke" if is_dilute else "Tortie Smoke"
-                else:
-                    name = "Blue Cream" if is_dilute else "Tortoiseshell"
+            name = self._tortie_name(base, is_dilute, is_agouti, is_silver, c_state)
         else:
             is_orange = orange == "orange"
-            if is_agouti:
-                if is_orange:
-                    if is_silver:
-                        stem = "Cream Cameo" if is_dilute else "Cameo"
-                    else:
-                        stem = "Cream" if is_dilute else "Red"
-                else:
-                    if is_silver:
-                        stem = "Blue Silver" if is_dilute else "Silver"
-                    else:
-                        stem = "Blue" if is_dilute else "Brown"
-                name = f"{stem} Tabby"
+            if is_orange:
+                name = self._orange_name(is_dilute, is_agouti, is_silver, c_state)
             else:
-                if is_orange:
-                    if is_silver:
-                        name = "Cream Smoke" if is_dilute else "Cameo"
-                    else:
-                        name = "Cream" if is_dilute else "Red"
-                else:
-                    if is_silver:
-                        name = "Blue Smoke" if is_dilute else "Black Smoke"
-                    else:
-                        name = "Blue" if is_dilute else "Black"
+                name = self._non_orange_name(base, is_dilute, is_agouti, is_silver, c_state)
 
         if spotting in ("white", "high_white"):
             # 通常モードでは Van を出さず -White に正規化 (データ正本 §5.2)
@@ -181,6 +162,142 @@ class PhenotypeNamer:
         if base == "cinnamon":
             return "Fawn " if is_dilute else "Cinnamon "
         return ""
+
+    @staticmethod
+    def _base_color_name(base: str, is_dilute: bool) -> str:
+        """B/D座位からフルカラーの基色名を返す。"""
+
+        if base == "black":
+            return "Blue" if is_dilute else "Black"
+        if base == "chocolate":
+            return "Lilac" if is_dilute else "Chocolate"
+        if base == "cinnamon":
+            return "Fawn" if is_dilute else "Cinnamon"
+        return "Blue" if is_dilute else "Black"
+
+    @staticmethod
+    def _tabby_base_stem(base: str, is_dilute: bool) -> str:
+        """タビー表示で使う基色名を返す (黒系は Brown 表記)。"""
+
+        if base == "black":
+            return "Blue" if is_dilute else "Brown"
+        return PhenotypeNamer._base_color_name(base, is_dilute)
+
+    @staticmethod
+    def _silver_tabby_stem(base: str, is_dilute: bool) -> str:
+        """Silver Tabby / Lynx Point 系の基色付き stem を返す。"""
+
+        if base == "black":
+            return "Blue Silver" if is_dilute else "Silver"
+        return f"{PhenotypeNamer._base_color_name(base, is_dilute)} Silver"
+
+    @staticmethod
+    def _point_base_stem(base: str, is_dilute: bool) -> str:
+        """Point 系で使う基色名を返す (黒系濃色は Seal)。"""
+
+        if base == "black":
+            return "Blue" if is_dilute else "Seal"
+        return PhenotypeNamer._base_color_name(base, is_dilute)
+
+    @staticmethod
+    def _tortie_solid_stem(base: str, is_dilute: bool, is_silver: bool) -> str:
+        """トーティ/スモーク系の solid stem を返す。"""
+
+        if base == "black":
+            if is_silver:
+                return "Blue Cream Smoke" if is_dilute else "Tortie Smoke"
+            return "Blue Cream" if is_dilute else "Tortoiseshell"
+        stem = PhenotypeNamer._base_color_name(base, is_dilute)
+        if is_silver:
+            return f"{stem} Cream Smoke" if is_dilute else f"{stem} Tortie Smoke"
+        return f"{stem} Cream" if is_dilute else f"{stem} Tortie"
+
+    @staticmethod
+    def _tortie_tabby_stem(base: str, is_dilute: bool, is_silver: bool) -> str:
+        """Patched Tabby 系の stem を返す。"""
+
+        if is_silver:
+            return f"{PhenotypeNamer._silver_tabby_stem(base, is_dilute)} Patched"
+        return f"{PhenotypeNamer._tabby_base_stem(base, is_dilute)} Patched"
+
+    @staticmethod
+    def _tortie_point_stem(base: str, is_dilute: bool, is_silver: bool) -> str:
+        """Tortie Point 系の stem を返す。"""
+
+        if base == "black":
+            if is_silver:
+                return "Blue Silver Cream" if is_dilute else "Silver Tortie"
+            return "Blue Cream" if is_dilute else "Seal Tortie"
+        stem = PhenotypeNamer._base_color_name(base, is_dilute)
+        if is_silver:
+            return f"{stem} Silver Cream" if is_dilute else f"{stem} Silver Tortie"
+        return f"{stem} Cream" if is_dilute else f"{stem} Tortie"
+
+    @staticmethod
+    def _non_orange_name(
+        base: str,
+        is_dilute: bool,
+        is_agouti: bool,
+        is_silver: bool,
+        c_state: str,
+    ) -> str:
+        """非オレンジ個体の標準名を構築する。"""
+
+        if c_state == "point":
+            stem = (
+                PhenotypeNamer._silver_tabby_stem(base, is_dilute)
+                if is_silver and is_agouti
+                else PhenotypeNamer._point_base_stem(base, is_dilute)
+            )
+            return f"{stem} Lynx Point" if is_agouti else f"{stem} Point"
+
+        if is_agouti:
+            stem = (
+                PhenotypeNamer._silver_tabby_stem(base, is_dilute)
+                if is_silver
+                else PhenotypeNamer._tabby_base_stem(base, is_dilute)
+            )
+            return f"{stem} Tabby"
+        if is_silver:
+            return f"{PhenotypeNamer._base_color_name(base, is_dilute)} Smoke"
+        return PhenotypeNamer._base_color_name(base, is_dilute)
+
+    @staticmethod
+    def _orange_name(
+        is_dilute: bool,
+        is_agouti: bool,
+        is_silver: bool,
+        c_state: str,
+    ) -> str:
+        """オレンジ個体の標準名を構築する。B座位は赤系表現では表示名に出さない。"""
+
+        stem = "Cream" if is_dilute else "Red"
+        if c_state == "point":
+            return f"{stem} Lynx Point" if is_agouti else f"{stem} Point"
+        if is_agouti:
+            if is_silver:
+                stem = "Cream Cameo" if is_dilute else "Cameo"
+            return f"{stem} Tabby"
+        if is_silver:
+            return "Cream Smoke" if is_dilute else "Cameo"
+        return stem
+
+    @staticmethod
+    def _tortie_name(
+        base: str,
+        is_dilute: bool,
+        is_agouti: bool,
+        is_silver: bool,
+        c_state: str,
+    ) -> str:
+        """トーティ個体の標準名を構築する。"""
+
+        if c_state == "point":
+            stem = PhenotypeNamer._tortie_point_stem(base, is_dilute, is_silver)
+            return f"{stem} Lynx Point" if is_agouti else f"{stem} Point"
+        if is_agouti:
+            return f"{PhenotypeNamer._tortie_tabby_stem(base, is_dilute, is_silver)} Tabby"
+        return PhenotypeNamer._tortie_solid_stem(base, is_dilute, is_silver)
 
     @staticmethod
     def _tipping_degree(sire_color: str, dam_color: str) -> str:
@@ -276,8 +393,12 @@ class PhenotypeNamer:
     ) -> str:
         name = self.clean_phenotype_name(name)
         name = self.simplify_patterns(name, sire_color, dam_color, breed)
+        # パターン簡略化後に "Black Silver Tabby" などの中間名が生じるため再度正規化する。
+        name = self.clean_phenotype_name(name)
         # 出力色名を cat_color_master.csv の canonical PrimaryName へ正規化する
         # (alias 統合・略記展開)。集計はこの canonical 名で行われ自動的にマージされる。
+        name = COLOR_MASTER.canonical_name(name)
+        name = self.normalize_point_display_name(name)
         name = COLOR_MASTER.canonical_name(name)
         # 猫種別表示名 (Abyssinian の Ruddy、Oriental の Ebony 等) と一般 Van 正規化を
         # cat_color_display_alias_map.csv 駆動で適用する (データ正本 §4 / §1.1)。
@@ -286,10 +407,32 @@ class PhenotypeNamer:
         name = DISPLAY_ALIAS_MAP.resolve_display_name(name, breed)
         return name
 
+    @staticmethod
+    def normalize_point_display_name(name: str) -> str:
+        """Point 系の表示名から Silver/Golden/tipping 系の過剰分類を落とす。"""
+
+        if "Point" not in name:
+            return name
+
+        suffix = ""
+        core = name
+        if core.endswith("-White"):
+            core = core[: -len("-White")]
+            suffix = "-White"
+
+        core = re.sub(r"\b(?:Chinchilla|Shaded|Shell|Golden|Silver|Cameo|Smoke)\b\s*", "", core)
+        core = " ".join(core.split())
+        if core in ("Point", "Lynx Point") or core.startswith("Tortie "):
+            core = f"Seal {core}"
+
+        return f"{core}{suffix}"
+
     def clean_phenotype_name(self, name: str) -> str:
         # すでにCSVに存在する正式なカラー名である場合は、誤置換を防ぐためそのまま返す
         if name in _VALID_COLOR_NAMES:
             return name
+
+        name = re.sub(r"\bSilver(?:\s+Silver)+\b", "Silver", name)
 
         is_silver = "Silver" in name and "Tabby" in name
         if is_silver:
@@ -305,13 +448,13 @@ class PhenotypeNamer:
                 name = name.replace("Red ", "Cameo ").replace(" Silver Tabby", " Tabby")
             elif name.startswith("Cream "):
                 name = name.replace("Cream ", "Cream Cameo ").replace(" Silver Tabby", " Tabby")
-            elif name.startswith("Chocolate "):
+            elif name.startswith("Chocolate ") and not name.startswith("Chocolate Silver "):
                 name = name.replace("Chocolate ", "Chocolate Silver ").replace(" Silver Tabby", " Tabby")
-            elif name.startswith("Lilac "):
+            elif name.startswith("Lilac ") and not name.startswith("Lilac Silver "):
                 name = name.replace("Lilac ", "Lilac Silver ").replace(" Silver Tabby", " Tabby")
-            elif name.startswith("Cinnamon "):
+            elif name.startswith("Cinnamon ") and not name.startswith("Cinnamon Silver "):
                 name = name.replace("Cinnamon ", "Cinnamon Silver ").replace(" Silver Tabby", " Tabby")
-            elif name.startswith("Fawn "):
+            elif name.startswith("Fawn ") and not name.startswith("Fawn Silver "):
                 name = name.replace("Fawn ", "Fawn Silver ").replace(" Silver Tabby", " Tabby")
         else:
             if "Tabby" in name:

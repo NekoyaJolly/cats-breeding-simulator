@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -232,10 +234,24 @@ def test_display_map_van_normalized_to_white_in_general() -> None:
     """一般表示では Van を -White に正規化する (データ正本 §5.2)。"""
 
     assert DISPLAY_ALIAS_MAP.resolve_display_name("Black-White Van", None) == "Black-White"
-    assert (
-        DISPLAY_ALIAS_MAP.resolve_display_name("Tortoiseshell-White Van", None)
-        == "Tortoiseshell-White"
-    )
+    assert DISPLAY_ALIAS_MAP.resolve_display_name("Van Calico", None) == "Calico"
+    assert DISPLAY_ALIAS_MAP.resolve_display_name("Dilute Calico Van", None) == "Dilute Calico"
+    assert DISPLAY_ALIAS_MAP.resolve_display_name("Tortoiseshell-White Van", None) == "Calico"
+    assert DISPLAY_ALIAS_MAP.resolve_display_name("Blue Cream-White Van", None) == "Dilute Calico"
+
+
+def test_general_output_collapses_van_tortie_white_aliases() -> None:
+    """一般結果では Van/トーティ白斑の alias を表示用 canonical 名へ寄せる。"""
+
+    calculator = CoatColorCalculator()
+    report = calculator.calculate_report("Black Smoke-White", "Blue Cream Point-White")
+    colors = _colors(report)
+
+    assert "Van Calico" not in colors
+    assert "Blue Cream-White" not in colors
+    assert "Calico" in colors
+    assert "Dilute Calico" in colors
+    assert report.unmatched_probability == 0
 
 
 def test_display_map_breed_name_composes_with_white_suffix() -> None:
@@ -538,6 +554,193 @@ def test_breed_colors_endpoint_unknown_breed_returns_422() -> None:
     response = client.get("/api/v1/breed-colors", params={"breed": "ドラゴン"})
     assert response.status_code == 422
     assert "未対応の猫種" in response.json()["detail"]
+
+
+def test_golden_locus_data_contract() -> None:
+    """Golden 系は V9 正本どおり non_silver + agouti + Wb/tipping として保持する。"""
+
+    wrong: list[tuple[str, dict[str, tuple[str, str]]]] = []
+    for name, bases in COLOR_BASE_LOCI.items():
+        if "Golden" not in name:
+            continue
+        for base in bases:
+            autosomal = base.autosomal
+            if (
+                autosomal.get("A") != ("A", "A")
+                or autosomal.get("I") != ("i", "i")
+                or autosomal.get("Wb") != ("Wb", "Wb")
+            ):
+                wrong.append((name, autosomal))
+
+    assert not wrong, f"Golden 系なのに A/A + i/i + Wb/Wb でない行: {wrong}"
+
+
+def test_cream_tortie_o_locus_data_contract() -> None:
+    """Blue/Lilac/Chocolate Cream 系はトーティ表現なので O/o として保持する。"""
+
+    tortie_cream_markers = ("Blue Cream", "Lilac Cream", "Choco Cream", "Chocolate Cream")
+    wrong: list[tuple[str, tuple[str, str]]] = []
+    for name, bases in COLOR_BASE_LOCI.items():
+        if not any(marker in name for marker in tortie_cream_markers):
+            continue
+        for base in bases:
+            if base.o != ("O", "o"):
+                wrong.append((name, base.o))
+
+    assert not wrong, f"Cream 系トーティ名なのに O/o でない行: {wrong}"
+
+
+def test_white_spotting_locus_data_contract() -> None:
+    """白斑名は V9 正本どおり -White=S/s、Van=S/S として保持する。"""
+
+    bicolor_markers = ("-White", "-W", " Bi-Color", " Bi-C", " Mitted")
+    wrong_bicolor: list[tuple[str, tuple[str, str] | None]] = []
+    wrong_van: list[tuple[str, tuple[str, str] | None]] = []
+    for name, bases in COLOR_BASE_LOCI.items():
+        is_van = " Van" in name
+        is_bicolor = any(marker in name for marker in bicolor_markers)
+        if not is_van and not is_bicolor:
+            continue
+        for base in bases:
+            s_locus = base.autosomal.get("S")
+            if is_van:
+                if s_locus != ("S", "S"):
+                    wrong_van.append((name, s_locus))
+            elif s_locus != ("S", "s"):
+                wrong_bicolor.append((name, s_locus))
+
+    assert not wrong_bicolor, f"-White/-W/Bi-Color/Mitted 名なのに S/s でない行: {wrong_bicolor}"
+    assert not wrong_van, f"Van 名なのに S/S でない行: {wrong_van}"
+
+
+@pytest.mark.parametrize(
+    "color_name",
+    [
+        "Blue Chinchilla Golden-White",
+        "Blue Chinchilla Silver-White",
+        "Blue Golden",
+        "Blue Golden-White",
+        "Blue Shaded Golden-White",
+        "Blue Shaded Silver-White",
+    ],
+)
+def test_tipping_fallback_outputs_exist_in_master(color_name: str) -> None:
+    """Wb/tipping fallback が出す汎用名は master で通常表示できる。"""
+
+    resolved = COLOR_MASTER.resolve(color_name)
+    assert resolved is not None
+    assert resolved.primary_name == color_name
+    assert resolved.display_allowed is True
+    assert resolved.input_allowed is True
+
+
+@pytest.mark.parametrize(
+    "color_name",
+    [
+        "Chocolate Tabby-White",
+        "Chocolate Silver Tabby-White",
+        "Lilac Silver Tabby",
+        "Chocolate Silver Patched Tabby",
+        "Chocolate Silver Patched Tabby-White",
+        "Lilac Patched Tabby-White",
+        "Lilac Silver Patched Tabby",
+        "Lilac Silver Patched Tabby-White",
+    ],
+)
+def test_chocolate_lilac_fallback_outputs_exist_in_master(color_name: str) -> None:
+    """Chocolate/Lilac 系 fallback が出す標準名は master で通常表示できる。"""
+
+    resolved = COLOR_MASTER.resolve(color_name)
+    assert resolved is not None
+    assert resolved.primary_name == color_name
+    assert resolved.display_allowed is True
+    assert resolved.input_allowed is True
+
+
+def test_point_white_fallback_output_exists_in_master_but_not_general_display() -> None:
+    """Point-White 補完名は入力可だが、一般候補としては常時表示しない。"""
+
+    resolved = COLOR_MASTER.resolve("Cream Lynx Point-White")
+    assert resolved is not None
+    assert resolved.primary_name == "Cream Lynx Point-White"
+    assert resolved.display_allowed is False
+    assert resolved.input_allowed is True
+
+
+@pytest.mark.parametrize(
+    "color_name",
+    [
+        "Blue Silver Lynx Point",
+        "Blue Silver Lynx Point-White",
+        "Silver Lynx Point-White",
+        "Blue Silver Cream Lynx Point",
+        "Silver Tortie Lynx Point",
+        "Blue Silver Cream Lynx Point-White",
+        "Chocolate Silver Lynx Point",
+        "Lilac Silver Lynx Point",
+        "Lilac Silver Lynx Point-White",
+        "Blue Shaded Golden Lynx Point",
+        "Blue Shaded Golden Lynx Point-White",
+        "Blue Shaded Silver Lynx Point",
+        "Blue Shaded Silver Lynx Point-White",
+        "Shaded Golden Lynx Point",
+        "Shaded Golden Lynx Point-White",
+        "Shaded Silver Lynx Point",
+        "Shaded Silver Lynx Point-White",
+        "Silver Tortie Lynx Point-White",
+        "Chocolate Silver Tortie Lynx Point-White",
+        "Lilac Silver Cream Lynx Point",
+        "Lilac Silver Cream Lynx Point-White",
+    ],
+)
+def test_point_silver_and_tipping_outputs_are_not_added_to_master(color_name: str) -> None:
+    """Point 表示で丸める Silver/Golden/tipping 系の補完名は master へ追加しない。"""
+
+    assert COLOR_MASTER.resolve(color_name) is None
+
+
+@pytest.mark.parametrize(
+    "color_name",
+    ["Lilac Lynx Point-White", "Lilac Cream Lynx Point-White", "Chocolate Tortie Point-White"],
+)
+def test_point_non_silver_fallback_outputs_exist_in_master_but_not_general_display(
+    color_name: str,
+) -> None:
+    """Silver/Golden/tipping を含まない Point 補完名は入力可だが、一般候補としては常時表示しない。"""
+
+    resolved = COLOR_MASTER.resolve(color_name)
+    assert resolved is not None
+    assert resolved.primary_name == color_name
+    assert resolved.display_allowed is False
+    assert resolved.input_allowed is True
+
+
+def test_point_results_do_not_display_silver_or_tipping_terms() -> None:
+    """Point 結果名には Silver/Golden/tipping 系の語を残さない。"""
+
+    calculator = CoatColorCalculator()
+    report = calculator.calculate_report("Blue Lynx Point", "Shaded Tortie Lynx Point-White")
+    forbidden = ("Silver", "Golden", "Shaded", "Chinchilla", "Shell", "Cameo", "Smoke")
+    offenders = [
+        result.color
+        for result in report.results
+        if "Point" in result.color
+        and any(re.search(rf"\b{re.escape(token)}\b", result.color) for token in forbidden)
+    ]
+
+    assert not offenders
+    assert report.unmatched_probability == 0
+
+
+@pytest.mark.parametrize("color_name", ["Lilac Cream-White", "Chocolate Tortie-White"])
+def test_tortie_white_fallback_outputs_exist_in_master(color_name: str) -> None:
+    """非Pointのトーティ白斑補完名は master で通常表示できる。"""
+
+    resolved = COLOR_MASTER.resolve(color_name)
+    assert resolved is not None
+    assert resolved.primary_name == color_name
+    assert resolved.display_allowed is True
+    assert resolved.input_allowed is True
 
 
 # --- Sp (スポテッド) 座位: 座位マスタ正本 V9 §5.11 / §7 Phase B ---

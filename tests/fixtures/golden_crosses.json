@@ -668,46 +668,34 @@
     "sire_carriers": null,
     "sire_color": "Chinchilla Golden"
    },
-   "parent_color_notes": [],
+   "parent_color_notes": [
+    {
+     "blocked_factors": [
+      "非アグーチ（ソリッド） a"
+     ],
+     "color": "Black",
+     "parent": "dam"
+    }
+   ],
    "results": [
     {
      "color": "Chinchilla Golden",
-     "probability_pct": 35.1562,
+     "probability_pct": 46.875,
      "sex": "Female"
     },
     {
      "color": "Chinchilla Golden",
-     "probability_pct": 35.1562,
-     "sex": "Male"
-    },
-    {
-     "color": "Black",
-     "probability_pct": 11.7188,
-     "sex": "Female"
-    },
-    {
-     "color": "Black",
-     "probability_pct": 11.7188,
+     "probability_pct": 46.875,
      "sex": "Male"
     },
     {
      "color": "Blue Chinchilla Golden",
-     "probability_pct": 2.3438,
+     "probability_pct": 3.125,
      "sex": "Female"
     },
     {
      "color": "Blue Chinchilla Golden",
-     "probability_pct": 2.3438,
-     "sex": "Male"
-    },
-    {
-     "color": "Blue",
-     "probability_pct": 0.7812,
-     "sex": "Female"
-    },
-    {
-     "color": "Blue",
-     "probability_pct": 0.7812,
+     "probability_pct": 3.125,
      "sex": "Male"
     }
    ],
@@ -755,7 +743,6 @@
    "parent_color_notes": [
     {
      "blocked_factors": [
-      "非アグーチ（ソリッド） a",
       "非オレンジ（赤以外） o"
      ],
      "color": "Chinchilla Golden",
@@ -764,83 +751,43 @@
    ],
    "results": [
     {
-     "color": "Silver Patched Tabby",
-     "probability_pct": 14.0625,
-     "sex": "Female"
-    },
-    {
-     "color": "Silver Patched Tabby-White",
-     "probability_pct": 14.0625,
-     "sex": "Female"
-    },
-    {
-     "color": "Cameo Tabby",
-     "probability_pct": 14.0625,
-     "sex": "Male"
-    },
-    {
-     "color": "Cameo Tabby-White",
-     "probability_pct": 14.0625,
-     "sex": "Male"
-    },
-    {
-     "color": "Blue Silver Patched Tabby",
-     "probability_pct": 4.6875,
-     "sex": "Female"
-    },
-    {
-     "color": "Blue Silver Patched Tabby-White",
-     "probability_pct": 4.6875,
-     "sex": "Female"
-    },
-    {
      "color": "Brown Patched Tabby",
-     "probability_pct": 4.6875,
+     "probability_pct": 18.75,
      "sex": "Female"
     },
     {
      "color": "Brown Patched Tabby-White",
-     "probability_pct": 4.6875,
+     "probability_pct": 18.75,
      "sex": "Female"
     },
     {
-     "color": "Cream Cameo Tabby",
-     "probability_pct": 4.6875,
-     "sex": "Male"
-    },
-    {
-     "color": "Cream Cameo Tabby-White",
-     "probability_pct": 4.6875,
-     "sex": "Male"
-    },
-    {
      "color": "Red Tabby",
-     "probability_pct": 4.6875,
+     "probability_pct": 18.75,
      "sex": "Male"
     },
     {
      "color": "Red Tabby-White",
-     "probability_pct": 4.6875,
+     "probability_pct": 18.75,
      "sex": "Male"
     },
     {
      "color": "Blue Patched Tabby",
-     "probability_pct": 1.5625,
+     "probability_pct": 6.25,
      "sex": "Female"
     },
     {
      "color": "Blue Patched Tabby-White",
-     "probability_pct": 1.5625,
+     "probability_pct": 6.25,
      "sex": "Female"
     },
     {
      "color": "Cream Tabby",
-     "probability_pct": 1.5625,
+     "probability_pct": 6.25,
      "sex": "Male"
     },
     {
      "color": "Cream Tabby-White",
-     "probability_pct": 1.5625,
+     "probability_pct": 6.25,
      "sex": "Male"
     }
    ],
@@ -1287,12 +1234,23 @@
      "label": "Blue Patched Tabby-White が B/b (チョコレートキャリア) と仮定 (Lilac は B 劣性を発現)",
      "new_colors": [
       "Lilac Patched Tabby",
+      "Lilac Patched Tabby-White",
       "Lilac Tabby",
       "Lilac Tabby-White"
      ],
      "prior_probability_applied": false,
      "probability_basis": "conditional_on_other_parent_carrier",
      "results": [
+      {
+       "color": "Cream Tabby",
+       "probability_pct": 12.5,
+       "sex": "Male"
+      },
+      {
+       "color": "Cream Tabby-White",
+       "probability_pct": 12.5,
+       "sex": "Male"
+      },
       {
        "color": "Blue Patched Tabby",
        "probability_pct": 6.25,
@@ -1319,6 +1277,11 @@
        "sex": "Female"
       },
       {
+       "color": "Lilac Patched Tabby-White",
+       "probability_pct": 6.25,
+       "sex": "Female"
+      },
+      {
        "color": "Lilac Tabby",
        "probability_pct": 6.25,
        "sex": "Female"
@@ -1335,16 +1298,6 @@
       },
       {
        "color": "Blue Tabby-White",
-       "probability_pct": 6.25,
-       "sex": "Male"
-      },
-      {
-       "color": "Cream Tabby",
-       "probability_pct": 6.25,
-       "sex": "Male"
-      },
-      {
-       "color": "Cream Tabby-White",
        "probability_pct": 6.25,
        "sex": "Male"
       },
@@ -1965,12 +1918,12 @@
    "parent_color_notes": [],
    "results": [
     {
-     "color": "Black Silver Tabby",
+     "color": "Silver Tabby",
      "probability_pct": 35.1562,
      "sex": "Female"
     },
     {
-     "color": "Black Silver Tabby",
+     "color": "Silver Tabby",
      "probability_pct": 35.1562,
      "sex": "Male"
     },

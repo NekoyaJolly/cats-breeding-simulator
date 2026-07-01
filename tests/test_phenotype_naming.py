@@ -132,11 +132,11 @@ def test_construct_fallback_dominant_white_is_white() -> None:
     assert namer.construct_fallback_name(_kitten("Female", "oo", w="WW")) == "White"
 
 
-def test_construct_fallback_point_is_unclassified() -> None:
-    """点紋系 (フルカラーでない) は通常モードの構築対象外 → None (未分類)。"""
+def test_construct_fallback_point_name() -> None:
+    """Point 系も入力文脈から到達した場合は標準名へ命名する。"""
 
     namer = PhenotypeNamer()
-    assert namer.construct_fallback_name(_kitten("Female", "oo", c="cscs")) is None
+    assert namer.construct_fallback_name(_kitten("Female", "oo", c="cscs")) == "Seal Point"
 
 
 @pytest.mark.parametrize(
@@ -174,6 +174,7 @@ def test_construct_fallback_solid_and_tortie_names(kitten: KittenGenotype, expec
         (_kitten("Female", "oo", a="AA", d="dd", wb="Wbwb"), "Blue Golden"),
         (_kitten("Female", "oo", a="AA", i="Ii", wb="Wbwb"), "Silver"),
         (_kitten("Female", "oo", a="AA", wb="Wbwb", s="Ss"), "Golden-White"),
+        (_kitten("Female", "oo", a="AA", c="cscs", wb="Wbwb"), "Seal Lynx Point"),
         # B/D 座位を残す接頭辞 (_wideband_base_prefix)
         (_kitten("Female", "oo", a="AA", b="bb", wb="Wbwb"), "Chocolate Golden"),
         (_kitten("Female", "oo", a="AA", b="bb", d="dd", wb="Wbwb"), "Lilac Golden"),
@@ -183,6 +184,49 @@ def test_construct_fallback_solid_and_tortie_names(kitten: KittenGenotype, expec
 )
 def test_construct_fallback_wideband_tipping(kitten: KittenGenotype, expected: str) -> None:
     """ワイドバンド tipping は非オレンジ・アグーチでのみ Golden/Silver として命名する。"""
+
+    namer = PhenotypeNamer()
+    assert namer.construct_fallback_name(kitten) == expected
+
+
+@pytest.mark.parametrize(
+    ("kitten", "expected"),
+    [
+        (_kitten("Female", "oo", a="AA", c="cscs", i="Ii"), "Seal Lynx Point"),
+        (_kitten("Female", "oo", a="AA", c="cscs", d="dd", i="Ii"), "Blue Lynx Point"),
+        (_kitten("Female", "Oo", a="AA", c="cscs", i="Ii"), "Seal Tortie Lynx Point"),
+        (_kitten("Female", "Oo", a="AA", c="cscs", d="dd", i="Ii"), "Blue Cream Lynx Point"),
+        (_kitten("Female", "oo", a="AA", c="cscs", wb="Wbwb"), "Seal Lynx Point"),
+    ],
+)
+def test_construct_fallback_point_display_ignores_silver_and_tipping(
+    kitten: KittenGenotype, expected: str
+) -> None:
+    """Point 表示では Silver/Golden/Wb/tipping 系を出さず標準 Point 名へ寄せる。"""
+
+    namer = PhenotypeNamer()
+    assert namer.construct_fallback_name(kitten) == expected
+
+
+@pytest.mark.parametrize(
+    ("kitten", "expected"),
+    [
+        (_kitten("Female", "Oo", b="bb"), "Chocolate Tortie"),
+        (_kitten("Male", "OY", b="bb"), "Red"),
+        (_kitten("Male", "OY", b="bb", d="dd"), "Cream"),
+        (_kitten("Female", "oo", b="bb", a="AA"), "Chocolate Tabby"),
+        (_kitten("Female", "Oo", b="bb", a="AA"), "Chocolate Patched Tabby"),
+        (_kitten("Female", "oo", b="bb", c="cscs"), "Chocolate Point"),
+        (_kitten("Female", "oo", b="bb", a="AA", c="cscs"), "Chocolate Lynx Point"),
+        (_kitten("Female", "Oo", b="bb", d="dd", c="cscs"), "Lilac Cream Point"),
+        (_kitten("Male", "OY", b="bb", d="dd", c="cscs"), "Cream Point"),
+        (_kitten("Female", "Oo", b="blbl", d="dd", a="AA"), "Fawn Patched Tabby"),
+    ],
+)
+def test_construct_fallback_chocolate_cinnamon_and_point_names(
+    kitten: KittenGenotype, expected: str
+) -> None:
+    """CSV逆引きに無いB/C/O座位の組み合わせも標準名へ命名する。"""
 
     namer = PhenotypeNamer()
     assert namer.construct_fallback_name(kitten) == expected
@@ -209,7 +253,11 @@ def test_construct_fallback_tipping_degree_from_parents() -> None:
         ("Red Silver Tabby", "Cameo Tabby"),
         ("Cream Silver Tabby", "Cream Cameo Tabby"),
         ("Chocolate Silver Tabby", "Chocolate Silver Tabby"),
+        ("Chocolate Silver Patched Tabby", "Chocolate Silver Patched Tabby"),
+        ("Chocolate Silver Silver Patched Tabby", "Chocolate Silver Patched Tabby"),
         ("Lilac Silver Tabby", "Lilac Silver Tabby"),
+        ("Lilac Silver Patched Tabby", "Lilac Silver Patched Tabby"),
+        ("Lilac Silver Silver Patched Tabby", "Lilac Silver Patched Tabby"),
         ("Cinnamon Silver Tabby", "Cinnamon Silver Tabby"),
         ("Fawn Silver Tabby", "Fawn Silver Tabby"),
         # 非シルバーのタビーは Black → Brown へ正規化
@@ -222,3 +270,41 @@ def test_clean_phenotype_name_silver_and_tabby_normalization(raw: str, expected:
 
     namer = PhenotypeNamer()
     assert namer.clean_phenotype_name(raw) == expected
+
+
+def test_post_process_recleans_silver_tabby_after_pattern_simplification() -> None:
+    """猫種なしで Spotted を外した後も黒系 Silver Tabby を一般名へ寄せる。"""
+
+    namer = PhenotypeNamer()
+    assert (
+        namer.post_process_color_name(
+            "Black Silver Spotted Tabby",
+            "Black",
+            "Blue Silver Patched Tabby",
+            breed=None,
+        )
+        == "Silver Tabby"
+    )
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("Silver Lynx Point", "Seal Lynx Point"),
+        ("Silver Lynx Point-White", "Seal Lynx Point-White"),
+        ("Blue Silver Lynx Point", "Blue Lynx Point"),
+        ("Chocolate Silver Lynx Point-White", "Chocolate Lynx Point-White"),
+        ("Lilac Silver Lynx Point", "Lilac Lynx Point"),
+        ("Silver Tortie Lynx Point", "Seal Tortie Lynx Point"),
+        ("Blue Silver Cream Lynx Point-White", "Blue Cream Lynx Point-White"),
+        ("Shaded Golden Lynx Point", "Seal Lynx Point"),
+        ("Blue Shaded Silver Lynx Point-White", "Blue Lynx Point-White"),
+        ("Chocolate Silver Tortie Lynx Point-White", "Chocolate Tortie Lynx Point-White"),
+        ("Lilac Silver Cream Lynx Point", "Lilac Cream Lynx Point"),
+    ],
+)
+def test_post_process_point_display_ignores_silver_and_tipping(raw: str, expected: str) -> None:
+    """CSV逆引き由来の Point 名でも Silver/Golden/tipping 系を表示に残さない。"""
+
+    namer = PhenotypeNamer()
+    assert namer.post_process_color_name(raw, "x", "y", breed=None) == expected

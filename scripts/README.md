@@ -38,6 +38,7 @@
 |---|---|---|---|---|
 | `build_cat_color_master.py` | 色柄マスター唯一正本 `docs/architecture/cat_color_master.csv` とレビュー `cat_color_master_review.md` を、元データ+遺伝子座マップから生成・再生成する | `PYTHONPATH=. python scripts/build_cat_color_master.py` | dev | `cat_color_master.csv` が手編集運用へ完全移行し再生成が不要になったとき |
 | `build_cat_color_display_alias_map.py` | 表示名マスタ唯一正本 `docs/architecture/cat_color_display_alias_map.csv` を、猫種別呼称ルール表 (Oriental の Ebony/Chestnut/Lavender 系、Abyssinian/Somali の Ruddy 系) から生成・再生成する (データ正本 V9 §4) | `PYTHONPATH=. python scripts/build_cat_color_display_alias_map.py` | dev | `cat_color_display_alias_map.csv` が手編集運用へ完全移行し再生成が不要になったとき |
+| `check/exhaustive_cross_audit.py` | 通常CIには入れない手動監査として、猫種なし normal モードの父色 x 母色を総当たりし、未分類・確率合計・性別制約・不可逆ルール違反などを `.artifacts/exhaustive-cross-audit/` へ出力する | `python scripts/check/exhaustive_cross_audit.py` | check | 計算エンジンが別の公式監査基盤へ移行し、この手動総当たり監査が不要になったとき |
 
 ## 4. one-shot スクリプトの制限
 
