@@ -358,26 +358,28 @@ export function LitterInference({ language }: { language: Language }) {
                 key={kitten.id}
                 className="grid grid-cols-1 gap-3 rounded-md border border-slate-200 p-2.5 sm:p-3 md:grid-cols-[1fr_130px_1.4fr_auto]"
               >
-                <FloatingTextInput
-                  id={`kitten-name-${kitten.id}`}
-                  label={`${text.kittenForm.kittenName} ${index + 1}`}
-                  value={kitten.name}
-                  onChange={(event) => updateKitten(kitten.id, { name: event.target.value })}
-                  placeholder={text.kittenForm.kittenNamePlaceholder}
-                />
-                <FloatingSelect
-                  id={`kitten-sex-${kitten.id}`}
-                  label={text.common.sex}
-                  value={kitten.sex}
-                  onChange={(event) =>
-                    updateKitten(kitten.id, {
-                      sex: event.target.value === "male" ? "male" : "female",
-                    })
-                  }
-                >
-                  <option value="female">{text.common.female}</option>
-                  <option value="male">{text.common.male}</option>
-                </FloatingSelect>
+                <div className="grid grid-cols-[minmax(0,1fr)_7.5rem] gap-2 md:contents">
+                  <FloatingTextInput
+                    id={`kitten-name-${kitten.id}`}
+                    label={`${text.kittenForm.kittenName} ${index + 1}`}
+                    value={kitten.name}
+                    onChange={(event) => updateKitten(kitten.id, { name: event.target.value })}
+                    placeholder={text.kittenForm.kittenNamePlaceholder}
+                  />
+                  <FloatingSelect
+                    id={`kitten-sex-${kitten.id}`}
+                    label={text.common.sex}
+                    value={kitten.sex}
+                    onChange={(event) =>
+                      updateKitten(kitten.id, {
+                        sex: event.target.value === "male" ? "male" : "female",
+                      })
+                    }
+                  >
+                    <option value="female">{text.common.female}</option>
+                    <option value="male">{text.common.male}</option>
+                  </FloatingSelect>
+                </div>
                 <ColorCombobox
                   id={`kitten-color-${kitten.id}`}
                   label={text.kittenForm.kittenCoat}

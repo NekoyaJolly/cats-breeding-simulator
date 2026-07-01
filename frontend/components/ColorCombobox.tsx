@@ -34,10 +34,11 @@ type Props = {
 const MAX_SUGGESTIONS = 20;
 
 const inputClass =
-  "h-11 w-full rounded-md border border-slate-300 bg-white pb-1.5 pt-4 text-sm shadow-sm transition focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500";
+  "h-11 w-full rounded-md border border-slate-300 bg-white py-2 text-sm shadow-sm transition focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500";
 const floatingLabelBaseClass =
   "absolute left-3 z-10 truncate bg-white px-1 transition-all duration-150";
-const floatingLabelClass = "top-1 text-[11px] leading-4 text-slate-500";
+const floatingLabelClass =
+  "top-0 -translate-y-1/2 text-[11px] leading-4 text-slate-600";
 const restingLabelClass =
   "top-1/2 -translate-y-1/2 text-sm leading-5 text-slate-500";
 
@@ -149,7 +150,9 @@ export function ColorCombobox({
 
   const expanded = open && suggestions.length > 0;
   const floated = focused || value.trim().length > 0 || Boolean(placeholder);
-  const rightInsetClass = labelAction ? "right-14" : "right-3";
+  const labelWidthClass = labelAction
+    ? "max-w-[calc(100%-4.5rem)]"
+    : "max-w-[calc(100%-1.5rem)]";
   const inputPaddingClass = labelAction ? "pl-3 pr-12" : "px-3";
   const listboxClass =
     suggestionLayout === "inline"
@@ -190,7 +193,7 @@ export function ColorCombobox({
         />
         <label
           htmlFor={id}
-          className={`${floatingLabelBaseClass} ${rightInsetClass} ${
+          className={`${floatingLabelBaseClass} ${labelWidthClass} ${
             floated ? floatingLabelClass : restingLabelClass
           }`}
         >
