@@ -1,5 +1,6 @@
 "use client";
 
+import { ChatCircleText } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { submitFeedback } from "@/lib/api";
@@ -216,20 +217,11 @@ export function FeedbackWidget() {
           cursor: "grab",
         }}
       >
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        <ChatCircleText
           aria-hidden="true"
-        >
-          <rect x="3" y="5" width="18" height="14" rx="2" />
-          <path d="m3 7 9 6 9-6" />
-        </svg>
+          className="h-6 w-6"
+          weight="duotone"
+        />
       </button>
 
       {open && (

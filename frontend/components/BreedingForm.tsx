@@ -1,5 +1,6 @@
 "use client";
 
+import { Dna, X } from "@phosphor-icons/react";
 import {
   useCallback,
   useEffect,
@@ -245,28 +246,6 @@ function carrierSelectionToInput(
     if (value) input[definition.locus] = value;
   }
   return Object.keys(input).length > 0 ? input : undefined;
-}
-
-function GeneIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="h-4 w-4"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M7 3c6 4 4 14 10 18" />
-      <path d="M17 3C11 7 13 17 7 21" />
-      <path d="M8.5 6h7" />
-      <path d="M7.5 10h9" />
-      <path d="M7.5 14h9" />
-      <path d="M8.5 18h7" />
-    </svg>
-  );
 }
 
 // 最近選んだ値 (履歴) の localStorage キーと保持件数。
@@ -589,7 +568,7 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
         title={label}
         onClick={() => setCarrierModalParent(parent)}
       >
-        <GeneIcon />
+        <Dna aria-hidden="true" className="h-4 w-4" weight="duotone" />
         {active && (
           <span className="min-w-4 text-center" aria-label={text.parentForm.carrierSelector.configured}>
             {count}
@@ -706,11 +685,11 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
                 </div>
                 <button
                   type="button"
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 text-lg leading-none text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400"
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400"
                   aria-label={text.parentForm.carrierSelector.close}
                   onClick={() => setCarrierModalParent(null)}
                 >
-                  ×
+                  <X aria-hidden="true" className="h-4 w-4" weight="bold" />
                 </button>
               </div>
             </div>
