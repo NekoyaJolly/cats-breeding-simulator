@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  Baby,
+  CheckCircle,
+  Crosshair,
+  Dna,
+  GlobeHemisphereEast,
+} from "@phosphor-icons/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BreedingForm } from "@/components/BreedingForm";
 import { BreedColorsHint } from "@/components/BreedColorsHint";
@@ -19,32 +26,31 @@ import type { CalculationResponse } from "@/lib/schema";
 
 type ActiveView = "parent" | "target" | "kitten";
 
-const TAB_LABELS: Record<ActiveView, string> = {
-  parent: "Parent Coats",
-  target: "Target Coat",
-  kitten: "Kitten Coats",
-};
-
-function GlobeIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="h-5 w-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="9" fill="#e0f2fe" stroke="#0284c7" />
-      <path d="M3 12h18" stroke="#0891b2" />
-      <path d="M12 3a14 14 0 0 1 0 18" stroke="#2563eb" />
-      <path d="M12 3a14 14 0 0 0 0 18" stroke="#2563eb" />
-      <path d="M5.2 8.5h13.6" stroke="#22c55e" />
-      <path d="M5.2 15.5h13.6" stroke="#22c55e" />
-    </svg>
-  );
-}
+const TAB_ITEMS = [
+  {
+    view: "parent",
+    label: "Parent Coats",
+    Icon: Dna,
+    iconClass: "text-emerald-600",
+  },
+  {
+    view: "target",
+    label: "Target Coat",
+    Icon: Crosshair,
+    iconClass: "text-violet-600",
+  },
+  {
+    view: "kitten",
+    label: "Kitten Coats",
+    Icon: Baby,
+    iconClass: "text-amber-600",
+  },
+] as const satisfies readonly {
+  view: ActiveView;
+  label: string;
+  Icon: typeof Dna;
+  iconClass: string;
+}[];
 
 export default function HomePage() {
   const [activeView, setActiveView] = useState<ActiveView>("parent");
@@ -139,7 +145,11 @@ export default function HomePage() {
               aria-expanded={languageMenuOpen}
               onClick={() => setLanguageMenuOpen((open) => !open)}
             >
-              <GlobeIcon />
+              <GlobeHemisphereEast
+                aria-hidden="true"
+                className="h-5 w-5 text-sky-600"
+                weight="duotone"
+              />
             </button>
             {languageMenuOpen && (
               <div
@@ -163,9 +173,11 @@ export default function HomePage() {
                   >
                     <span>{option.label}</span>
                     {language === option.value && (
-                      <span className="text-xs text-slate-500" aria-hidden="true">
-                        ✓
-                      </span>
+                      <CheckCircle
+                        aria-hidden="true"
+                        className="h-4 w-4 text-emerald-600"
+                        weight="fill"
+                      />
                     )}
                   </button>
                 ))}
@@ -176,20 +188,31 @@ export default function HomePage() {
       </header>
 
       <div className="mb-5 grid grid-cols-3 gap-1 rounded-md bg-slate-100 p-1">
-        {(["parent", "target", "kitten"] as const).map((view) => (
-          <button
-            key={view}
-            type="button"
-            className={`min-w-0 rounded px-1.5 py-2 text-center text-xs font-semibold sm:px-3 sm:text-sm ${
-              activeView === view
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-500 hover:text-slate-800"
-            }`}
-            onClick={() => setActiveView(view)}
-          >
-            <span className="block truncate">{TAB_LABELS[view]}</span>
-          </button>
-        ))}
+        {TAB_ITEMS.map((tab) => {
+          const Icon = tab.Icon;
+          const active = activeView === tab.view;
+          return (
+            <button
+              key={tab.view}
+              type="button"
+              className={`min-w-0 rounded px-1.5 py-2 text-center text-xs font-semibold sm:px-3 sm:text-sm ${
+                active
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+              onClick={() => setActiveView(tab.view)}
+            >
+              <span className="flex min-w-0 items-center justify-center gap-1.5">
+                <Icon
+                  aria-hidden="true"
+                  className={`h-4 w-4 shrink-0 ${active ? tab.iconClass : "text-slate-400"}`}
+                  weight={active ? "duotone" : "regular"}
+                />
+                <span className="truncate">{tab.label}</span>
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       <section className="mb-5">

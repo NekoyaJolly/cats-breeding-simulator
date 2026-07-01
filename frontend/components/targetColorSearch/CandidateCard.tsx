@@ -1,3 +1,4 @@
+import { GenderFemale, GenderMale } from "@phosphor-icons/react";
 import type { ReverseLookupCandidate } from "@/lib/schema";
 import { UI_TEXT, type Language } from "@/lib/i18n";
 import { getLocusTone } from "@/lib/lociGlossary";
@@ -35,11 +36,13 @@ export function CandidateCard({
             {candidate.sire.name} × {candidate.dam.name}
           </h4>
           <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="rounded bg-sky-50 px-1.5 py-0.5 font-medium text-sky-700">
-              ♂ {candidate.sire.color}
+            <span className="inline-flex items-center gap-1 rounded bg-sky-50 px-1.5 py-0.5 font-medium text-sky-700">
+              <GenderMale aria-hidden="true" className="h-3.5 w-3.5" weight="duotone" />
+              {candidate.sire.color}
             </span>
-            <span className="rounded bg-rose-50 px-1.5 py-0.5 font-medium text-rose-700">
-              ♀ {candidate.dam.color}
+            <span className="inline-flex items-center gap-1 rounded bg-rose-50 px-1.5 py-0.5 font-medium text-rose-700">
+              <GenderFemale aria-hidden="true" className="h-3.5 w-3.5" weight="duotone" />
+              {candidate.dam.color}
             </span>
           </div>
         </div>

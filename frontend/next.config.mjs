@@ -6,6 +6,9 @@
 const backendOrigin = process.env.BACKEND_ORIGIN ?? "http://localhost:8000";
 
 const nextConfig = {
+  experimental: {
+    optimizePackageImports: ["@phosphor-icons/react"],
+  },
   async rewrites() {
     return [
       {

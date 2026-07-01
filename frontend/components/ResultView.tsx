@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { GenderFemale, GenderMale } from "@phosphor-icons/react";
+import { useState, type ReactNode } from "react";
 import type {
   CalculationResponse,
   CarrierScenarioEntry,
@@ -130,11 +131,13 @@ function groupByBase(rows: ResultEntry[]): ColorGroup[] {
 // 残りは「詳細を見る (残り N 件)」で展開 / 「閉じる」で折りたたむ (性別ごとに独立)。
 function SexResultGroup({
   title,
+  icon,
   accentClass,
   rows,
   language,
 }: {
   title: string;
+  icon: ReactNode;
   accentClass: string;
   rows: ResultEntry[];
   language: Language;
@@ -149,9 +152,14 @@ function SexResultGroup({
   return (
     <div className="overflow-hidden rounded-md border border-slate-200">
       <div
-        className={`flex items-baseline justify-between px-4 py-2 ${accentClass}`}
+        className={`flex items-center justify-between gap-3 px-4 py-2 ${accentClass}`}
       >
-        <h3 className="text-sm font-semibold">{title}</h3>
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/80">
+            {icon}
+          </span>
+          <h3 className="truncate text-sm font-semibold">{title}</h3>
+        </div>
         {/* 各行は整数丸めのため合計が厳密一致しない。概算であることを「約」で明示する。 */}
         <span className="text-xs tabular-nums opacity-80">
           {text.parentResult.totalApprox}
@@ -224,12 +232,26 @@ function SexSplitResults({
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <SexResultGroup
         title={text.parentResult.male}
+        icon={
+          <GenderMale
+            aria-hidden="true"
+            className="h-4 w-4 text-sky-700"
+            weight="duotone"
+          />
+        }
         accentClass="bg-sky-50 text-sky-800"
         rows={male}
         language={language}
       />
       <SexResultGroup
         title={text.parentResult.female}
+        icon={
+          <GenderFemale
+            aria-hidden="true"
+            className="h-4 w-4 text-pink-700"
+            weight="duotone"
+          />
+        }
         accentClass="bg-pink-50 text-pink-800"
         rows={female}
         language={language}
