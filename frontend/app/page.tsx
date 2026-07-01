@@ -128,11 +128,11 @@ export default function HomePage() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:py-10">
-      <header className="mb-7">
+    <main className="mx-auto max-w-3xl px-3 py-5 sm:px-4 sm:py-10">
+      <header className="mb-4 sm:mb-7">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-3xl font-bold tracking-normal text-slate-950">
+            <h1 className="text-2xl font-bold tracking-normal text-slate-950 sm:text-3xl">
               {text.app.name}
             </h1>
             <p className="mt-1 text-sm text-slate-600">{text.app.subtitle}</p>
@@ -187,7 +187,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      <div className="mb-5 grid grid-cols-3 gap-1 rounded-md bg-slate-100 p-1">
+      <div className="mb-3 grid grid-cols-3 gap-1 rounded-md bg-slate-100 p-1 sm:mb-5">
         {TAB_ITEMS.map((tab) => {
           const Icon = tab.Icon;
           const active = activeView === tab.view;
@@ -195,7 +195,7 @@ export default function HomePage() {
             <button
               key={tab.view}
               type="button"
-              className={`min-w-0 rounded px-1.5 py-2 text-center text-xs font-semibold sm:px-3 sm:text-sm ${
+              className={`min-w-0 rounded px-1 py-1.5 text-center text-xs font-semibold sm:px-3 sm:py-2 sm:text-sm ${
                 active
                   ? "bg-white text-slate-900 shadow-sm"
                   : "text-slate-500 hover:text-slate-800"
@@ -215,15 +215,15 @@ export default function HomePage() {
         })}
       </div>
 
-      <section className="mb-5">
-        <p className="text-sm leading-6 text-slate-600">
+      <section className="mb-4 sm:mb-5">
+        <p className="text-xs leading-5 text-slate-600 sm:text-sm sm:leading-6">
           {activeIntro.description}
         </p>
       </section>
 
       {activeView === "parent" ? (
         <>
-          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
             <BreedingForm
               onSubmit={handleSubmit}
               loading={loading}
@@ -242,7 +242,7 @@ export default function HomePage() {
           )}
 
           {result && (
-            <div className="mt-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
               <ResultView data={result} language={language} />
             </div>
           )}

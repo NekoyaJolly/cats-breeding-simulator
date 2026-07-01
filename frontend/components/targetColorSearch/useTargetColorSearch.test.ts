@@ -44,7 +44,47 @@ describe("useTargetColorSearch", () => {
     expect(result.current.color).toBe("");
   });
 
-  it("登録猫が2頭未満では検索 API を呼ばない", async () => {
+  it("登録フォームで性別を変更するとO座位の確認済み因子をクリアする", async () => {
+    const { result } = await renderFlushed();
+
+    act(() => result.current.setCarrierSelection({ O: "O/O", D: "D/d" }));
+    act(() => result.current.setSex("male"));
+
+    expect(result.current.carrierSelection.O).toBeUndefined();
+    expect(result.current.carrierSelection.D).toBe("D/d");
+  });
+
+  it("編集フォームで性別を変更するとO座位の確認済み因子をクリアする", async () => {
+    const { result } = await renderFlushed();
+
+    act(() =>
+      result.current.startEdit({
+        id: "cat-1",
+        name: "赤の父",
+        sex: "male",
+        color: "Red",
+        carriers: { O: "O/Y", D: "D/d" },
+      }),
+    );
+    act(() => result.current.setEditSex("female"));
+
+    expect(result.current.editCarrierSelection.O).toBeUndefined();
+    expect(result.current.editCarrierSelection.D).toBe("D/d");
+  });
+
+  it("登録猫が無くても目標条件案内を検索 API から取得する", async () => {
+    const response: ReverseLookupResponse = {
+      status: "ok",
+      target_color: "Blue",
+      target_sex: null,
+      response_category: "現在の情報では判定が難しい",
+      target_conditions: ["D座位: d/d"],
+      unchecked_conditions: ["父猫・母猫の両方が登録されていないため、交配候補を評価できません。"],
+      recommended_checks: ["D座位（ダイリュート）の遺伝子検査"],
+      candidates: [],
+    };
+    (searchTargetColor as Mock).mockResolvedValue({ ok: true, data: response });
+
     const { result } = await renderFlushed();
 
     act(() => result.current.setTargetColor("Blue"));
@@ -52,8 +92,13 @@ describe("useTargetColorSearch", () => {
       await result.current.handleSearch();
     });
 
-    expect(searchTargetColor).not.toHaveBeenCalled();
-    expect(result.current.result).toBeNull();
+    expect(searchTargetColor).toHaveBeenCalledWith({
+      target_color: "Blue",
+      target_sex: undefined,
+      cats: [],
+      limit: 20,
+    });
+    expect(result.current.result).toEqual(response);
   });
 
   it("2頭以上 + 目標カラーありで検索すると結果がセットされる", async () => {

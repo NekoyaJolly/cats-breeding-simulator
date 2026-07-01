@@ -166,6 +166,23 @@ def test_reverse_lookup_no_candidate_includes_unchecked_loci() -> None:
     assert any("W座位" in condition for condition in body["unchecked_conditions"])
 
 
+def test_reverse_lookup_target_only_returns_requirement_guidance() -> None:
+    """登録猫が無くても、目標カラーから必要条件と登録案内を返す。"""
+
+    response = client.post(
+        "/api/v1/reverse-lookup",
+        json={"target_color": "Blue Tabby", "target_sex": "male", "cats": []},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["target_sex"] == "male"
+    assert body["candidates"] == []
+    assert any(condition.startswith("D座位") for condition in body["target_conditions"])
+    assert any("父猫・母猫" in condition for condition in body["unchecked_conditions"])
+    assert any("父猫として評価する登録猫" in check for check in body["recommended_checks"])
+
+
 def test_reverse_lookup_solid_nonwhite_pair_cannot_confirm_tabby_white_target() -> None:
     """Black × Black では、A座位とS座位を要する Brown Tabby-White を確認できない。"""
 

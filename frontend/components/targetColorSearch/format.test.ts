@@ -17,9 +17,9 @@ describe("formatPct", () => {
 });
 
 describe("sexLabel", () => {
-  it("性別を父候補/母候補ラベルへ変換する", () => {
-    expect(sexLabel("male")).toBe("♂ 父猫候補");
-    expect(sexLabel("female")).toBe("♀ 母猫候補");
+  it("登録猫の性別を入力欄と同じラベルへ変換する", () => {
+    expect(sexLabel("male")).toBe("♂ オス");
+    expect(sexLabel("female")).toBe("♀ メス");
   });
 });
 

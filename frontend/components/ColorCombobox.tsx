@@ -34,8 +34,13 @@ type Props = {
 const MAX_SUGGESTIONS = 20;
 
 const inputClass =
-  "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500";
-const labelClass = "block text-sm font-medium text-slate-700";
+  "h-11 w-full rounded-md border border-slate-300 bg-white py-2 text-sm shadow-sm transition focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500";
+const floatingLabelBaseClass =
+  "absolute left-3 z-10 truncate bg-white px-1 transition-all duration-150";
+const floatingLabelClass =
+  "top-0 -translate-y-1/2 text-[11px] leading-4 text-slate-600";
+const restingLabelClass =
+  "top-1/2 -translate-y-1/2 text-sm leading-5 text-slate-500";
 
 // 履歴の文字列を ColorOption へ解決する。一覧に無い自由入力履歴は最小エントリで合成する。
 function resolveRecent(recent: string[], byValue: Map<string, ColorOption>): ColorOption[] {
@@ -68,6 +73,7 @@ export function ColorCombobox({
   suggestionLayout = "overlay",
 }: Props) {
   const [open, setOpen] = useState(false);
+  const [focused, setFocused] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const listboxId = useId();
@@ -143,23 +149,22 @@ export function ColorCombobox({
   }
 
   const expanded = open && suggestions.length > 0;
+  const floated = focused || value.trim().length > 0 || Boolean(placeholder);
+  const labelWidthClass = labelAction
+    ? "max-w-[calc(100%-4.5rem)]"
+    : "max-w-[calc(100%-1.5rem)]";
+  const inputPaddingClass = labelAction ? "pl-3 pr-12" : "px-3";
   const listboxClass =
     suggestionLayout === "inline"
       ? "mt-1 max-h-64 w-full overflow-auto rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg"
       : "absolute z-10 mt-1 max-h-64 w-full overflow-auto rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg";
 
   return (
-    <div className="space-y-1" ref={containerRef}>
-      <div className="flex min-h-6 items-center justify-between gap-2">
-        <label htmlFor={id} className={labelClass}>
-          {label} {required && <span className="text-red-500">*</span>}
-        </label>
-        {labelAction && <div className="shrink-0">{labelAction}</div>}
-      </div>
+    <div className="relative" ref={containerRef}>
       <div className="relative">
         <input
           id={id}
-          className={inputClass}
+          className={`${inputClass} ${inputPaddingClass}`}
           value={value}
           onChange={(event) => {
             onValueChange(event.target.value);
@@ -167,7 +172,13 @@ export function ColorCombobox({
             setActiveIndex(-1);
           }}
           onFocus={() => {
+            setFocused(true);
             setOpen(true);
+            setActiveIndex(-1);
+          }}
+          onBlur={() => {
+            setFocused(false);
+            setOpen(false);
             setActiveIndex(-1);
           }}
           onKeyDown={handleKeyDown}
@@ -184,6 +195,20 @@ export function ColorCombobox({
               : undefined
           }
         />
+        <label
+          htmlFor={id}
+          className={`${floatingLabelBaseClass} ${labelWidthClass} ${
+            floated ? floatingLabelClass : restingLabelClass
+          }`}
+        >
+          {label}
+          {required && <span className="text-red-500"> *</span>}
+        </label>
+        {labelAction && (
+          <div className="absolute right-2 top-1/2 -translate-y-1/2">
+            {labelAction}
+          </div>
+        )}
         {expanded && (
           <ul
             id={listboxId}

@@ -1,18 +1,36 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { RegisteredCat } from "@/lib/schema";
 import { UI_TEXT, type Language } from "@/lib/i18n";
 import { PARENT_GROUP_ACCENT_CLASS } from "@/lib/uiTone";
+import { CarrierSelectorButton, type CarrierParent } from "./CarrierSelector";
 import { ColorCombobox } from "./ColorCombobox";
+import { FloatingSelect, FloatingTextInput } from "./FloatingField";
 import { ResultsView } from "./targetColorSearch/ResultsView";
 import { carriersText } from "./targetColorSearch/format";
 import { useTargetColorSearch } from "./targetColorSearch/useTargetColorSearch";
 
-const inputClass =
-  "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500";
-const labelClass = "block text-sm font-medium text-slate-700";
 const secondaryButtonClass =
   "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50";
+const sectionClass =
+  "relative rounded-lg border border-slate-200 bg-white px-4 pb-4 pt-5 shadow-sm sm:px-6 sm:pb-6 sm:pt-6";
+const sectionTitleClass =
+  "absolute -top-2.5 left-4 bg-white px-1 text-sm font-semibold leading-5 text-slate-700 sm:left-6";
+
+function SectionCard({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className={sectionClass}>
+      <h2 className={sectionTitleClass}>{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+function parentFromSex(sex: RegisteredCat["sex"]): CarrierParent {
+  return sex === "male" ? "sire" : "dam";
+}
+
 // 「目標カラーから探す」画面。状態とロジックは useTargetColorSearch に集約し、
 // このコンポーネントは表示と入力ハンドラの結線に専念する。
 export function TargetColorSearch({ language }: { language: Language }) {
@@ -30,8 +48,8 @@ export function TargetColorSearch({ language }: { language: Language }) {
     removeAdditionalColor,
     breed,
     setBreed,
-    carriers,
-    setCarriers,
+    carrierSelection,
+    setCarrierSelection,
     colorsToRegister,
     registrationColors,
     handleAddCat,
@@ -49,8 +67,8 @@ export function TargetColorSearch({ language }: { language: Language }) {
     setEditColor,
     editBreed,
     setEditBreed,
-    editCarriers,
-    setEditCarriers,
+    editCarrierSelection,
+    setEditCarrierSelection,
     editColors,
     startEdit,
     cancelEdit,
@@ -68,9 +86,13 @@ export function TargetColorSearch({ language }: { language: Language }) {
   } = useTargetColorSearch(text.common.geneticsAffects);
 
   function catSexLabel(sexValue: RegisteredCat["sex"]): string {
+    return sexValue === "male" ? text.common.male : text.common.female;
+  }
+
+  function carrierButtonLabel(sexValue: RegisteredCat["sex"]): string {
     return sexValue === "male"
-      ? text.common.maleCandidate
-      : text.common.femaleCandidate;
+      ? text.parentForm.carrierSelector.sireButton
+      : text.parentForm.carrierSelector.damButton;
   }
 
   function renderCatList(groupCats: RegisteredCat[]) {
@@ -86,35 +108,48 @@ export function TargetColorSearch({ language }: { language: Language }) {
         {groupCats.map((cat) => (
           <li key={cat.id} className="px-4 py-3 text-sm">
             {editingId === cat.id ? (
-              <form onSubmit={handleSaveEdit} className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                <div className="space-y-1">
-                  <label htmlFor={`edit-name-${cat.id}`} className={labelClass}>
-                    {text.targetForm.name}
-                  </label>
-                  <input
-                    id={`edit-name-${cat.id}`}
-                    className={inputClass}
-                    value={editName}
-                    onChange={(event) => setEditName(event.target.value)}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label htmlFor={`edit-sex-${cat.id}`} className={labelClass}>
-                    {text.common.sex}
-                  </label>
-                  <select
+              <form onSubmit={handleSaveEdit} className="grid grid-cols-1 gap-3">
+                <FloatingTextInput
+                  id={`edit-name-${cat.id}`}
+                  label={text.targetForm.name}
+                  value={editName}
+                  onChange={(event) => setEditName(event.target.value)}
+                />
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <FloatingSelect
                     id={`edit-sex-${cat.id}`}
-                    className={inputClass}
+                    label={text.common.sex}
                     value={editSex}
                     onChange={(event) => setEditSex(event.target.value === "male" ? "male" : "female")}
                   >
-                    <option value="female">{text.common.femaleCandidate}</option>
-                    <option value="male">{text.common.maleCandidate}</option>
-                  </select>
+                    <option value="female">{text.common.female}</option>
+                    <option value="male">{text.common.male}</option>
+                  </FloatingSelect>
+                  <ColorCombobox
+                    id={`edit-breed-${cat.id}`}
+                    label={text.common.breed}
+                    value={editBreed}
+                    onValueChange={setEditBreed}
+                    onCommit={setEditBreed}
+                    colors={breedItems}
+                    recent={[]}
+                    recentLabel={text.common.recent}
+                    femaleOnlyLabel={text.common.femaleOnly}
+                  />
                 </div>
                 <ColorCombobox
                   id={`edit-color-${cat.id}`}
                   label={text.targetForm.coat}
+                  labelAction={
+                    <CarrierSelectorButton
+                      parent={parentFromSex(editSex)}
+                      value={editCarrierSelection}
+                      onChange={setEditCarrierSelection}
+                      language={language}
+                      buttonLabel={carrierButtonLabel(editSex)}
+                      modalTitle={text.targetForm.carriersLabel}
+                    />
+                  }
                   value={editColor}
                   onValueChange={setEditColor}
                   onCommit={setEditColor}
@@ -124,30 +159,7 @@ export function TargetColorSearch({ language }: { language: Language }) {
                   recentLabel={text.common.recent}
                   femaleOnlyLabel={text.common.femaleOnly}
                 />
-                <ColorCombobox
-                  id={`edit-breed-${cat.id}`}
-                  label={text.common.breed}
-                  value={editBreed}
-                  onValueChange={setEditBreed}
-                  onCommit={setEditBreed}
-                  colors={breedItems}
-                  recent={[]}
-                  recentLabel={text.common.recent}
-                  femaleOnlyLabel={text.common.femaleOnly}
-                />
-                <div className="space-y-1 md:col-span-2">
-                  <label htmlFor={`edit-carriers-${cat.id}`} className={labelClass}>
-                    {text.targetForm.carriers}
-                  </label>
-                  <input
-                    id={`edit-carriers-${cat.id}`}
-                    className={inputClass}
-                    value={editCarriers}
-                    onChange={(event) => setEditCarriers(event.target.value)}
-                    placeholder="例: B:B/b, D:D/d"
-                  />
-                </div>
-                <div className="flex gap-2 md:col-span-2">
+                <div className="flex gap-2">
                   <button
                     type="submit"
                     className="rounded-md bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
@@ -191,124 +203,154 @@ export function TargetColorSearch({ language }: { language: Language }) {
   }
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-800">
-          {text.targetForm.registrationTitle}
-        </h2>
-        <form onSubmit={handleAddCat} className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="space-y-1">
-            <label htmlFor="registered-cat-name" className={labelClass}>
-              {text.targetForm.name}
-            </label>
-            <input
-              id="registered-cat-name"
-              className={inputClass}
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder={text.targetForm.namePlaceholder}
-            />
+    <div className="space-y-4 sm:space-y-6">
+      <SectionCard title={text.targetForm.targetTitle}>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_180px_auto] md:items-start">
+          <ColorCombobox
+            id="target-color"
+            label={text.targetForm.targetCoat}
+            value={targetColor}
+            onValueChange={setTargetColor}
+            onCommit={setTargetColor}
+            colors={targetColors}
+            recent={[]}
+            placeholder={text.targetForm.targetPlaceholder}
+            recentLabel={text.common.recent}
+            femaleOnlyLabel={text.common.femaleOnly}
+          />
+          <FloatingSelect
+            id="target-sex"
+            label={text.targetForm.targetSex}
+            value={targetSex}
+            onChange={(event) => {
+              const value = event.target.value;
+              setTargetSex(value === "male" || value === "female" ? value : "any");
+            }}
+          >
+            <option value="any">{text.common.any}</option>
+            <option value="male">{text.common.male}</option>
+            <option value="female">{text.common.female}</option>
+          </FloatingSelect>
+          <button
+            type="button"
+            onClick={handleSearch}
+            disabled={!targetColor.trim() || loading}
+            className="h-11 rounded-md bg-slate-800 px-4 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading ? text.targetForm.loading : text.targetForm.button}
+          </button>
+        </div>
+        {error && (
+          <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            {error}
           </div>
-          <div className="space-y-1">
-            <label htmlFor="registered-cat-sex" className={labelClass}>
-              {text.common.sex}
-            </label>
-            <select
+        )}
+      </SectionCard>
+
+      {result && (
+        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+          <ResultsView data={result} language={language} />
+        </section>
+      )}
+
+      <SectionCard title={text.targetForm.registrationTitle}>
+        <form onSubmit={handleAddCat} className="grid grid-cols-1 gap-3">
+          <FloatingTextInput
+            id="registered-cat-name"
+            label={text.targetForm.name}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder={text.targetForm.namePlaceholder}
+          />
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <FloatingSelect
               id="registered-cat-sex"
-              className={inputClass}
+              label={text.common.sex}
               value={sex}
               onChange={(event) => setSex(event.target.value === "male" ? "male" : "female")}
             >
-              <option value="female">{text.common.femaleCandidate}</option>
-              <option value="male">{text.common.maleCandidate}</option>
-            </select>
+              <option value="female">{text.common.female}</option>
+              <option value="male">{text.common.male}</option>
+            </FloatingSelect>
+            <ColorCombobox
+              id="registered-cat-breed"
+              label={text.common.breed}
+              value={breed}
+              onValueChange={setBreed}
+              onCommit={setBreed}
+              colors={breedItems}
+              recent={[]}
+              placeholder={text.targetForm.breedPlaceholder}
+              recentLabel={text.common.recent}
+              femaleOnlyLabel={text.common.femaleOnly}
+            />
           </div>
-          <div className="space-y-3 md:col-span-2">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
-                <ColorCombobox
-                  id="registered-cat-color"
-                  label={text.targetForm.coat}
-                  value={color}
-                  onValueChange={setColor}
-                  onCommit={setColor}
-                  colors={registrationColors}
-                  recent={[]}
-                  placeholder={text.targetForm.coatPlaceholder}
-                  suggestionLayout="inline"
-                  recentLabel={text.common.recent}
-                  femaleOnlyLabel={text.common.femaleOnly}
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+            <ColorCombobox
+              id="registered-cat-color"
+              label={text.targetForm.coat}
+              labelAction={
+                <CarrierSelectorButton
+                  parent={parentFromSex(sex)}
+                  value={carrierSelection}
+                  onChange={setCarrierSelection}
+                  language={language}
+                  buttonLabel={carrierButtonLabel(sex)}
+                  modalTitle={text.targetForm.carriersLabel}
                 />
-                <button
-                  type="button"
-                  className={`${secondaryButtonClass} mt-6 whitespace-nowrap`}
-                  onClick={addColorInput}
-                >
-                  {text.targetForm.addCoat}
-                </button>
-              </div>
+              }
+              value={color}
+              onValueChange={setColor}
+              onCommit={setColor}
+              colors={registrationColors}
+              recent={[]}
+              placeholder={text.targetForm.coatPlaceholder}
+              suggestionLayout="inline"
+              recentLabel={text.common.recent}
+              femaleOnlyLabel={text.common.femaleOnly}
+            />
+            <button
+              type="button"
+              className={`${secondaryButtonClass} h-11 whitespace-nowrap`}
+              onClick={addColorInput}
+            >
+              {text.targetForm.addCoat}
+            </button>
+          </div>
+          {additionalColors.map((entryColor, index) => (
+            <div
+              key={entryColor.id}
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2"
+            >
               <ColorCombobox
-                id="registered-cat-breed"
-                label={text.common.breed}
-                value={breed}
-                onValueChange={setBreed}
-                onCommit={setBreed}
-                colors={breedItems}
+                id={`registered-cat-additional-color-${entryColor.id}`}
+                label={`${text.targetForm.additionalCoat} ${index + 1}`}
+                value={entryColor.value}
+                onValueChange={(value) => updateAdditionalColor(entryColor.id, value)}
+                onCommit={(value) => updateAdditionalColor(entryColor.id, value)}
+                colors={registrationColors}
                 recent={[]}
-                placeholder={text.targetForm.breedPlaceholder}
+                placeholder={text.targetForm.coatPlaceholder}
+                suggestionLayout="inline"
                 recentLabel={text.common.recent}
                 femaleOnlyLabel={text.common.femaleOnly}
               />
-            </div>
-            {additionalColors.map((entryColor, index) => (
-              <div
-                key={entryColor.id}
-                className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2"
+              <button
+                type="button"
+                className={`${secondaryButtonClass} h-11 whitespace-nowrap`}
+                onClick={() => removeAdditionalColor(entryColor.id)}
               >
-                <ColorCombobox
-                  id={`registered-cat-additional-color-${entryColor.id}`}
-                  label={`${text.targetForm.additionalCoat} ${index + 1}`}
-                  value={entryColor.value}
-                  onValueChange={(value) => updateAdditionalColor(entryColor.id, value)}
-                  onCommit={(value) => updateAdditionalColor(entryColor.id, value)}
-                  colors={registrationColors}
-                  recent={[]}
-                  placeholder={language === "ja" ? "例: Lilac" : "e.g. Lilac"}
-                  suggestionLayout="inline"
-                  recentLabel={text.common.recent}
-                  femaleOnlyLabel={text.common.femaleOnly}
-                />
-                <button
-                  type="button"
-                  className={`${secondaryButtonClass} mt-6 whitespace-nowrap`}
-                  onClick={() => removeAdditionalColor(entryColor.id)}
-                >
-                  {text.common.delete}
-                </button>
-              </div>
-            ))}
-          </div>
-          <div className="space-y-1 md:col-span-2">
-            <label htmlFor="registered-cat-carriers" className={labelClass}>
-              {text.targetForm.carriers}
-            </label>
-            <input
-              id="registered-cat-carriers"
-              className={inputClass}
-              value={carriers}
-              onChange={(event) => setCarriers(event.target.value)}
-              placeholder={text.targetForm.carriersPlaceholder}
-            />
-          </div>
-          <div className="md:col-span-2">
-            <button
-              type="submit"
-              className="rounded-md bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={colorsToRegister.length === 0}
-            >
-              {text.targetForm.addCandidate}
-            </button>
-          </div>
+                {text.common.delete}
+              </button>
+            </div>
+          ))}
+          <button
+            type="submit"
+            className="w-full rounded-md bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+            disabled={colorsToRegister.length === 0}
+          >
+            {text.targetForm.addCandidate}
+          </button>
         </form>
         {registrationError && (
           <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
@@ -347,64 +389,7 @@ export function TargetColorSearch({ language }: { language: Language }) {
             </div>
           )}
         </div>
-      </section>
-
-      <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-800">
-          {text.targetForm.targetTitle}
-        </h2>
-        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-[1fr_180px_auto] md:items-end">
-          <ColorCombobox
-            id="target-color"
-            label={text.targetForm.targetCoat}
-            value={targetColor}
-            onValueChange={setTargetColor}
-            onCommit={setTargetColor}
-            colors={targetColors}
-            recent={[]}
-            placeholder={text.targetForm.targetPlaceholder}
-            recentLabel={text.common.recent}
-            femaleOnlyLabel={text.common.femaleOnly}
-          />
-          <div className="space-y-1">
-            <label htmlFor="target-sex" className={labelClass}>
-              {text.targetForm.targetSex}
-            </label>
-            <select
-              id="target-sex"
-              className={inputClass}
-              value={targetSex}
-              onChange={(event) => {
-                const value = event.target.value;
-                setTargetSex(value === "male" || value === "female" ? value : "any");
-              }}
-            >
-              <option value="any">{text.common.any}</option>
-              <option value="male">{text.common.male}</option>
-              <option value="female">{text.common.female}</option>
-            </select>
-          </div>
-          <button
-            type="button"
-            onClick={handleSearch}
-            disabled={!targetColor.trim() || cats.length < 2 || loading}
-            className="rounded-md bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {loading ? text.targetForm.loading : text.targetForm.button}
-          </button>
-        </div>
-        {error && (
-          <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-      </section>
-
-      {result && (
-        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-          <ResultsView data={result} language={language} />
-        </section>
-      )}
+      </SectionCard>
     </div>
   );
 }
