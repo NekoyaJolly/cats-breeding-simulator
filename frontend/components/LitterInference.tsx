@@ -292,11 +292,11 @@ export function LitterInference({ language }: { language: Language }) {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-        <h2 className="text-lg font-semibold text-slate-800">
+      <section className="relative rounded-lg border border-slate-200 bg-white px-4 pb-4 pt-6 shadow-sm sm:px-6 sm:pb-6 sm:pt-7">
+        <h2 className="absolute -top-3 left-4 bg-white px-1 text-lg font-semibold leading-6 text-slate-800 sm:left-6">
           {text.kittenForm.sectionTitle}
         </h2>
-        <form onSubmit={handleSubmit} className="mt-3 space-y-3 sm:mt-4 sm:space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
             <ColorCombobox
               id="litter-sire-color"
@@ -339,65 +339,71 @@ export function LitterInference({ language }: { language: Language }) {
             femaleOnlyLabel={text.common.femaleOnly}
           />
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="text-sm font-semibold text-slate-700">
-                {text.kittenForm.kittenSection}
-              </h3>
-              <button type="button" className={secondaryButtonClass} onClick={addKitten}>
-                {text.kittenForm.addKitten}
-              </button>
-            </div>
-            {kittens.map((kitten, index) => (
-              <div
-                key={kitten.id}
-                className="grid grid-cols-1 gap-3 rounded-md border border-slate-200 p-2.5 sm:p-3 md:grid-cols-[1fr_130px_1.4fr_auto]"
-              >
-                <div className="grid grid-cols-[minmax(0,1fr)_7.5rem] gap-2 md:contents">
-                  <FloatingTextInput
-                    id={`kitten-name-${kitten.id}`}
-                    label={`${text.kittenForm.kittenName} ${index + 1}`}
-                    value={kitten.name}
-                    onChange={(event) => updateKitten(kitten.id, { name: event.target.value })}
-                    placeholder={text.kittenForm.kittenNamePlaceholder}
-                  />
-                  <FloatingSelect
-                    id={`kitten-sex-${kitten.id}`}
-                    label={text.common.sex}
-                    value={kitten.sex}
-                    onChange={(event) =>
-                      updateKitten(kitten.id, {
-                        sex: event.target.value === "male" ? "male" : "female",
-                      })
-                    }
-                  >
-                    <option value="female">{text.common.female}</option>
-                    <option value="male">{text.common.male}</option>
-                  </FloatingSelect>
-                </div>
-                <ColorCombobox
-                  id={`kitten-color-${kitten.id}`}
-                  label={text.kittenForm.kittenCoat}
-                  value={kitten.color}
-                  onValueChange={(value) => updateKitten(kitten.id, { color: value })}
-                  onCommit={(value) => updateKitten(kitten.id, { color: value })}
-                  colors={breedFilteredColors}
-                  recent={[]}
-                  placeholder={text.kittenForm.kittenCoatPlaceholder}
-                  suggestionLayout="inline"
-                  recentLabel={text.common.recent}
-                  femaleOnlyLabel={text.common.femaleOnly}
-                />
-                <button
-                  type="button"
-                  className={`${secondaryButtonClass} h-11 self-start whitespace-nowrap`}
-                  onClick={() => removeKitten(kitten.id)}
+          <section className="relative rounded-md border border-slate-200 p-2.5 pt-5 sm:p-3 sm:pt-5">
+            <h3 className="absolute -top-2.5 left-3 bg-white px-1 text-sm font-semibold leading-5 text-slate-700">
+              {text.kittenForm.kittenSection}
+            </h3>
+            <div className="space-y-3">
+              {kittens.map((kitten, index) => (
+                <div
+                  key={kitten.id}
+                  className="grid grid-cols-1 gap-3 rounded-md border border-slate-200 p-2.5 sm:p-3 md:grid-cols-[1fr_130px_1.4fr]"
                 >
-                  {text.common.delete}
-                </button>
-              </div>
-            ))}
-          </div>
+                  <div className="grid grid-cols-[minmax(0,1fr)_7.5rem] gap-2 md:contents">
+                    <FloatingTextInput
+                      id={`kitten-name-${kitten.id}`}
+                      label={`${text.kittenForm.kittenName} ${index + 1}`}
+                      value={kitten.name}
+                      onChange={(event) => updateKitten(kitten.id, { name: event.target.value })}
+                      placeholder={text.kittenForm.kittenNamePlaceholder}
+                    />
+                    <FloatingSelect
+                      id={`kitten-sex-${kitten.id}`}
+                      label={text.common.sex}
+                      value={kitten.sex}
+                      onChange={(event) =>
+                        updateKitten(kitten.id, {
+                          sex: event.target.value === "male" ? "male" : "female",
+                        })
+                      }
+                    >
+                      <option value="female">{text.common.female}</option>
+                      <option value="male">{text.common.male}</option>
+                    </FloatingSelect>
+                  </div>
+                  <ColorCombobox
+                    id={`kitten-color-${kitten.id}`}
+                    label={text.kittenForm.kittenCoat}
+                    value={kitten.color}
+                    onValueChange={(value) => updateKitten(kitten.id, { color: value })}
+                    onCommit={(value) => updateKitten(kitten.id, { color: value })}
+                    colors={breedFilteredColors}
+                    recent={[]}
+                    placeholder={text.kittenForm.kittenCoatPlaceholder}
+                    suggestionLayout="inline"
+                    recentLabel={text.common.recent}
+                    femaleOnlyLabel={text.common.femaleOnly}
+                  />
+                  <div className="grid grid-cols-2 gap-2 md:col-span-3">
+                    <button
+                      type="button"
+                      className={`${secondaryButtonClass} h-11 whitespace-nowrap`}
+                      onClick={addKitten}
+                    >
+                      {text.kittenForm.addKitten}
+                    </button>
+                    <button
+                      type="button"
+                      className={`${secondaryButtonClass} h-11 whitespace-nowrap`}
+                      onClick={() => removeKitten(kitten.id)}
+                    >
+                      {text.common.delete}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
 
           <button
             type="submit"
