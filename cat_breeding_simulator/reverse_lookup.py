@@ -426,7 +426,7 @@ class ReverseLookupService:
             result_names = {result.color, COLOR_MASTER.canonical_name(result.color)}
             if target_names & result_names:
                 out.append(result)
-        return out[:12]
+        return _sex_balanced_results(out)
 
     def _other_possible_colors(
         self,
@@ -442,7 +442,7 @@ class ReverseLookupService:
             if target_names & result_names and _matches_target_sex(result.sex, target_sex):
                 continue
             out.append(result)
-        return out[:12]
+        return _sex_balanced_results(out)
 
     def _hidden_conditions_for_pair(
         self,
@@ -873,6 +873,23 @@ def _matches_target_sex(result_sex: str, target_sex: RegisteredSex | None) -> bo
         return True
     expected = "Male" if target_sex == "male" else "Female"
     return result_sex == expected
+
+
+def _sex_balanced_results(results: list[KittenResult]) -> list[KittenResult]:
+    """表示時に片方の性別だけが先に並ばないよう、オス→メスで交互に返す。"""
+
+    male_rows = [result for result in results if result.sex == "Male"]
+    female_rows = [result for result in results if result.sex == "Female"]
+    other_rows = [result for result in results if result.sex not in {"Male", "Female"}]
+    balanced: list[KittenResult] = []
+    max_length = max(len(male_rows), len(female_rows))
+    for index in range(max_length):
+        if index < len(male_rows):
+            balanced.append(male_rows[index])
+        if index < len(female_rows):
+            balanced.append(female_rows[index])
+    balanced.extend(other_rows)
+    return balanced
 
 
 def _factor_label(locus: str, allele: str) -> str:

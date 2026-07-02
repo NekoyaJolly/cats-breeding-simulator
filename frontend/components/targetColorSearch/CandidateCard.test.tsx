@@ -96,6 +96,33 @@ describe("CandidateCard", () => {
     expect(screen.getByText("♂ Black-White 5.9%")).toBeInTheDocument();
   });
 
+  it("目標色柄以外のカラーは性別ごとに色名だけでまとめる", () => {
+    render(
+      <CandidateCard
+        candidate={makeCandidate({
+          other_possible_colors: [
+            { sex: "Female", color: "Calico", probability_pct: 5.8594 },
+            { sex: "Female", color: "Cameo", probability_pct: 5.8594 },
+            { sex: "Female", color: "Cameo-White", probability_pct: 5.8594 },
+            { sex: "Female", color: "Red", probability_pct: 5.8594 },
+            { sex: "Male", color: "Black", probability_pct: 5.8594 },
+            { sex: "Male", color: "Black Smoke-White", probability_pct: 5.8594 },
+            { sex: "Male", color: "Cameo", probability_pct: 5.8594 },
+            { sex: "Male", color: "Cameo-White", probability_pct: 5.8594 },
+          ],
+        })}
+        index={0}
+        language="ja"
+        categoryLabel="確定で期待できる"
+      />,
+    );
+
+    expect(screen.getByText("Black / Black Smoke-White / Cameo")).toBeInTheDocument();
+    expect(screen.getByText("Calico / Cameo / Cameo-White")).toBeInTheDocument();
+    expect(screen.getAllByText("他1件")).toHaveLength(2);
+    expect(screen.queryByText("♀ Calico 5.9%")).not.toBeInTheDocument();
+  });
+
   it("組み合わせ番号は index+1 で表示する", () => {
     render(
       <CandidateCard

@@ -3,8 +3,47 @@ import type { ReverseLookupCandidate } from "@/lib/schema";
 import { UI_TEXT, type Language } from "@/lib/i18n";
 import { getLocusTone } from "@/lib/lociGlossary";
 import { InfoList } from "./InfoList";
-import { colorRows, formatPct } from "./format";
+import { colorRows, formatPct, groupedColorNameRows } from "./format";
 import { LocusChip } from "../LocusChip";
+
+function moreCountLabel(count: number, language: Language): string {
+  return language === "ja" ? `他${count}件` : `${count} more`;
+}
+
+function OtherColorRows({
+  rows,
+  emptyText,
+  language,
+}: {
+  rows: ReverseLookupCandidate["other_possible_colors"];
+  emptyText: string;
+  language: Language;
+}) {
+  const groups = groupedColorNameRows(rows);
+  if (groups.length === 0) {
+    return (
+      <p className="mt-1 text-xs leading-5 text-slate-600">
+        {emptyText}
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-1 space-y-1 text-xs leading-5 text-slate-600">
+      {groups.map((group) => (
+        <p key={group.sex}>
+          <span className="font-semibold text-slate-700">{group.symbol}</span>{" "}
+          <span>{group.colors.join(" / ")}</span>
+          {group.hiddenCount > 0 && (
+            <span className="ml-1 text-slate-400">
+              {moreCountLabel(group.hiddenCount, language)}
+            </span>
+          )}
+        </p>
+      ))}
+    </div>
+  );
+}
 
 // 1 件の交配候補 (父 × 母) を、確率・成立条件・座位別根拠つきで折りたたみ表示する。
 export function CandidateCard({
@@ -109,9 +148,11 @@ export function CandidateCard({
             <p className="font-medium text-slate-700">
               {text.targetForm.otherPossibleCoats}
             </p>
-            <p className="mt-1 text-xs leading-5 text-slate-600">
-              {colorRows(candidate.other_possible_colors, text.targetForm.noOtherCoats)}
-            </p>
+            <OtherColorRows
+              rows={candidate.other_possible_colors}
+              emptyText={text.targetForm.noOtherCoats}
+              language={language}
+            />
           </div>
         </div>
 

@@ -299,7 +299,7 @@ def test_reverse_lookup_can_filter_target_by_kitten_sex() -> None:
 
 
 def test_reverse_lookup_black_white_target_shows_male_target_outcome() -> None:
-    """Cameo×Calico の Black-White 目標では、目標内訳にオス結果を表示する。"""
+    """Cameo×Calico の Black-White 目標では、性別別内訳にオス結果を表示する。"""
 
     response = client.post(
         "/api/v1/reverse-lookup",
@@ -318,6 +318,10 @@ def test_reverse_lookup_black_white_target_shows_male_target_outcome() -> None:
     assert any(
         entry["sex"] == "Male" and entry["color"] == "Black-White"
         for entry in candidate["target_possible_colors"]
+    )
+    assert any(
+        entry["sex"] == "Male"
+        for entry in candidate["other_possible_colors"][:8]
     )
     assert all(
         entry["color"] != "Cameo Red Smoke-White"
