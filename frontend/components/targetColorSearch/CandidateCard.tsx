@@ -35,12 +35,12 @@ export function CandidateCard({
           <h4 className="text-base font-semibold text-slate-800">
             {candidate.sire.name} × {candidate.dam.name}
           </h4>
-          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="inline-flex items-center gap-1 rounded bg-sky-50 px-1.5 py-0.5 font-medium text-sky-700">
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs leading-5">
+            <span className="inline-flex items-center gap-1 rounded bg-sky-50 px-1.5 py-0.5 font-medium leading-5 text-sky-700">
               <GenderMale aria-hidden="true" className="h-3.5 w-3.5" weight="duotone" />
               {candidate.sire.color}
             </span>
-            <span className="inline-flex items-center gap-1 rounded bg-rose-50 px-1.5 py-0.5 font-medium text-rose-700">
+            <span className="inline-flex items-center gap-1 rounded bg-rose-50 px-1.5 py-0.5 font-medium leading-5 text-rose-700">
               <GenderFemale aria-hidden="true" className="h-3.5 w-3.5" weight="duotone" />
               {candidate.dam.color}
             </span>
@@ -97,6 +97,14 @@ export function CandidateCard({
                 : [text.targetForm.noRecommendedTests]
             }
           />
+          <div className="rounded-md bg-slate-50 p-3 text-sm">
+            <p className="font-medium text-slate-700">
+              {text.targetForm.targetPossibleCoats}
+            </p>
+            <p className="mt-1 text-xs leading-5 text-slate-600">
+              {colorRows(candidate.target_possible_colors, text.targetForm.noTargetCoats)}
+            </p>
+          </div>
           <div className="rounded-md bg-slate-50 p-3 text-sm">
             <p className="font-medium text-slate-700">
               {text.targetForm.otherPossibleCoats}

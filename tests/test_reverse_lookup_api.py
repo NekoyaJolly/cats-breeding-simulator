@@ -287,10 +287,43 @@ def test_reverse_lookup_can_filter_target_by_kitten_sex() -> None:
     candidate = body["candidates"][0]
     assert candidate["category"] == "確定で期待できる"
     assert candidate["confirmed_probability_pct"] == 46.875
+    assert all(entry["sex"] == "Male" for entry in candidate["target_possible_colors"])
+    assert any(
+        entry["sex"] == "Male" and entry["color"] == "Red"
+        for entry in candidate["target_possible_colors"]
+    )
     assert all(
         not (entry["sex"] == "Male" and entry["color"] == "Red")
         for entry in candidate["other_possible_colors"]
     )
+
+
+def test_reverse_lookup_black_white_target_shows_male_target_outcome() -> None:
+    """Cameo×Calico の Black-White 目標では、目標内訳にオス結果を表示する。"""
+
+    response = client.post(
+        "/api/v1/reverse-lookup",
+        json={
+            "target_color": "Black-White",
+            "cats": [
+                {"id": "sire-1", "name": "カメオ父", "sex": "male", "color": "Cameo"},
+                {"id": "dam-1", "name": "キャリコ母", "sex": "female", "color": "Calico"},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    candidate = body["candidates"][0]
+    assert any(
+        entry["sex"] == "Male" and entry["color"] == "Black-White"
+        for entry in candidate["target_possible_colors"]
+    )
+    assert all(
+        entry["color"] != "Cameo Red Smoke-White"
+        for entry in candidate["other_possible_colors"]
+    )
+    assert any("o/Y（オス）" in condition for condition in body["target_conditions"])
 
 
 def test_reverse_lookup_rejects_female_only_alias_for_sire() -> None:

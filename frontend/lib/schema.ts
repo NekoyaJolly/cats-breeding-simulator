@@ -153,6 +153,7 @@ export const reverseLookupCandidateSchema = z.object({
   confirmation_needed: z.array(z.string()),
   recommended_tests: z.array(z.string()),
   locus_evidence: z.array(locusEvidenceSchema),
+  target_possible_colors: z.array(resultEntrySchema).optional().default([]),
   other_possible_colors: z.array(resultEntrySchema),
 });
 export type ReverseLookupCandidate = z.infer<typeof reverseLookupCandidateSchema>;

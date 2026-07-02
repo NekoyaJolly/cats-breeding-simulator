@@ -39,6 +39,13 @@ _FEMALE_ONLY_MARKERS: tuple[str, ...] = (
     "choco cream",
 )
 
+# 旧CSVには Cameo と同じ遺伝子型の冗長な Smoke 名が混在しているため、表示だけ統一する。
+_CAMEO_DISPLAY_ALIASES: dict[str, str] = {
+    "Cameo Smoke": "Cameo",
+    "Cameo Red Smoke-White": "Cameo-White",
+    "Cameo Red Smoke-White Van": "Cameo-White",
+}
+
 
 # 発現キー (sex, expressed_key) → 候補カラー名。PHENOTYPE_GENOTYPES の逆引き表。
 GENOTYPE_TO_COLOR_MAP: dict[tuple[str, tuple], list[str]] = {}
@@ -400,12 +407,19 @@ class PhenotypeNamer:
         name = COLOR_MASTER.canonical_name(name)
         name = self.normalize_point_display_name(name)
         name = COLOR_MASTER.canonical_name(name)
+        name = self.normalize_cameo_display_name(name)
         # 猫種別表示名 (Abyssinian の Ruddy、Oriental の Ebony 等) と一般 Van 正規化を
         # cat_color_display_alias_map.csv 駆動で適用する (データ正本 §4 / §1.1)。
         # canonical 正規化の「後」に置く: Ebony/Chestnut/Lavender は master では alias のため、
         # 先に canonical 化しないと猫種別呼称が一般名へ戻ってしまう。
         name = DISPLAY_ALIAS_MAP.resolve_display_name(name, breed)
         return name
+
+    @staticmethod
+    def normalize_cameo_display_name(name: str) -> str:
+        """旧CSV由来の冗長な Cameo Smoke 名を一般表示へ寄せる。"""
+
+        return _CAMEO_DISPLAY_ALIASES.get(name, name)
 
     @staticmethod
     def normalize_point_display_name(name: str) -> str:

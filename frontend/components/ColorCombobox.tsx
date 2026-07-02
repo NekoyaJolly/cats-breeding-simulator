@@ -34,9 +34,9 @@ type Props = {
 const MAX_SUGGESTIONS = 20;
 
 const inputClass =
-  "h-11 w-full rounded-md border border-slate-300 bg-white py-2 text-sm shadow-sm transition focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500";
+  "h-11 w-full rounded-md border border-slate-300 bg-white py-2 text-base leading-6 shadow-sm transition focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 sm:text-sm sm:leading-5";
 const floatingLabelBaseClass =
-  "absolute left-3 z-10 truncate bg-white px-1 transition-all duration-150";
+  "absolute left-3 z-[1] truncate bg-white px-1 transition-all duration-150";
 const floatingLabelClass =
   "top-0 -translate-y-1/2 text-[11px] leading-4 text-slate-600";
 const restingLabelClass =
@@ -157,7 +157,7 @@ export function ColorCombobox({
   const listboxClass =
     suggestionLayout === "inline"
       ? "mt-1 max-h-64 w-full overflow-auto rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg"
-      : "absolute z-10 mt-1 max-h-64 w-full overflow-auto rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg";
+      : "absolute z-40 mt-1 max-h-64 w-full overflow-auto rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg";
 
   return (
     <div className="relative" ref={containerRef}>
@@ -248,12 +248,12 @@ export function ColorCombobox({
                   </span>
                   <span className="flex shrink-0 items-center gap-1">
                     {color.sex_restriction === "female_only" && (
-                      <span className="rounded bg-pink-50 px-1.5 py-0.5 text-[10px] font-medium text-pink-600">
+                      <span className="rounded bg-pink-50 px-1.5 py-0.5 text-[10px] font-medium leading-4 text-pink-600">
                         {femaleOnlyLabel}
                       </span>
                     )}
                     {color.breed_context && (
-                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500">
+                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] leading-4 text-slate-500">
                         {color.breed_context}
                       </span>
                     )}

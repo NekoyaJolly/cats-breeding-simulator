@@ -158,10 +158,10 @@ function SexResultGroup({
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/80">
             {icon}
           </span>
-          <h3 className="truncate text-sm font-semibold">{title}</h3>
+          <h3 className="truncate text-sm font-semibold leading-5">{title}</h3>
         </div>
         {/* 各行は整数丸めのため合計が厳密一致しない。概算であることを「約」で明示する。 */}
-        <span className="text-xs tabular-nums opacity-80">
+        <span className="text-xs leading-5 tabular-nums opacity-80">
           {text.parentResult.totalApprox}
           {formatPctInt(total)}
         </span>

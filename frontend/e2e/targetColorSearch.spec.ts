@@ -27,6 +27,7 @@ const reverseLookupResponse = {
       locus_evidence: [
         { locus: "D", target: "d/d", sire: "d/d", dam: "D/d", status: "ok", note: "希釈" },
       ],
+      target_possible_colors: [],
       other_possible_colors: [],
     },
   ],

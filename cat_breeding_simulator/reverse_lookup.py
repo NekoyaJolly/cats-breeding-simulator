@@ -60,6 +60,7 @@ class ReverseLookupCandidate:
     confirmation_needed: list[str]
     recommended_tests: list[str]
     locus_evidence: list[LocusEvidence]
+    target_possible_colors: list[KittenResult]
     other_possible_colors: list[KittenResult]
 
 
@@ -174,7 +175,12 @@ class ReverseLookupService:
                 target_sex=target_sex,
                 response_category=_CATEGORY_DIFFICULT,
                 candidates=[],
-                target_conditions=self._target_conditions(target_loci),
+                target_conditions=self._target_conditions(
+                    target_loci,
+                    target_color,
+                    target_resolution.breed,
+                    target_sex,
+                ),
                 unchecked_conditions=["父猫・母猫の両方が登録されていないため、交配候補を評価できません。"],
                 recommended_checks=["父猫として評価する登録猫と、母猫として評価する登録猫を追加してください。"],
             )
@@ -199,7 +205,12 @@ class ReverseLookupService:
             target_sex=target_sex,
             response_category=self._response_category(limited),
             candidates=limited,
-            target_conditions=self._target_conditions(target_loci),
+            target_conditions=self._target_conditions(
+                target_loci,
+                target_color,
+                target_resolution.breed,
+                target_sex,
+            ),
             unchecked_conditions=[] if limited else self._unchecked_conditions(target_loci, sires, dams),
             recommended_checks=[] if limited else self._recommended_checks_for_loci(target_loci.keys()),
         )
@@ -291,7 +302,21 @@ class ReverseLookupService:
             ),
             confirmation_needed=self._confirmation_needed(conditions),
             recommended_tests=self._recommended_tests(conditions),
-            locus_evidence=self._locus_evidence(target_color, target_sex, sire, dam, breed, mode, conditions),
+            locus_evidence=self._locus_evidence(
+                target_color,
+                target_sex,
+                sire,
+                dam,
+                breed,
+                mode,
+                conditions,
+            ),
+            target_possible_colors=self._target_possible_colors(
+                conditional_report.results,
+                target_color,
+                breed,
+                target_sex,
+            ),
             other_possible_colors=self._other_possible_colors(
                 conditional_report.results,
                 target_color,
@@ -383,6 +408,25 @@ class ReverseLookupService:
             if target_names & result_names:
                 total += result.probability_pct
         return total
+
+    def _target_possible_colors(
+        self,
+        results: list[KittenResult],
+        target_color: str,
+        breed: str | None,
+        target_sex: RegisteredSex | None,
+    ) -> list[KittenResult]:
+        """目標色そのものとして生まれる性別別内訳を返す。"""
+
+        target_names = self._target_names(target_color, breed)
+        out: list[KittenResult] = []
+        for result in results:
+            if not _matches_target_sex(result.sex, target_sex):
+                continue
+            result_names = {result.color, COLOR_MASTER.canonical_name(result.color)}
+            if target_names & result_names:
+                out.append(result)
+        return out[:12]
 
     def _other_possible_colors(
         self,
@@ -587,7 +631,15 @@ class ReverseLookupService:
                 continue
             sire_set = set(sire_alleles.get(locus, set()))
             dam_set = set(dam_alleles.get(locus, set()))
-            can_supply = self._can_supply_target_pair(locus, target_pair, sire_set, dam_set)
+            can_supply = self._can_supply_target_locus(
+                locus,
+                target_pair,
+                sire_set,
+                dam_set,
+                target_color,
+                breed,
+                target_sex,
+            )
             status = "confirmed" if can_supply and locus not in conditions_by_locus else "needs_confirmation"
             if status == "confirmed":
                 note = "現在の登録条件で必要アレルを渡せます。"
@@ -596,7 +648,13 @@ class ReverseLookupService:
             evidence.append(
                 LocusEvidence(
                     locus=locus,
-                    target="/".join(_format_allele(allele) for allele in target_pair),
+                    target=self._target_pair_label(
+                        locus,
+                        target_pair,
+                        target_color,
+                        breed,
+                        target_sex,
+                    ),
                     sire=self._format_alleles(sire_set),
                     dam=self._format_alleles(dam_set),
                     status=status,
@@ -605,15 +663,46 @@ class ReverseLookupService:
             )
         return evidence
 
-    @staticmethod
-    def _can_supply_target_pair(
+    def _can_supply_target_locus(
+        self,
         locus: str,
         target_pair: tuple[str, str],
         sire_alleles: set[str],
         dam_alleles: set[str],
+        target_color: str,
+        breed: str | None,
+        target_sex: RegisteredSex | None,
     ) -> bool:
         if locus == "O":
-            return bool(sire_alleles and dam_alleles)
+            return any(
+                self._can_supply_o_target_pair(sex, pair, sire_alleles, dam_alleles)
+                for sex, pair in self._o_target_pairs(target_color, breed, target_sex)
+            )
+        return self._can_supply_target_pair(target_pair, sire_alleles, dam_alleles)
+
+    @staticmethod
+    def _can_supply_target_pair(
+        target_pair: tuple[str, str],
+        sire_alleles: set[str],
+        dam_alleles: set[str],
+    ) -> bool:
+        first, second = target_pair
+        return (first in sire_alleles and second in dam_alleles) or (
+            second in sire_alleles and first in dam_alleles
+        )
+
+    @staticmethod
+    def _can_supply_o_target_pair(
+        sex: RegisteredSex,
+        target_pair: tuple[str, str],
+        sire_alleles: set[str],
+        dam_alleles: set[str],
+    ) -> bool:
+        """O座位は父が娘へO/o、息子へYを渡すため常染色体と分けて判定する。"""
+
+        if sex == "male":
+            required = "O" if "O" in target_pair else "o"
+            return "Y" in sire_alleles and required in dam_alleles
         first, second = target_pair
         return (first in sire_alleles and second in dam_alleles) or (
             second in sire_alleles and first in dam_alleles
@@ -625,16 +714,72 @@ class ReverseLookupService:
             return "未確認"
         return ", ".join(_format_allele(allele) for allele in sorted(alleles))
 
-    @staticmethod
-    def _target_conditions(target_loci: dict[str, tuple[str, str]]) -> list[str]:
+    def _target_conditions(
+        self,
+        target_loci: dict[str, tuple[str, str]],
+        target_color: str,
+        breed: str | None,
+        target_sex: RegisteredSex | None,
+    ) -> list[str]:
         conditions: list[str] = []
         for locus in _LOCUS_ORDER:
             pair = target_loci.get(locus)
             if pair is None:
                 continue
             label = _LOCUS_LABELS.get(locus, locus)
-            conditions.append(f"{label}: {'/'.join(_format_allele(allele) for allele in pair)}")
+            target_label = self._target_pair_label(
+                locus,
+                pair,
+                target_color,
+                breed,
+                target_sex,
+            )
+            conditions.append(f"{label}: {target_label}")
         return conditions
+
+    def _target_pair_label(
+        self,
+        locus: str,
+        target_pair: tuple[str, str],
+        target_color: str,
+        breed: str | None,
+        target_sex: RegisteredSex | None,
+    ) -> str:
+        """性別未指定のO座位だけ、オス/メス双方の条件を見える化する。"""
+
+        if locus != "O":
+            return _format_pair(target_pair)
+        pairs = self._o_target_pairs(target_color, breed, target_sex)
+        if target_sex is None and len(pairs) > 1:
+            return " / ".join(
+                f"{_format_pair(pair)}（{_sex_label(sex)}）"
+                for sex, pair in pairs
+            )
+        return _format_pair(target_pair)
+
+    def _o_target_pairs(
+        self,
+        target_color: str,
+        breed: str | None,
+        target_sex: RegisteredSex | None,
+    ) -> list[tuple[RegisteredSex, tuple[str, str]]]:
+        """目標色のO座位条件を、対象性別ごとに解決する。"""
+
+        sexes: tuple[RegisteredSex, ...] = (
+            (target_sex,) if target_sex is not None else ("male", "female")
+        )
+        pairs: list[tuple[RegisteredSex, tuple[str, str]]] = []
+        for sex in sexes:
+            try:
+                loci = self._calculator.resolved_color_loci(target_color, sex, breed)
+            except BreedingCalculationError:
+                continue
+            if loci is None or "O" not in loci:
+                continue
+            item = (sex, loci["O"])
+            if item not in pairs:
+                pairs.append(item)
+        return pairs
 
     def _unchecked_conditions(
         self,
@@ -707,6 +852,18 @@ def _format_allele(allele: str) -> str:
     """bl をUI向けに b^l と表示する。"""
 
     return "b^l" if allele == "bl" else allele
+
+
+def _format_pair(pair: tuple[str, str]) -> str:
+    """アレルペアをUI向けに A/a 形式で表示する。"""
+
+    return "/".join(_format_allele(allele) for allele in pair)
+
+
+def _sex_label(sex: RegisteredSex) -> str:
+    """座位条件の補足に使う短い性別ラベル。"""
+
+    return "オス" if sex == "male" else "メス"
 
 
 def _matches_target_sex(result_sex: str, target_sex: RegisteredSex | None) -> bool:

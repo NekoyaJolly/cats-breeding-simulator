@@ -20,6 +20,7 @@ function makeCandidate(
     locus_evidence: [
       { locus: "D", target: "d/d", sire: "d/d", dam: "D/d", status: "ok", note: "希釈" },
     ],
+    target_possible_colors: [],
     other_possible_colors: [],
     ...overrides,
   };
@@ -71,9 +72,28 @@ describe("CandidateCard", () => {
     );
     expect(screen.getByText("追加確認なしで評価できます。")).toBeInTheDocument();
     expect(screen.getByText("現時点で追加検査の提案はありません。")).toBeInTheDocument();
+    expect(screen.getByText("目標色柄として表示できる内訳がありません。")).toBeInTheDocument();
     expect(
       screen.getByText("現在の計算範囲では表示できる色柄がありません。"),
     ).toBeInTheDocument();
+  });
+
+  it("目標色柄として生まれる性別別内訳を表示する", () => {
+    render(
+      <CandidateCard
+        candidate={makeCandidate({
+          target_possible_colors: [
+            { sex: "Male", color: "Black-White", probability_pct: 5.8594 },
+          ],
+        })}
+        index={0}
+        language="ja"
+        categoryLabel="確定で期待できる"
+      />,
+    );
+
+    expect(screen.getByText("目標色柄として生まれる内訳")).toBeInTheDocument();
+    expect(screen.getByText("♂ Black-White 5.9%")).toBeInTheDocument();
   });
 
   it("組み合わせ番号は index+1 で表示する", () => {

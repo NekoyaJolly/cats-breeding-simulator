@@ -41,7 +41,7 @@ export function ResultsView({
         <h3 className="text-lg font-semibold text-slate-800">
           {text.targetForm.ranking}
         </h3>
-        <span className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-600">
+        <span className="rounded bg-slate-100 px-2 py-1 text-xs leading-5 text-slate-600">
           {text.targetForm.targetSummary}: {targetSex} / {data.target_color}
         </span>
       </div>
