@@ -31,35 +31,40 @@ afterEach(() => {
 });
 
 describe("createLocalRegisteredCatRepository", () => {
-  it("未保存なら load は空配列", () => {
+  it("未保存なら load は空配列", async () => {
     stubWindow(makeStorage());
-    expect(createLocalRegisteredCatRepository().load()).toEqual([]);
+    await expect(createLocalRegisteredCatRepository().load()).resolves.toEqual([]);
   });
 
-  it("save→load の往復で同じ猫リストを復元する", () => {
+  it("save→load の往復で同じ猫リストを復元する", async () => {
     stubWindow(makeStorage());
     const repo = createLocalRegisteredCatRepository();
-    repo.save([CAT]);
-    expect(repo.load()).toEqual([CAT]);
+    await repo.save([CAT]);
+    await expect(repo.load()).resolves.toEqual([CAT]);
   });
 
-  it("壊れたJSONは空配列にフォールバックする", () => {
+  it("旧登録猫キーの壊れたJSONは空配列にフォールバックする", async () => {
     stubWindow(makeStorage({ "cbs:registeredCats": "{壊れた" }));
-    expect(createLocalRegisteredCatRepository().load()).toEqual([]);
+    await expect(createLocalRegisteredCatRepository().load()).resolves.toEqual([]);
   });
 
-  it("スキーマ不一致のデータは空配列", () => {
+  it("旧登録猫キーのスキーマ不一致データは空配列", async () => {
     stubWindow(makeStorage({ "cbs:registeredCats": JSON.stringify([{ wrong: true }]) }));
-    expect(createLocalRegisteredCatRepository().load()).toEqual([]);
+    await expect(createLocalRegisteredCatRepository().load()).resolves.toEqual([]);
   });
 
-  it("save が例外を投げても呼び出し側へ伝播しない", () => {
+  it("旧登録猫キーの正しいデータはStorage v1として読み込める", async () => {
+    stubWindow(makeStorage({ "cbs:registeredCats": JSON.stringify([CAT]) }));
+    await expect(createLocalRegisteredCatRepository().load()).resolves.toEqual([CAT]);
+  });
+
+  it("save が例外を投げても呼び出し側へ伝播しない", async () => {
     stubWindow({
       getItem: () => null,
       setItem: () => {
         throw new Error("quota exceeded");
       },
     });
-    expect(() => createLocalRegisteredCatRepository().save([CAT])).not.toThrow();
+    await expect(createLocalRegisteredCatRepository().save([CAT])).resolves.toBeUndefined();
   });
 });
