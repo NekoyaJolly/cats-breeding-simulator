@@ -186,7 +186,11 @@ function sameCarrierMap(
   left: RegisteredCat["carriers"],
   right: RegisteredCat["carriers"],
 ): boolean {
-  return JSON.stringify(left ?? {}) === JSON.stringify(right ?? {});
+  const leftMap = left ?? {};
+  const rightMap = right ?? {};
+  const leftKeys = Object.keys(leftMap);
+  if (leftKeys.length !== Object.keys(rightMap).length) return false;
+  return leftKeys.every((key) => rightMap[key] === leftMap[key]);
 }
 
 function sameRegisteredCatData(cat: RegisteredCat, stored: StoredRegisteredCat): boolean {

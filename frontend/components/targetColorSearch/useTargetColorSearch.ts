@@ -122,9 +122,14 @@ export function useTargetColorSearch(geneticsAffectsLabel = "遺伝に影響") {
 
   useEffect(() => {
     let alive = true;
-    catRepository.load().then((savedCats) => {
-      if (alive) setCats(savedCats);
-    });
+    catRepository
+      .load()
+      .then((savedCats) => {
+        if (alive) setCats(savedCats);
+      })
+      .catch(() => {
+        if (alive) setCats([]);
+      });
     return () => {
       alive = false;
     };

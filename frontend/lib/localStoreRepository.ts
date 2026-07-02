@@ -61,6 +61,20 @@ function openLocalStoreDb(): Promise<IDBPDatabase<CatsLocalStoreDb>> {
   return dbPromise;
 }
 
+function resetIndexedDbConnection(): void {
+  dbPromise = null;
+}
+
+async function openLocalStoreDbOrNull(): Promise<IDBPDatabase<CatsLocalStoreDb> | null> {
+  if (!hasIndexedDb()) return null;
+  try {
+    return await openLocalStoreDb();
+  } catch {
+    resetIndexedDbConnection();
+    return null;
+  }
+}
+
 function loadLegacyRegisteredCats(now: string): LocalStoreState | null {
   if (!hasLocalStorage()) return null;
   const raw = window.localStorage.getItem(LEGACY_REGISTERED_CATS_KEY);
@@ -84,28 +98,42 @@ function loadFallbackState(): LocalStoreState {
 
 function saveFallbackState(state: LocalStoreState): void {
   if (!hasLocalStorage()) return;
-  window.localStorage.setItem(FALLBACK_STORAGE_KEY, exportLocalStoreState(state));
+  try {
+    window.localStorage.setItem(FALLBACK_STORAGE_KEY, exportLocalStoreState(state));
+  } catch {
+    // fallback保存も失敗する環境では、画面状態の維持を優先して永続化だけ諦める。
+  }
 }
 
 export function createLocalStoreRepository(): LocalStoreRepository {
   async function loadState(): Promise<LocalStoreState> {
-    if (!hasIndexedDb()) return loadFallbackState();
-    const db = await openLocalStoreDb();
-    const stored = await db.get(STORE_NAME, STATE_KEY);
-    if (stored) return normalizeLocalStoreState(stored);
-    const initialState = loadLegacyRegisteredCats(nowIsoString()) ?? createEmptyLocalStoreState();
-    await db.put(STORE_NAME, initialState, STATE_KEY);
-    return initialState;
+    const db = await openLocalStoreDbOrNull();
+    if (db === null) return loadFallbackState();
+    try {
+      const stored = await db.get(STORE_NAME, STATE_KEY);
+      if (stored) return normalizeLocalStoreState(stored);
+      const initialState = loadLegacyRegisteredCats(nowIsoString()) ?? createEmptyLocalStoreState();
+      await db.put(STORE_NAME, initialState, STATE_KEY);
+      return initialState;
+    } catch {
+      resetIndexedDbConnection();
+      return loadFallbackState();
+    }
   }
 
   async function saveState(state: LocalStoreState): Promise<void> {
     const normalizedState = normalizeLocalStoreState(state);
-    if (!hasIndexedDb()) {
+    const db = await openLocalStoreDbOrNull();
+    if (db === null) {
       saveFallbackState(normalizedState);
       return;
     }
-    const db = await openLocalStoreDb();
-    await db.put(STORE_NAME, normalizedState, STATE_KEY);
+    try {
+      await db.put(STORE_NAME, normalizedState, STATE_KEY);
+    } catch {
+      resetIndexedDbConnection();
+      saveFallbackState(normalizedState);
+    }
   }
 
   return {
