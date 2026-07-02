@@ -47,7 +47,15 @@ export function AppTour({
   const autoStartedRef = useRef(false);
   const initialViewRef = useRef<AppTourView>("parent");
   const tourRef = useRef<Driver | null>(null);
+  const autoTimerRef = useRef<number | null>(null);
   const startTimerRef = useRef<number | null>(null);
+
+  const clearAutoTimer = useCallback(() => {
+    if (autoTimerRef.current !== null) {
+      window.clearTimeout(autoTimerRef.current);
+      autoTimerRef.current = null;
+    }
+  }, []);
 
   const clearStartTimer = useCallback(() => {
     if (startTimerRef.current !== null) {
@@ -185,6 +193,7 @@ export function AppTour({
   );
 
   const startTour = useCallback((mode: TourMode) => {
+    clearAutoTimer();
     clearStartTimer();
     tourRef.current?.destroy();
     initialViewRef.current = activeView;
@@ -219,7 +228,9 @@ export function AppTour({
           popover.closeButton.classList.add("ccp-driver-close-action");
         },
         onDestroyed: () => {
-          markTourCompleted();
+          if (mode === "full") {
+            markTourCompleted();
+          }
           onViewChange(initialViewRef.current);
           tourRef.current = null;
         },
@@ -233,6 +244,7 @@ export function AppTour({
     activeView,
     buildCurrentSteps,
     buildFullSteps,
+    clearAutoTimer,
     clearStartTimer,
     onViewChange,
     text,
@@ -240,10 +252,11 @@ export function AppTour({
 
   useEffect(() => {
     return () => {
+      clearAutoTimer();
       clearStartTimer();
       tourRef.current?.destroy();
     };
-  }, [clearStartTimer]);
+  }, [clearAutoTimer, clearStartTimer]);
 
   useEffect(() => {
     if (!languageReady || autoStartedRef.current || hasCompletedTour()) {
@@ -251,14 +264,15 @@ export function AppTour({
     }
 
     autoStartedRef.current = true;
-    const timerId = window.setTimeout(() => {
+    autoTimerRef.current = window.setTimeout(() => {
       startTour("full");
+      autoTimerRef.current = null;
     }, AUTO_TOUR_DELAY_MS);
 
     return () => {
-      window.clearTimeout(timerId);
+      clearAutoTimer();
     };
-  }, [languageReady, startTour]);
+  }, [clearAutoTimer, languageReady, startTour]);
 
   return (
     <button

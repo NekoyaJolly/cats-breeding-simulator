@@ -72,6 +72,15 @@ describe("AppTour", () => {
       },
     );
     expect(closeButton).toHaveTextContent("スキップ");
+    const activeStep = config.steps?.[0];
+    expect(activeStep).toBeDefined();
+    if (!activeStep) return;
+    config.onDestroyed?.(undefined, activeStep, {
+      config,
+      state: {},
+      driver: driverMock.create.mock.results[0].value,
+    });
+    expect(window.localStorage.getItem(APP_TOUR_COMPLETED_KEY)).toBe("true");
   });
 
   it("完了済みなら初回の自動開始は行わない", () => {
@@ -139,5 +148,36 @@ describe("AppTour", () => {
       },
     );
     expect(closeButton).toHaveTextContent("閉じる");
+    const activeStep = config.steps?.[0];
+    expect(activeStep).toBeDefined();
+    if (!activeStep) return;
+    config.onDestroyed?.(undefined, activeStep, {
+      config,
+      state: {},
+      driver: driverMock.create.mock.results[0].value,
+    });
+    expect(window.localStorage.getItem(APP_TOUR_COMPLETED_KEY)).toBeNull();
+  });
+
+  it("手動ヘルプ開始時は予約済みの初回フルツアーをキャンセルする", () => {
+    vi.useFakeTimers();
+
+    render(
+      <AppTour
+        language="ja"
+        languageReady
+        activeView="target"
+        onViewChange={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "使い方" }));
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(driverMock.create).toHaveBeenCalledTimes(1);
+    const [config] = driverMock.create.mock.calls[0] as [Config];
+    expect(config.steps?.[0]?.element).toBe("[data-tour='target-panel']");
   });
 });
