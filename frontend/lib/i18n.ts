@@ -185,6 +185,15 @@ export const UI_TEXT = {
       priorApplied: "事前確率あり",
       conditional: "条件付き",
       newCoats: "新規に出現する色柄",
+      aocTitle: "AOC とは",
+      aocBody:
+        "AOC = Any Other Color（白親の下の色が未確定なため、生後の毛色で判明します）",
+      aocHintSire: "父猫が White で下の色が未入力のためです。",
+      aocHintDam: "母猫が White で下の色が未入力のためです。",
+      aocHintBoth: "両親が White で下の色が未入力のためです。",
+      aocHintGeneric: "White 親の下の色が未入力のためです。",
+      aocMore: "下の色を入力すると確定できます。",
+      aocAria: "AOC の説明を開く",
     },
     targetForm: {
       registrationTitle: "登録猫の色柄",
@@ -450,6 +459,15 @@ export const UI_TEXT = {
       priorApplied: "prior applied",
       conditional: "conditional",
       newCoats: "Newly possible coats",
+      aocTitle: "About AOC",
+      aocBody:
+        "AOC = Any Other Color (the White parent's underlying coat is undetermined, so it shows after birth).",
+      aocHintSire: "The sire is White with no underlying coat entered.",
+      aocHintDam: "The dam is White with no underlying coat entered.",
+      aocHintBoth: "Both parents are White with no underlying coat entered.",
+      aocHintGeneric: "A White parent's underlying coat is not entered.",
+      aocMore: "Enter the underlying coat to resolve it.",
+      aocAria: "Show AOC explanation",
     },
     targetForm: {
       registrationTitle: "Registered cats",
