@@ -211,11 +211,11 @@ export const UI_TEXT = {
       targetSex: "子猫の性別 (任意)",
       loading: "検索中…",
       button: "組み合わせを探す",
-      ranking: "結果ランキング",
+      ranking: "候補ペア",
       targetSummary: "目標",
-      noCategoryCandidates:
-        "このカテゴリで確認できる組み合わせ候補はまだありません。",
+      noCategoryCandidates: "この条件の候補はありません。",
       matchLabel: "組み合わせ",
+      productionCondition: "産出条件",
       confirmedProbability: "確定確率",
       conditionalMaxProbability: "条件付き最大確率",
       establishmentConditions: "成立条件",
@@ -240,10 +240,15 @@ export const UI_TEXT = {
       complexScopeNote:
         "ゴールデン / ワイドバンド / CORIN系は品種・系統で扱いが複雑なため、現在の対応範囲では登録情報と既存ルールに基づく確認結果として表示します。",
       categories: {
-        confirmed: "確定で期待できる",
-        conditional: "条件付きで期待できる",
-        difficult: "現在の情報では判定が難しい",
-        unavailable: "現在の登録情報では確認できない",
+        confirmed: "条件無し",
+        conditional: "条件付き",
+        difficult: "判定保留",
+        unavailable: "該当ペアなし",
+      },
+      categoryDescriptions: {
+        confirmed: "表現型からのみ推定できるカラー",
+        conditional:
+          "父母どちらかに隠れキャリアがいると仮定すると推定できるカラー",
       },
     },
     kittenForm: {
@@ -471,10 +476,11 @@ export const UI_TEXT = {
       targetSex: "Kitten sex (optional)",
       loading: "Searching...",
       button: "Find Pairings",
-      ranking: "Match ranking",
+      ranking: "Candidate pairs",
       targetSummary: "Target",
-      noCategoryCandidates: "No matches are available in this category yet.",
+      noCategoryCandidates: "No pairs in this group.",
       matchLabel: "Match",
+      productionCondition: "Production condition",
       confirmedProbability: "Confirmed probability",
       conditionalMaxProbability: "Conditional max probability",
       establishmentConditions: "Required conditions",
@@ -499,10 +505,15 @@ export const UI_TEXT = {
       complexScopeNote:
         "Golden, wideband, and CORIN-related coats vary by breed and line, so this view shows what can be checked from the registered data and current rules.",
       categories: {
-        confirmed: "Confirmed matches",
-        conditional: "Conditional matches",
-        difficult: "Needs more information",
-        unavailable: "Not confirmed from current data",
+        confirmed: "No conditions",
+        conditional: "Conditional",
+        difficult: "Needs review",
+        unavailable: "No matching pair",
+      },
+      categoryDescriptions: {
+        confirmed: "Coats inferred from visible phenotype only.",
+        conditional:
+          "Coats inferred when either parent is assumed to carry a hidden factor.",
       },
     },
     kittenForm: {
