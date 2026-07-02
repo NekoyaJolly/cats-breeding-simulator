@@ -104,6 +104,9 @@ function ResultPanel({
             : `${data.response_category} / ${data.candidate_pair_count} ${text.kittenForm.candidateCount}`}
         </span>
       </div>
+      <p className="mt-1 text-xs leading-5 text-slate-500">
+        {text.onboarding.resultBody}
+      </p>
 
       {data.contradictions.length > 0 && (
         <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
