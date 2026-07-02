@@ -36,8 +36,6 @@ export type LocalStoreRepository = {
   importJson: (raw: string) => Promise<LocalStoreState | null>;
 };
 
-let dbPromise: Promise<IDBPDatabase<CatsLocalStoreDb>> | null = null;
-
 function hasIndexedDb(): boolean {
   return typeof window !== "undefined" && "indexedDB" in window;
 }
@@ -48,31 +46,6 @@ function hasLocalStorage(): boolean {
 
 function nowIsoString(): string {
   return new Date().toISOString();
-}
-
-function openLocalStoreDb(): Promise<IDBPDatabase<CatsLocalStoreDb>> {
-  dbPromise ??= openDB<CatsLocalStoreDb>(DB_NAME, DB_VERSION, {
-    upgrade(db) {
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME);
-      }
-    },
-  });
-  return dbPromise;
-}
-
-function resetIndexedDbConnection(): void {
-  dbPromise = null;
-}
-
-async function openLocalStoreDbOrNull(): Promise<IDBPDatabase<CatsLocalStoreDb> | null> {
-  if (!hasIndexedDb()) return null;
-  try {
-    return await openLocalStoreDb();
-  } catch {
-    resetIndexedDbConnection();
-    return null;
-  }
 }
 
 function loadLegacyRegisteredCats(now: string): LocalStoreState | null {
@@ -106,6 +79,33 @@ function saveFallbackState(state: LocalStoreState): void {
 }
 
 export function createLocalStoreRepository(): LocalStoreRepository {
+  let dbPromise: Promise<IDBPDatabase<CatsLocalStoreDb>> | null = null;
+
+  function openLocalStoreDb(): Promise<IDBPDatabase<CatsLocalStoreDb>> {
+    dbPromise ??= openDB<CatsLocalStoreDb>(DB_NAME, DB_VERSION, {
+      upgrade(db) {
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          db.createObjectStore(STORE_NAME);
+        }
+      },
+    });
+    return dbPromise;
+  }
+
+  function resetIndexedDbConnection(): void {
+    dbPromise = null;
+  }
+
+  async function openLocalStoreDbOrNull(): Promise<IDBPDatabase<CatsLocalStoreDb> | null> {
+    if (!hasIndexedDb()) return null;
+    try {
+      return await openLocalStoreDb();
+    } catch {
+      resetIndexedDbConnection();
+      return null;
+    }
+  }
+
   async function loadState(): Promise<LocalStoreState> {
     const db = await openLocalStoreDbOrNull();
     if (db === null) return loadFallbackState();

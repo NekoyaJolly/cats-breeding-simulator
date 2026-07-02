@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createLocalStoreRepository } from "./localStoreRepository";
 import {
   activeRegisteredCats,
   createEmptyLocalStoreState,
@@ -78,11 +79,6 @@ function configureOpenDb(initialState?: LocalStoreState): MockDb {
   return db;
 }
 
-async function importRepository() {
-  vi.resetModules();
-  return await import("./localStoreRepository");
-}
-
 beforeEach(() => {
   vi.unstubAllGlobals();
   vi.clearAllMocks();
@@ -94,7 +90,6 @@ describe("createLocalStoreRepository", () => {
     const storage = makeStorage({ [LEGACY_KEY]: JSON.stringify([CAT]) });
     stubWindow(storage);
     const db = configureOpenDb();
-    const { createLocalStoreRepository } = await importRepository();
 
     const state = await createLocalStoreRepository().loadState();
 
@@ -108,7 +103,6 @@ describe("createLocalStoreRepository", () => {
     const storage = makeStorage({ [LEGACY_KEY]: JSON.stringify([CAT]) });
     stubWindow(storage);
     const db = configureOpenDb();
-    const { createLocalStoreRepository } = await importRepository();
     const repo = createLocalStoreRepository();
 
     await repo.loadState();
@@ -127,7 +121,6 @@ describe("createLocalStoreRepository", () => {
     stubWindow(storage);
     openDbMock.mockRejectedValueOnce(new Error("indexedDB blocked"));
     const db = configureOpenDb();
-    const { createLocalStoreRepository } = await importRepository();
     const repo = createLocalStoreRepository();
 
     const fallbackState = await repo.loadState();
@@ -144,7 +137,6 @@ describe("createLocalStoreRepository", () => {
     stubWindow(storage);
     const db = configureOpenDb();
     db.put.mockRejectedValueOnce(new Error("put failed"));
-    const { createLocalStoreRepository } = await importRepository();
     const state = legacyRegisteredCatsToState([CAT], "2026-07-02T00:00:00.000Z");
 
     await createLocalStoreRepository().saveState(state);
