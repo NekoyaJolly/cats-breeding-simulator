@@ -121,7 +121,13 @@ export function useTargetColorSearch(geneticsAffectsLabel = "遺伝に影響") {
   const catRepository = useMemo(() => repository(), []);
 
   useEffect(() => {
-    setCats(catRepository.load());
+    let alive = true;
+    catRepository.load().then((savedCats) => {
+      if (alive) setCats(savedCats);
+    });
+    return () => {
+      alive = false;
+    };
   }, [catRepository]);
 
   useEffect(() => {
@@ -237,7 +243,7 @@ export function useTargetColorSearch(geneticsAffectsLabel = "遺伝に影響") {
 
   function saveCats(nextCats: RegisteredCat[]) {
     setCats(nextCats);
-    catRepository.save(nextCats);
+    void catRepository.save(nextCats);
     setRegistrationError(null);
     setResult(null);
   }
