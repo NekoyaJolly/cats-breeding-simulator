@@ -79,6 +79,14 @@ function cleanErrorMessage(detail: string): string {
   return detail; // それ以外 (既に簡潔な日本語メッセージ等) はそのまま返す。
 }
 
+// PWA利用時はバックエンド停止と端末オフラインを分けて案内する。
+function connectionErrorMessage(): string {
+  if (typeof navigator !== "undefined" && navigator.onLine === false) {
+    return "オフラインです。計算にはインターネット接続が必要です。";
+  }
+  return "バックエンドに接続できませんでした。API サーバ (uvicorn) が起動しているか確認してください。";
+}
+
 // FastAPI のエラー detail を日本語メッセージへ整形する。
 // 文字列は自前の BreedingCalculationError (日本語)。配列は pydantic の検証エラーで
 // msg が英語のため、そのまま出さず日本語の総括メッセージにする。
@@ -145,8 +153,7 @@ export async function calculate(input: CalculateInput): Promise<CalculateOutcome
     // バックエンド未起動などで到達できないケース。
     return {
       ok: false,
-      message:
-        "バックエンドに接続できませんでした。API サーバ (uvicorn) が起動しているか確認してください。",
+      message: connectionErrorMessage(),
     };
   }
 
@@ -184,8 +191,7 @@ export async function searchTargetColor(
   } catch {
     return {
       ok: false,
-      message:
-        "バックエンドに接続できませんでした。API サーバ (uvicorn) が起動しているか確認してください。",
+      message: connectionErrorMessage(),
     };
   }
 
@@ -220,8 +226,7 @@ export async function inferFromLitter(
   } catch {
     return {
       ok: false,
-      message:
-        "バックエンドに接続できませんでした。API サーバ (uvicorn) が起動しているか確認してください。",
+      message: connectionErrorMessage(),
     };
   }
 

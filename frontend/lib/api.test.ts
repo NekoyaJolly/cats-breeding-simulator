@@ -223,6 +223,16 @@ describe("calculate", () => {
     });
   });
 
+  it("オフライン時の接続不可は専用文言を返す", async () => {
+    mockFetchReject();
+    vi.stubGlobal("navigator", { onLine: false });
+    const result = await calculate(input);
+    expect(result).toEqual({
+      ok: false,
+      message: "オフラインです。計算にはインターネット接続が必要です。",
+    });
+  });
+
   it("エラー応答 (文字列 detail) は整形メッセージを返す", async () => {
     mockFetch(jsonResponse({ detail: "「Foo」は対応していない毛色です。" }, false, 422));
     const result = await calculate(input);
