@@ -14,12 +14,29 @@ export const metadata: Metadata = {
         type: "image/svg+xml",
         sizes: "any",
       },
+      {
+        url: "/icons/app-icon-192.png",
+        type: "image/png",
+        sizes: "192x192",
+      },
+      {
+        url: "/icons/app-icon-512.png",
+        type: "image/png",
+        sizes: "512x512",
+      },
     ],
     shortcut: [
       {
-        url: "/icons/app-icon.svg",
-        type: "image/svg+xml",
-        sizes: "any",
+        url: "/icons/app-icon-192.png",
+        type: "image/png",
+        sizes: "192x192",
+      },
+    ],
+    apple: [
+      {
+        url: "/icons/app-icon-180.png",
+        type: "image/png",
+        sizes: "180x180",
       },
     ],
   },
