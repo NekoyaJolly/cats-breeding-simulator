@@ -296,7 +296,10 @@ export function BreedingForm({ onSubmit, loading, language }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+      <div
+        data-tour="parent-carriers"
+        className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4"
+      >
         <ColorCombobox
           id="sire-color"
           label={text.parentForm.sireCoat}

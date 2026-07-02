@@ -54,6 +54,58 @@ export const UI_TEXT = {
           "実際に生まれた子猫たちの色柄から、父猫・母猫の隠れキャリア候補を推定します。",
       },
     },
+    onboarding: {
+      helpButton: "使い方",
+      progress: "{{current}} / {{total}}",
+      next: "次へ",
+      previous: "戻る",
+      done: "完了",
+      skip: "スキップ",
+      skipTour: "チュートリアルをスキップ",
+      close: "閉じる",
+      steps: {
+        tabs: {
+          title: "目的に合わせてタブを切り替えます",
+          description:
+            "予測、目標カラーの逆引き、産子実績からの推定を同じ画面で使い分けます。",
+        },
+        parent: {
+          title: "まずは父猫・母猫から予測します",
+          description:
+            "父猫と母猫の色柄を入れると、子猫に出る可能性のある色柄と割合を確認できます。",
+        },
+        carriers: {
+          title: "検査済み因子だけを追加します",
+          description:
+            "ここに入れるのは検査や根拠で確認できた因子です。産子からの推定は Kitten Coats で別に確認します。",
+        },
+        targetTab: {
+          title: "目標カラーから探す画面へ進みます",
+          description:
+            "作りたい色柄が先に決まっているときは、Target Coat から組み合わせを探します。",
+        },
+        target: {
+          title: "最初に目標色柄を選びます",
+          description:
+            "目標色柄と性別を選ぶと、登録した父猫・母猫から成立しそうな組み合わせを比較できます。",
+        },
+        kittenTab: {
+          title: "生まれた子猫で見直します",
+          description:
+            "実績が出た後は Kitten Coats で、両親が持つ隠れ因子の候補を絞り込みます。",
+        },
+        kitten: {
+          title: "産子実績からキャリアを推定します",
+          description:
+            "父母と子猫の色柄を入れると、次回の交配判断に使える推定キャリアを確認できます。",
+        },
+        help: {
+          title: "迷ったらいつでも再表示できます",
+          description:
+            "このボタンから、同じチュートリアルを何度でも開けます。",
+        },
+      },
+    },
     common: {
       breed: "猫種 (任意)",
       sex: "性別",
@@ -257,6 +309,58 @@ export const UI_TEXT = {
         title: "Refine with actual kitten coats",
         description:
           "Use real kitten coat outcomes to infer hidden carrier candidates in the sire and dam.",
+      },
+    },
+    onboarding: {
+      helpButton: "Guide",
+      progress: "{{current}} / {{total}}",
+      next: "Next",
+      previous: "Back",
+      done: "Done",
+      skip: "Skip",
+      skipTour: "Skip tutorial",
+      close: "Close",
+      steps: {
+        tabs: {
+          title: "Switch tabs by workflow",
+          description:
+            "Use one workspace for forecasting, target-coat search, and litter-based carrier inference.",
+        },
+        parent: {
+          title: "Start with the sire and dam",
+          description:
+            "Enter both parent coats to estimate the kitten coats and expected ratios.",
+        },
+        carriers: {
+          title: "Add only confirmed factors",
+          description:
+            "Use these settings for tested or evidence-backed factors. Inferred carriers are checked separately in Kitten Coats.",
+        },
+        targetTab: {
+          title: "Move to target-coat search",
+          description:
+            "When the desired kitten coat is already decided, use Target Coat to look for pairings.",
+        },
+        target: {
+          title: "Choose the target coat first",
+          description:
+            "Select the target coat and sex, then compare registered sire and dam combinations.",
+        },
+        kittenTab: {
+          title: "Review real litter outcomes",
+          description:
+            "After kittens are born, use Kitten Coats to narrow hidden carrier candidates.",
+        },
+        kitten: {
+          title: "Infer carriers from the litter",
+          description:
+            "Enter the parent and kitten coats to find inferred carriers that can guide future pairings.",
+        },
+        help: {
+          title: "Open this guide anytime",
+          description:
+            "Use this button whenever you want to replay the tutorial.",
+        },
       },
     },
     common: {

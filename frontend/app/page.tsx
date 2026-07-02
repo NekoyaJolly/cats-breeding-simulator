@@ -8,6 +8,7 @@ import {
   GlobeHemisphereEast,
 } from "@phosphor-icons/react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AppTour } from "@/components/AppTour";
 import { BreedingForm } from "@/components/BreedingForm";
 import { BreedColorsHint } from "@/components/BreedColorsHint";
 import { LitterInference } from "@/components/LitterInference";
@@ -137,57 +138,68 @@ export default function HomePage() {
             </h1>
             <p className="mt-1 text-sm text-slate-600">{text.app.subtitle}</p>
           </div>
-          <div className="relative shrink-0" ref={languageMenuRef}>
-            <button
-              type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-sky-100 bg-white shadow-sm transition hover:bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-300"
-              aria-label={text.app.languageLabel}
-              aria-expanded={languageMenuOpen}
-              onClick={() => setLanguageMenuOpen((open) => !open)}
-            >
-              <GlobeHemisphereEast
-                aria-hidden="true"
-                className="h-5 w-5 text-sky-600"
-                weight="duotone"
-              />
-            </button>
-            {languageMenuOpen && (
-              <div
+          <div className="flex shrink-0 items-center gap-2">
+            <AppTour
+              language={language}
+              languageReady={languageLoaded}
+              activeView={activeView}
+              onViewChange={setActiveView}
+            />
+            <div className="relative" ref={languageMenuRef}>
+              <button
+                type="button"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-sky-100 bg-white shadow-sm transition hover:bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-300"
                 aria-label={text.app.languageLabel}
-                className="absolute right-0 z-30 mt-2 w-40 overflow-hidden rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg"
+                aria-expanded={languageMenuOpen}
+                onClick={() => setLanguageMenuOpen((open) => !open)}
               >
-                {LANGUAGE_OPTIONS.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    aria-pressed={language === option.value}
-                    className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left ${
-                      language === option.value
-                        ? "bg-slate-100 font-semibold text-slate-900"
-                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                    }`}
-                    onClick={() => {
-                      setLanguage(option.value);
-                      setLanguageMenuOpen(false);
-                    }}
-                  >
-                    <span>{option.label}</span>
-                    {language === option.value && (
-                      <CheckCircle
-                        aria-hidden="true"
-                        className="h-4 w-4 text-emerald-600"
-                        weight="fill"
-                      />
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
+                <GlobeHemisphereEast
+                  aria-hidden="true"
+                  className="h-5 w-5 text-sky-600"
+                  weight="duotone"
+                />
+              </button>
+              {languageMenuOpen && (
+                <div
+                  aria-label={text.app.languageLabel}
+                  className="absolute right-0 z-30 mt-2 w-40 overflow-hidden rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg"
+                >
+                  {LANGUAGE_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      aria-pressed={language === option.value}
+                      className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left ${
+                        language === option.value
+                          ? "bg-slate-100 font-semibold text-slate-900"
+                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      }`}
+                      onClick={() => {
+                        setLanguage(option.value);
+                        setLanguageMenuOpen(false);
+                      }}
+                    >
+                      <span>{option.label}</span>
+                      {language === option.value && (
+                        <CheckCircle
+                          aria-hidden="true"
+                          className="h-4 w-4 text-emerald-600"
+                          weight="fill"
+                        />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
 
-      <div className="mb-3 grid grid-cols-3 gap-1 rounded-md bg-slate-100 p-1 sm:mb-5">
+      <div
+        data-tour="app-tabs"
+        className="mb-3 grid grid-cols-3 gap-1 rounded-md bg-slate-100 p-1 sm:mb-5"
+      >
         {TAB_ITEMS.map((tab) => {
           const Icon = tab.Icon;
           const active = activeView === tab.view;
@@ -195,6 +207,7 @@ export default function HomePage() {
             <button
               key={tab.view}
               type="button"
+              data-tour={`${tab.view}-tab`}
               className={`min-w-0 rounded px-1 py-1.5 text-center text-xs font-semibold sm:px-3 sm:py-2 sm:text-sm ${
                 active
                   ? "bg-white text-slate-900 shadow-sm"
@@ -223,7 +236,10 @@ export default function HomePage() {
 
       {activeView === "parent" ? (
         <>
-          <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+          <div
+            data-tour="parent-panel"
+            className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
+          >
             <BreedingForm
               onSubmit={handleSubmit}
               loading={loading}

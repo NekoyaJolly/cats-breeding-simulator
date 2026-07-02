@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { FeedbackWidget } from "@/components/FeedbackWidget";
 import { PwaStatus } from "@/components/PwaStatus";
+import "driver.js/dist/driver.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
