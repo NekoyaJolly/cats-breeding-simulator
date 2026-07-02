@@ -7,7 +7,12 @@ from dataclasses import dataclass
 from typing import Literal
 
 from cat_breeding_simulator.engine import BreedingCalculationError, CoatColorCalculator
-from cat_breeding_simulator.master_data import ParentGenotype
+from cat_breeding_simulator.master_data import (
+    BREED_FILTERS,
+    ParentGenotype,
+    _breed_allele_matches,
+    build_white_underlying_candidates,
+)
 
 
 ObservedSex = Literal["male", "female"]
@@ -62,7 +67,9 @@ class LitterInferenceReport:
     recommended_tests: list[str]
 
 
-_LOCUS_ORDER: tuple[str, ...] = ("B", "D", "A", "O", "C", "I", "S", "Wb")
+# W (優性白) を含める。White 親から色付きの子が出た実績は「親が w を渡せる＝W/w」を確定でき、
+# これが White 親逆算の要 (§3 R2a/R2b)。W は B より前に置き、白か有色かの土台を先に示す。
+_LOCUS_ORDER: tuple[str, ...] = ("W", "B", "D", "A", "O", "C", "I", "S", "Wb")
 _PARENT_LABELS: dict[ParentRole, str] = {"sire": "父猫", "dam": "母猫"}
 _TEST_LABELS: dict[str, str] = {
     "A": "A座位（アグーティ/ソリッド）の表現確認または産子履歴確認",
@@ -71,6 +78,7 @@ _TEST_LABELS: dict[str, str] = {
     "D": "D座位（ダイリュート）の遺伝子検査",
     "I": "I座位（シルバー/スモーク）の確認",
     "S": "S座位（白斑）の確認",
+    "W": "W座位（優性白）の確認",
     "Wb": "ゴールデン修飾・ワイドバンドの確認",
 }
 _ALLELE_ORDER: dict[str, dict[str, int]] = {
@@ -80,6 +88,7 @@ _ALLELE_ORDER: dict[str, dict[str, int]] = {
     "C": {"C": 0, "cb": 1, "cs": 2},
     "I": {"I": 0, "i": 1},
     "S": {"S": 0, "s": 1},
+    "W": {"W": 0, "w": 1},
     "Wb": {"Wb": 0, "wb": 1},
 }
 
@@ -101,18 +110,8 @@ class LitterInferenceService:
         breed = self._shared_breed(sire, dam)
         self._calculator.validate_parent_color(sire.color, "male", breed)
         self._calculator.validate_parent_color(dam.color, "female", breed)
-        sire_candidates = self._calculator.parent_genotype_candidates(
-            sire.color,
-            "male",
-            breed,
-            include_unconfirmed_carriers=True,
-        )
-        dam_candidates = self._calculator.parent_genotype_candidates(
-            dam.color,
-            "female",
-            breed,
-            include_unconfirmed_carriers=True,
-        )
+        sire_candidates = self._parent_candidates(sire.color, "male", breed)
+        dam_candidates = self._parent_candidates(dam.color, "female", breed)
         observed_kittens = [
             self._observed_kitten_profiles(kitten, breed) for kitten in kittens
         ]
@@ -149,6 +148,42 @@ class LitterInferenceService:
             contradictions=[],
             warnings=warnings,
             recommended_tests=recommended_tests,
+        )
+
+    def _parent_candidates(
+        self, color: str, sex: str, breed: str | None
+    ) -> list[ParentGenotype]:
+        """親の遺伝子型候補を返す。White 親だけは下地を全不明として開く (§3)。
+
+        通常色は従来どおり resolver + 未確認キャリア展開。White は優性白が下の色を隠すため、
+        CSV の White 行を確定値扱いすると「White 親は a/a ソリッド」等の誤確定を生む。
+        下地を全対立で開き、観察子猫が要求する範囲だけを surviving_pairs に絞らせる。
+        """
+
+        if self._calculator._is_white_phenotype(color, breed):
+            candidates = build_white_underlying_candidates(sex)
+            if not breed:
+                return candidates
+            # 猫種指定時は、その猫種の座位制約を満たす下地候補だけに絞る (通常計算と同基準)。
+            constraints = BREED_FILTERS.get(
+                CoatColorCalculator._normalize_breed_key(breed), {}
+            )
+            if not constraints:
+                return candidates
+            return [
+                candidate
+                for candidate in candidates
+                if all(
+                    _breed_allele_matches(candidate.loci[locus], required)
+                    for locus, required in constraints.items()
+                    if locus in candidate.loci
+                )
+            ]
+        return self._calculator.parent_genotype_candidates(
+            color,
+            sex,
+            breed,
+            include_unconfirmed_carriers=True,
         )
 
     @staticmethod
@@ -281,13 +316,16 @@ class LitterInferenceService:
             parent_index = 0 if role == "sire" else 1
             parent_label = _PARENT_LABELS[role]
             for locus in _LOCUS_ORDER:
-                genotypes = [
-                    self._format_genotype(pair[parent_index].loci[locus], locus)
-                    for pair in surviving_pairs
-                ]
-                counts = Counter(genotypes)
+                # 生存ペアが多い (White 親は下不明で候補が数万に及ぶ) ため、整形は座位ごとの
+                # 「異なるアレル対」だけに絞る。順序非依存キーで数え、代表のみ表示名へ整形する。
+                raw_counts: Counter[tuple[str, str]] = Counter(
+                    tuple(sorted(pair[parent_index].loci[locus])) for pair in surviving_pairs
+                )
+                counts: Counter[str] = Counter()
+                for raw_pair, raw_count in raw_counts.items():
+                    counts[self._format_genotype(raw_pair, locus)] += raw_count
                 if len(counts) == 1:
-                    genotype = genotypes[0]
+                    genotype = next(iter(counts))
                     confirmed.append(
                         InferenceFinding(
                             category="確定",
