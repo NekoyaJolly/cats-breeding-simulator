@@ -18,9 +18,17 @@ const sectionClass =
 const sectionTitleClass =
   "absolute -top-2.5 left-4 bg-white px-1 text-sm font-semibold leading-5 text-slate-700 sm:left-6";
 
-function SectionCard({ title, children }: { title: string; children: ReactNode }) {
+function SectionCard({
+  title,
+  children,
+  tourId,
+}: {
+  title: string;
+  children: ReactNode;
+  tourId?: string;
+}) {
   return (
-    <section className={sectionClass}>
+    <section className={sectionClass} data-tour={tourId}>
       <h2 className={sectionTitleClass}>{title}</h2>
       {children}
     </section>
@@ -204,7 +212,7 @@ export function TargetColorSearch({ language }: { language: Language }) {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <SectionCard title={text.targetForm.targetTitle}>
+      <SectionCard title={text.targetForm.targetTitle} tourId="target-panel">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_180px_auto] md:items-start">
           <ColorCombobox
             id="target-color"

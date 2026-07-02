@@ -104,9 +104,6 @@ function ResultPanel({
             : `${data.response_category} / ${data.candidate_pair_count} ${text.kittenForm.candidateCount}`}
         </span>
       </div>
-      <p className="mt-1 text-xs leading-5 text-slate-500">
-        {text.onboarding.resultBody}
-      </p>
 
       {data.contradictions.length > 0 && (
         <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
@@ -295,7 +292,10 @@ export function LitterInference({ language }: { language: Language }) {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <section className="relative rounded-lg border border-slate-200 bg-white px-4 pb-4 pt-5 shadow-sm sm:px-6 sm:pb-6 sm:pt-6">
+      <section
+        data-tour="kitten-panel"
+        className="relative rounded-lg border border-slate-200 bg-white px-4 pb-4 pt-5 shadow-sm sm:px-6 sm:pb-6 sm:pt-6"
+      >
         <h2 className="absolute -top-2.5 left-4 bg-white px-1 text-sm font-semibold leading-5 text-slate-700 sm:left-6">
           {text.kittenForm.sectionTitle}
         </h2>

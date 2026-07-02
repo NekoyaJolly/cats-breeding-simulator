@@ -337,9 +337,6 @@ export function ResultView({
             {text.parentResult.mode}: {data.mode}
           </span>
         </div>
-        <p className="mt-1 text-xs leading-5 text-slate-500">
-          {text.onboarding.resultBody}
-        </p>
         <div className="mt-3">
           <SexSplitResults key={resultsKey} rows={data.results} language={language} />
         </div>

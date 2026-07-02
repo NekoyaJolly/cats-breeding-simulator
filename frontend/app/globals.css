@@ -1,3 +1,67 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.ccp-driver-popover {
+  max-width: min(320px, calc(100vw - 32px));
+  border: 1px solid rgb(226 232 240);
+  border-radius: 8px;
+  color: rgb(15 23 42);
+  box-shadow:
+    0 22px 44px rgb(15 23 42 / 0.18),
+    0 2px 8px rgb(15 23 42 / 0.08);
+}
+
+.ccp-driver-popover .driver-popover-title {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+.ccp-driver-popover .driver-popover-description {
+  color: rgb(71 85 105);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.ccp-driver-popover .driver-popover-progress-text {
+  color: rgb(100 116 139);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ccp-driver-popover .driver-popover-prev-btn,
+.ccp-driver-popover .driver-popover-next-btn {
+  border-radius: 6px;
+  border-color: rgb(203 213 225);
+  font-size: 12px;
+  font-weight: 700;
+  text-shadow: none;
+}
+
+.ccp-driver-popover .driver-popover-next-btn {
+  border-color: rgb(5 150 105);
+  background: rgb(5 150 105);
+  color: white;
+}
+
+.ccp-driver-popover .driver-popover-prev-btn {
+  background: white;
+  color: rgb(51 65 85);
+}
+
+.ccp-driver-popover .ccp-driver-close-action {
+  border-radius: 999px;
+  color: rgb(100 116 139);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 6px 8px;
+  text-shadow: none;
+}
+
+.ccp-driver-popover .ccp-driver-close-action:hover {
+  background: rgb(241 245 249);
+  color: rgb(15 23 42);
+}

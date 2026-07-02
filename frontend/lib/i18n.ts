@@ -55,37 +55,56 @@ export const UI_TEXT = {
       },
     },
     onboarding: {
-      helpButton: "ヘルプ",
+      helpButton: "使い方",
+      progress: "{{current}} / {{total}}",
+      next: "次へ",
+      previous: "戻る",
+      done: "完了",
+      skip: "スキップ",
+      skipTour: "チュートリアルをスキップ",
       close: "閉じる",
-      modalTitle: "使い方のガイド",
-      modalSubtitle:
-        "目的に合わせてタブを選び、入力できる情報が増えたら結果を見直します。",
-      views: {
+      steps: {
+        tabs: {
+          title: "目的に合わせてタブを切り替えます",
+          description:
+            "予測、目標カラーの逆引き、産子実績からの推定を同じ画面で使い分けます。",
+        },
         parent: {
-          title: "Parent Coat",
-          purpose: "父母の毛色から子猫の出現割合を計算します。",
-          guide:
-            "親猫の色柄と、検査済み因子がある場合だけ遺伝子座を指定します。",
+          title: "まずは父猫・母猫から予測します",
+          description:
+            "父猫と母猫の色柄を入れると、子猫に出る可能性のある色柄と割合を確認できます。",
+        },
+        carriers: {
+          title: "検査済み因子だけを追加します",
+          description:
+            "ここに入れるのは検査や根拠で確認できた因子です。産子からの推定は Kitten Coats で別に確認します。",
+        },
+        targetTab: {
+          title: "目標カラーから探す画面へ進みます",
+          description:
+            "作りたい色柄が先に決まっているときは、Target Coat から組み合わせを探します。",
         },
         target: {
-          title: "Target Coat",
-          purpose: "登録猫から目標カラーが出るペアを探します。",
-          guide:
-            "最初に目標色柄を選び、必要に応じて登録猫の候補を増やします。",
+          title: "最初に目標色柄を選びます",
+          description:
+            "目標色柄と性別を選ぶと、登録した父猫・母猫から成立しそうな組み合わせを比較できます。",
+        },
+        kittenTab: {
+          title: "生まれた子猫で見直します",
+          description:
+            "実績が出た後は Kitten Coats で、両親が持つ隠れ因子の候補を絞り込みます。",
         },
         kitten: {
-          title: "Kitten Coats",
-          purpose: "実際に生まれた子猫から隠れキャリアを推定します。",
-          guide:
-            "両親と子猫の実績を入力し、次回以降の交配判断に使う因子候補を確認します。",
+          title: "産子実績からキャリアを推定します",
+          description:
+            "父母と子猫の色柄を入れると、次回の交配判断に使える推定キャリアを確認できます。",
+        },
+        help: {
+          title: "迷ったらいつでも再表示できます",
+          description:
+            "このボタンから、同じチュートリアルを何度でも開けます。",
         },
       },
-      carrierTitle: "キャリア欄",
-      carrierBody:
-        "「検査済み」は確定情報です。「推定」は産子実績などからの候補として扱い、確定因子とは分けて判断します。",
-      resultTitle: "結果欄",
-      resultBody:
-        "結果の信頼度は入力精度で変わります。猫種、性別、検査済み因子、実際の子猫情報が増えるほど判断材料が増えます。",
     },
     common: {
       breed: "猫種 (任意)",
@@ -128,7 +147,7 @@ export const UI_TEXT = {
         sireTitle: "父猫の遺伝子座設定",
         damTitle: "母猫の遺伝子座設定",
         description:
-          "検査済みの座位だけを指定します。推定因子とは分けて扱い、未指定の座位は通常計算のまま扱います。",
+          "確認済みの座位だけを指定します。未指定の座位は通常計算のまま扱います。",
         modeNote:
           "座位を1つでも指定すると、明示キャリアモードで計算します。",
         none: "未指定",
@@ -293,37 +312,56 @@ export const UI_TEXT = {
       },
     },
     onboarding: {
-      helpButton: "Help",
+      helpButton: "Guide",
+      progress: "{{current}} / {{total}}",
+      next: "Next",
+      previous: "Back",
+      done: "Done",
+      skip: "Skip",
+      skipTour: "Skip tutorial",
       close: "Close",
-      modalTitle: "Guide",
-      modalSubtitle:
-        "Choose the tab that matches your goal, then revisit results as you add better evidence.",
-      views: {
+      steps: {
+        tabs: {
+          title: "Switch tabs by workflow",
+          description:
+            "Use one workspace for forecasting, target-coat search, and litter-based carrier inference.",
+        },
         parent: {
-          title: "Parent Coat",
-          purpose: "Estimate kitten coat probabilities from sire and dam coats.",
-          guide:
-            "Select parent coats and enter only genetically tested factors when available.",
+          title: "Start with the sire and dam",
+          description:
+            "Enter both parent coats to estimate the kitten coats and expected ratios.",
+        },
+        carriers: {
+          title: "Add only confirmed factors",
+          description:
+            "Use these settings for tested or evidence-backed factors. Inferred carriers are checked separately in Kitten Coats.",
+        },
+        targetTab: {
+          title: "Move to target-coat search",
+          description:
+            "When the desired kitten coat is already decided, use Target Coat to look for pairings.",
         },
         target: {
-          title: "Target Coat",
-          purpose: "Find registered pairings that can produce a target coat.",
-          guide:
-            "Start with the target coat, then add registered cats when you want pair-specific matches.",
+          title: "Choose the target coat first",
+          description:
+            "Select the target coat and sex, then compare registered sire and dam combinations.",
+        },
+        kittenTab: {
+          title: "Review real litter outcomes",
+          description:
+            "After kittens are born, use Kitten Coats to narrow hidden carrier candidates.",
         },
         kitten: {
-          title: "Kitten Coats",
-          purpose: "Infer hidden carriers from actual kitten coat outcomes.",
-          guide:
-            "Enter parents and litter outcomes to review carrier candidates for future planning.",
+          title: "Infer carriers from the litter",
+          description:
+            "Enter the parent and kitten coats to find inferred carriers that can guide future pairings.",
+        },
+        help: {
+          title: "Open this guide anytime",
+          description:
+            "Use this button whenever you want to replay the tutorial.",
         },
       },
-      carrierTitle: "Carrier fields",
-      carrierBody:
-        "Tested factors are confirmed evidence. Inferred factors are candidates from litter outcomes and should stay separate from confirmed factors.",
-      resultTitle: "Results",
-      resultBody:
-        "Result confidence depends on input precision. Breed, sex, tested factors, and actual kitten data all improve the evidence.",
     },
     common: {
       breed: "Breed (optional)",
@@ -366,7 +404,7 @@ export const UI_TEXT = {
         sireTitle: "Sire genetic settings",
         damTitle: "Dam genetic settings",
         description:
-          "Set only genetically tested loci. Keep inferred factors separate; unspecified loci stay in the normal calculation.",
+          "Set only confirmed loci. Unspecified loci stay in the normal calculation.",
         modeNote:
           "Selecting any locus uses explicit carrier mode for the forecast.",
         none: "Unspecified",
