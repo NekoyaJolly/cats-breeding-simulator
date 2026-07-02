@@ -9,7 +9,7 @@ import {
   ShieldCheck,
   X,
 } from "@phosphor-icons/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { UI_TEXT, type Language } from "@/lib/i18n";
 
 export type OnboardingView = "parent" | "target" | "kitten";
@@ -53,19 +53,27 @@ export function OnboardingGuide({
   language: Language;
 }) {
   const [open, setOpen] = useState(false);
+  const helpButtonRef = useRef<HTMLButtonElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const text = UI_TEXT[language].onboarding;
   const activeGuide = text.views[activeView];
   const tone = viewTone[activeView];
   const Icon = tone.Icon;
 
+  const closeHelp = useCallback(() => {
+    setOpen(false);
+    helpButtonRef.current?.focus();
+  }, []);
+
   useEffect(() => {
     if (!open) return;
+    closeButtonRef.current?.focus();
     function closeWithEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") closeHelp();
     }
     document.addEventListener("keydown", closeWithEscape);
     return () => document.removeEventListener("keydown", closeWithEscape);
-  }, [open]);
+  }, [closeHelp, open]);
 
   return (
     <>
@@ -85,6 +93,7 @@ export function OnboardingGuide({
             </p>
           </div>
           <button
+            ref={helpButtonRef}
             type="button"
             className={`inline-flex shrink-0 items-center gap-1 rounded-md border bg-white/60 px-2.5 py-1.5 text-xs font-semibold shadow-sm ${tone.buttonClass}`}
             onClick={() => setOpen(true)}
@@ -97,10 +106,11 @@ export function OnboardingGuide({
 
       {open && (
         <div
+          data-testid="onboarding-help-overlay"
           className="fixed inset-0 z-[160] flex items-end justify-center bg-slate-950/35 p-3 sm:items-center sm:p-6"
           role="presentation"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setOpen(false);
+            if (event.target === event.currentTarget) closeHelp();
           }}
         >
           <section
@@ -108,6 +118,11 @@ export function OnboardingGuide({
             aria-modal="true"
             aria-labelledby="onboarding-help-title"
             className="max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-lg border border-slate-200 bg-white p-4 shadow-xl sm:p-5"
+            onKeyDown={(event) => {
+              if (event.key !== "Tab") return;
+              event.preventDefault();
+              closeButtonRef.current?.focus();
+            }}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -119,10 +134,11 @@ export function OnboardingGuide({
                 </p>
               </div>
               <button
+                ref={closeButtonRef}
                 type="button"
                 aria-label={text.close}
                 className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                onClick={() => setOpen(false)}
+                onClick={closeHelp}
               >
                 <X aria-hidden="true" className="h-5 w-5" />
               </button>
