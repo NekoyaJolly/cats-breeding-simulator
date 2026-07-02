@@ -11,6 +11,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { BreedingForm } from "@/components/BreedingForm";
 import { BreedColorsHint } from "@/components/BreedColorsHint";
 import { LitterInference } from "@/components/LitterInference";
+import { OnboardingGuide } from "@/components/OnboardingGuide";
 import { ResultView } from "@/components/ResultView";
 import { TargetColorSearch } from "@/components/TargetColorSearch";
 import { calculate, type CalculateInput } from "@/lib/api";
@@ -216,9 +217,10 @@ export default function HomePage() {
       </div>
 
       <section className="mb-4 sm:mb-5">
-        <p className="text-xs leading-5 text-slate-600 sm:text-sm sm:leading-6">
+        <p className="mb-3 text-xs leading-5 text-slate-600 sm:text-sm sm:leading-6">
           {activeIntro.description}
         </p>
+        <OnboardingGuide activeView={activeView} language={language} />
       </section>
 
       {activeView === "parent" ? (
