@@ -3,8 +3,47 @@ import type { ReverseLookupCandidate } from "@/lib/schema";
 import { UI_TEXT, type Language } from "@/lib/i18n";
 import { getLocusTone } from "@/lib/lociGlossary";
 import { InfoList } from "./InfoList";
-import { colorRows, formatPct } from "./format";
+import { colorRows, formatPct, groupedColorNameRows } from "./format";
 import { LocusChip } from "../LocusChip";
+
+function moreCountLabel(count: number, language: Language): string {
+  return language === "ja" ? `他${count}件` : `${count} more`;
+}
+
+function OtherColorRows({
+  rows,
+  emptyText,
+  language,
+}: {
+  rows: ReverseLookupCandidate["other_possible_colors"];
+  emptyText: string;
+  language: Language;
+}) {
+  const groups = groupedColorNameRows(rows);
+  if (groups.length === 0) {
+    return (
+      <p className="mt-1 text-xs leading-5 text-slate-600">
+        {emptyText}
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-1 space-y-1 text-xs leading-5 text-slate-600">
+      {groups.map((group) => (
+        <p key={group.sex}>
+          <span className="font-semibold text-slate-700">{group.symbol}</span>{" "}
+          <span>{group.colors.join(" / ")}</span>
+          {group.hiddenCount > 0 && (
+            <span className="ml-1 text-slate-400">
+              {moreCountLabel(group.hiddenCount, language)}
+            </span>
+          )}
+        </p>
+      ))}
+    </div>
+  );
+}
 
 // 1 件の交配候補 (父 × 母) を、確率・成立条件・座位別根拠つきで折りたたみ表示する。
 export function CandidateCard({
@@ -35,12 +74,12 @@ export function CandidateCard({
           <h4 className="text-base font-semibold text-slate-800">
             {candidate.sire.name} × {candidate.dam.name}
           </h4>
-          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="inline-flex items-center gap-1 rounded bg-sky-50 px-1.5 py-0.5 font-medium text-sky-700">
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs leading-5">
+            <span className="inline-flex items-center gap-1 rounded bg-sky-50 px-1.5 py-0.5 font-medium leading-5 text-sky-700">
               <GenderMale aria-hidden="true" className="h-3.5 w-3.5" weight="duotone" />
               {candidate.sire.color}
             </span>
-            <span className="inline-flex items-center gap-1 rounded bg-rose-50 px-1.5 py-0.5 font-medium text-rose-700">
+            <span className="inline-flex items-center gap-1 rounded bg-rose-50 px-1.5 py-0.5 font-medium leading-5 text-rose-700">
               <GenderFemale aria-hidden="true" className="h-3.5 w-3.5" weight="duotone" />
               {candidate.dam.color}
             </span>
@@ -99,11 +138,21 @@ export function CandidateCard({
           />
           <div className="rounded-md bg-slate-50 p-3 text-sm">
             <p className="font-medium text-slate-700">
-              {text.targetForm.otherPossibleCoats}
+              {text.targetForm.targetPossibleCoats}
             </p>
             <p className="mt-1 text-xs leading-5 text-slate-600">
-              {colorRows(candidate.other_possible_colors, text.targetForm.noOtherCoats)}
+              {colorRows(candidate.target_possible_colors, text.targetForm.noTargetCoats)}
             </p>
+          </div>
+          <div className="rounded-md bg-slate-50 p-3 text-sm">
+            <p className="font-medium text-slate-700">
+              {text.targetForm.otherPossibleCoats}
+            </p>
+            <OtherColorRows
+              rows={candidate.other_possible_colors}
+              emptyText={text.targetForm.noOtherCoats}
+              language={language}
+            />
           </div>
         </div>
 

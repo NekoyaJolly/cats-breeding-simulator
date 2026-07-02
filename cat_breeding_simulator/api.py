@@ -211,6 +211,7 @@ class ReverseLookupCandidateEntry(BaseModel):
     confirmation_needed: list[str]
     recommended_tests: list[str]
     locus_evidence: list[LocusEvidenceEntry]
+    target_possible_colors: list[ResultEntry]
     other_possible_colors: list[ResultEntry]
 
 
@@ -435,6 +436,14 @@ def reverse_lookup_endpoint(payload: ReverseLookupRequest) -> ReverseLookupRespo
                         note=evidence.note,
                     )
                     for evidence in candidate.locus_evidence
+                ],
+                target_possible_colors=[
+                    ResultEntry(
+                        sex=entry.sex,
+                        color=entry.color,
+                        probability_pct=entry.probability_pct,
+                    )
+                    for entry in candidate.target_possible_colors
                 ],
                 other_possible_colors=[
                     ResultEntry(

@@ -20,6 +20,7 @@ function makeCandidate(
     locus_evidence: [
       { locus: "D", target: "d/d", sire: "d/d", dam: "D/d", status: "ok", note: "希釈" },
     ],
+    target_possible_colors: [],
     other_possible_colors: [],
     ...overrides,
   };
@@ -71,9 +72,55 @@ describe("CandidateCard", () => {
     );
     expect(screen.getByText("追加確認なしで評価できます。")).toBeInTheDocument();
     expect(screen.getByText("現時点で追加検査の提案はありません。")).toBeInTheDocument();
+    expect(screen.getByText("目標色柄として表示できる内訳がありません。")).toBeInTheDocument();
     expect(
       screen.getByText("現在の計算範囲では表示できる色柄がありません。"),
     ).toBeInTheDocument();
+  });
+
+  it("目標色柄として生まれる性別別内訳を表示する", () => {
+    render(
+      <CandidateCard
+        candidate={makeCandidate({
+          target_possible_colors: [
+            { sex: "Male", color: "Black-White", probability_pct: 5.8594 },
+          ],
+        })}
+        index={0}
+        language="ja"
+        categoryLabel="確定で期待できる"
+      />,
+    );
+
+    expect(screen.getByText("目標色柄として生まれる内訳")).toBeInTheDocument();
+    expect(screen.getByText("♂ Black-White 5.9%")).toBeInTheDocument();
+  });
+
+  it("目標色柄以外のカラーは性別ごとに色名だけでまとめる", () => {
+    render(
+      <CandidateCard
+        candidate={makeCandidate({
+          other_possible_colors: [
+            { sex: "Female", color: "Calico", probability_pct: 5.8594 },
+            { sex: "Female", color: "Cameo", probability_pct: 5.8594 },
+            { sex: "Female", color: "Cameo-White", probability_pct: 5.8594 },
+            { sex: "Female", color: "Red", probability_pct: 5.8594 },
+            { sex: "Male", color: "Black", probability_pct: 5.8594 },
+            { sex: "Male", color: "Black Smoke-White", probability_pct: 5.8594 },
+            { sex: "Male", color: "Cameo", probability_pct: 5.8594 },
+            { sex: "Male", color: "Cameo-White", probability_pct: 5.8594 },
+          ],
+        })}
+        index={0}
+        language="ja"
+        categoryLabel="確定で期待できる"
+      />,
+    );
+
+    expect(screen.getByText("Black / Black Smoke-White / Cameo")).toBeInTheDocument();
+    expect(screen.getByText("Calico / Cameo / Cameo-White")).toBeInTheDocument();
+    expect(screen.getAllByText("他1件")).toHaveLength(2);
+    expect(screen.queryByText("♀ Calico 5.9%")).not.toBeInTheDocument();
   });
 
   it("組み合わせ番号は index+1 で表示する", () => {

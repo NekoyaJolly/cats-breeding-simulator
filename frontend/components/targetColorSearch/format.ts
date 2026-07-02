@@ -7,13 +7,19 @@ import type {
 // 目標カラー探索の表示ロジックで共有する純粋ヘルパー群。
 // UI から切り離して単体テスト可能にするため、コンポーネントとは別ファイルに置く。
 
-// 逆引き結果のカテゴリ表示順 (バックエンドの category 文字列と一致させる)。
-export const CATEGORIES = [
+// 候補一覧でユーザーに見せる産出条件。判定保留/確認不可は候補なし案内側で扱う。
+export const PUBLIC_CATEGORIES = [
   "確定で期待できる",
   "条件付きで期待できる",
-  "現在の情報では判定が難しい",
-  "現在の登録情報では確認できない",
 ] as const;
+
+/** その他カラーを性別ごとにまとめたプレビュー行。 */
+export type ColorNamePreviewGroup = {
+  sex: "Male" | "Female";
+  symbol: "♂" | "♀";
+  colors: string[];
+  hiddenCount: number;
+};
 
 // 確率を「12%」「12.5%」のように整数なら小数点なしで表示する。
 export function formatPct(value: number): string {
@@ -32,19 +38,69 @@ export function targetSexLabel(sex: ReverseLookupResponse["target_sex"]): string
   return "指定なし";
 }
 
-// 目標カラー以外に生まれ得るカラー行を、先頭8件まで「♀ 色 12%」形式で連結する。
+// 性別ごとの結果が片方に偏って見えないよう、オス→メスの順で交互にプレビューする。
+function previewRowsBySex(rows: ResultEntry[], limit: number): ResultEntry[] {
+  const maleRows = rows.filter((row) => row.sex === "Male");
+  const femaleRows = rows.filter((row) => row.sex === "Female");
+  const otherRows = rows.filter((row) => row.sex !== "Male" && row.sex !== "Female");
+  const balancedRows: ResultEntry[] = [];
+  const maxLength = Math.max(maleRows.length, femaleRows.length);
+  for (let index = 0; index < maxLength; index += 1) {
+    if (index < maleRows.length) {
+      balancedRows.push(maleRows[index]);
+    }
+    if (index < femaleRows.length) {
+      balancedRows.push(femaleRows[index]);
+    }
+  }
+  return [...balancedRows, ...otherRows].slice(0, limit);
+}
+
+// 生まれ得るカラー行を、性別が偏らない先頭8件まで「♀ 色 12%」形式で連結する。
 export function colorRows(
   rows: ResultEntry[],
   emptyText = "現在の計算範囲では表示できるカラーがありません。",
 ): string {
   if (rows.length === 0) return emptyText;
-  return rows
-    .slice(0, 8)
+  return previewRowsBySex(rows, 8)
     .map(
       (row) =>
         `${row.sex === "Female" ? "♀" : "♂"} ${row.color} ${formatPct(row.probability_pct)}`,
     )
     .join(" / ");
+}
+
+// その他カラーは確率を詰め込まず、性別ごとの色名プレビューにまとめる。
+export function groupedColorNameRows(
+  rows: ResultEntry[],
+  visiblePerSex = 3,
+): ColorNamePreviewGroup[] {
+  const groupForSex = (
+    sex: ColorNamePreviewGroup["sex"],
+    symbol: ColorNamePreviewGroup["symbol"],
+  ): ColorNamePreviewGroup | null => {
+    const colors = Array.from(
+      new Set(
+        rows
+          .filter((row) => row.sex === sex)
+          .map((row) => row.color),
+      ),
+    );
+    if (colors.length === 0) {
+      return null;
+    }
+    return {
+      sex,
+      symbol,
+      colors: colors.slice(0, visiblePerSex),
+      hiddenCount: Math.max(colors.length - visiblePerSex, 0),
+    };
+  };
+
+  return [
+    groupForSex("Male", "♂"),
+    groupForSex("Female", "♀"),
+  ].filter((group): group is ColorNamePreviewGroup => group !== null);
 }
 
 // 確認済み因子 (キャリア) を「B:B/b, D:D/d」形式の文字列にする。未登録は空文字。

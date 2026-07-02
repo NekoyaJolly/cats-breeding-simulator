@@ -3,6 +3,7 @@ import {
   carriersText,
   colorRows,
   formatPct,
+  groupedColorNameRows,
   sexLabel,
   targetSexLabel,
 } from "./format";
@@ -43,7 +44,7 @@ describe("colorRows", () => {
         { sex: "Female", color: "Blue", probability_pct: 12.5 },
         { sex: "Male", color: "Black", probability_pct: 25 },
       ]),
-    ).toBe("♀ Blue 12.5% / ♂ Black 25%");
+    ).toBe("♂ Black 25% / ♀ Blue 12.5%");
   });
 
   it("先頭8件までに制限する", () => {
@@ -53,6 +54,55 @@ describe("colorRows", () => {
       probability_pct: 1,
     }));
     expect(colorRows(rows).split(" / ")).toHaveLength(8);
+  });
+
+  it("メス結果が先に並んでいても、プレビューにはオス結果を含める", () => {
+    const rows = [
+      ...Array.from({ length: 8 }, (_, index) => ({
+        sex: "Female",
+        color: `Female${index}`,
+        probability_pct: 1,
+      })),
+      ...Array.from({ length: 4 }, (_, index) => ({
+        sex: "Male",
+        color: `Male${index}`,
+        probability_pct: 1,
+      })),
+    ];
+
+    const displayed = colorRows(rows).split(" / ");
+
+    expect(displayed).toHaveLength(8);
+    expect(displayed.some((row) => row.startsWith("♂ Male"))).toBe(true);
+    expect(displayed.some((row) => row.startsWith("♀ Female"))).toBe(true);
+  });
+});
+
+describe("groupedColorNameRows", () => {
+  it("その他カラーをオス、メスの順に色名だけでまとめる", () => {
+    const groups = groupedColorNameRows([
+      { sex: "Female", color: "Calico", probability_pct: 5.9 },
+      { sex: "Female", color: "Cameo", probability_pct: 5.9 },
+      { sex: "Female", color: "Red", probability_pct: 5.9 },
+      { sex: "Female", color: "Tortoiseshell", probability_pct: 5.9 },
+      { sex: "Male", color: "Black", probability_pct: 5.9 },
+      { sex: "Male", color: "Cameo", probability_pct: 5.9 },
+    ]);
+
+    expect(groups).toEqual([
+      {
+        sex: "Male",
+        symbol: "♂",
+        colors: ["Black", "Cameo"],
+        hiddenCount: 0,
+      },
+      {
+        sex: "Female",
+        symbol: "♀",
+        colors: ["Calico", "Cameo", "Red"],
+        hiddenCount: 1,
+      },
+    ]);
   });
 });
 

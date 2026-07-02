@@ -23,6 +23,7 @@ function makeCandidate(
     locus_evidence: [
       { locus: "D", target: "d/d", sire: "d/d", dam: "D/d", status: "ok", note: "希釈" },
     ],
+    target_possible_colors: [],
     other_possible_colors: [],
     ...overrides,
   };
@@ -54,6 +55,9 @@ describe("ResultsView", () => {
     );
 
     expect(screen.getByText("青系の父 × 黒系の母")).toBeInTheDocument();
+    expect(screen.getByText("産出条件")).toBeInTheDocument();
+    expect(screen.getAllByText("条件無し").length).toBeGreaterThan(0);
+    expect(screen.getByText("表現型からのみ推定できるカラー")).toBeInTheDocument();
     // 目標サマリー (性別未指定 + 目標カラー) を表示する。
     expect(screen.getByText("目標: 指定なし / Blue")).toBeInTheDocument();
   });
@@ -61,6 +65,26 @@ describe("ResultsView", () => {
   it("候補が0件のとき、確認できない旨の案内 (NoCandidateAnalysis) を出す", () => {
     render(<ResultsView data={makeResponse({ candidates: [] })} language="ja" />);
 
+    expect(
+      screen.getByText(
+        "現在の登録情報では、目標色柄の成立条件を満たす組み合わせ候補を確認できません。",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("ユーザー向けではない内部カテゴリだけの場合、候補なし案内を表示する", () => {
+    render(
+      <ResultsView
+        data={makeResponse({
+          candidates: [
+            makeCandidate({ category: "現在の情報では判定が難しい" }),
+          ],
+        })}
+        language="ja"
+      />,
+    );
+
+    expect(screen.queryByText("青系の父 × 黒系の母")).not.toBeInTheDocument();
     expect(
       screen.getByText(
         "現在の登録情報では、目標色柄の成立条件を満たす組み合わせ候補を確認できません。",

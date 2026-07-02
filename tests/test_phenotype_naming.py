@@ -290,6 +290,21 @@ def test_post_process_recleans_silver_tabby_after_pattern_simplification() -> No
 @pytest.mark.parametrize(
     ("raw", "expected"),
     [
+        ("Cameo Smoke", "Cameo"),
+        ("Cameo Red Smoke-White", "Cameo-White"),
+        ("Cameo Red Smoke-White Van", "Cameo-White"),
+    ],
+)
+def test_post_process_normalizes_redundant_cameo_smoke_names(raw: str, expected: str) -> None:
+    """旧CSV由来の冗長な Cameo Smoke 名を結果表示に残さない。"""
+
+    namer = PhenotypeNamer()
+    assert namer.post_process_color_name(raw, "Cameo", "Calico", breed=None) == expected
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
         ("Silver Lynx Point", "Seal Lynx Point"),
         ("Silver Lynx Point-White", "Seal Lynx Point-White"),
         ("Blue Silver Lynx Point", "Blue Lynx Point"),
