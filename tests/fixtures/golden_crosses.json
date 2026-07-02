@@ -2383,12 +2383,9 @@
    "carrier_exploration_results": null,
    "diagnostics": {
     "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
-     "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
-     "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
-     "S (白斑): 入力レベルで確定 (非展開)"
+     "W (優性白): 表現型からは W/W・W/w を区別できないため W/w を仮定 (X/- 展開)",
+     "父が White (優性白) のため W/w を仮定。オスは母由来で色が確定、メスは半分が母の色・半分は父の赤系が乗り不定のため AOC に集約 (§2.1)。",
+     "AOC: 白親の下の色が未確定な有色カテゴリ。生後の毛色で判明する集約表示"
     ],
     "closed_loci": [
      "A",
@@ -2398,6 +2395,7 @@
     ],
     "matched_probability": 1.0,
     "opened_loci": [
+     "W",
      "D",
      "I",
      "Mc",
@@ -2415,23 +2413,32 @@
     "sire_carriers": null,
     "sire_color": "White"
    },
-   "parent_color_notes": [
-    {
-     "blocked_factors": [],
-     "color": "Black",
-     "parent": "dam"
-    }
-   ],
+   "parent_color_notes": [],
    "results": [
     {
      "color": "White",
-     "probability_pct": 50.0,
-     "sex": "Female"
+     "probability_pct": 25.0,
+     "sex": "Male"
     },
     {
      "color": "White",
-     "probability_pct": 50.0,
+     "probability_pct": 25.0,
+     "sex": "Female"
+    },
+    {
+     "color": "Black",
+     "probability_pct": 25.0,
      "sex": "Male"
+    },
+    {
+     "color": "Black",
+     "probability_pct": 12.5,
+     "sex": "Female"
+    },
+    {
+     "color": "AOC",
+     "probability_pct": 12.5,
+     "sex": "Female"
     }
    ],
    "status": "success"
