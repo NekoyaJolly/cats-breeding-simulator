@@ -32,6 +32,11 @@ from cat_breeding_simulator.phenotype_naming import PhenotypeNamer
 
 ProbabilityMap = dict[tuple[str, str], float]
 
+# AOC (Any Other Color): White 親の「下の色」が未確定なため、生後の毛色で判明する集約カテゴリ。
+# 実在の毛色ではないため canonical 正規化・表示名解決 (display_alias_map) の対象に含めない
+# (V9 §2.4 / 指示書 §2.3・§7)。順方向の色行とは別扱いで最後段に付与する。
+_AOC_COLOR = "AOC"
+
 _TONKINESE_BREED_KEY = "Tonkinese"
 _TONKINESE_POINT_CLASS_COLORS: frozenset[str] = frozenset(
     {"Natural Point", "Blue Point", "Champagne Point", "Platinum Point"}
@@ -385,6 +390,18 @@ class CoatColorCalculator:
         if mode == "carrier_exploration":
             return self._calculate_carrier_exploration(sire_color, dam_color, breed)
 
+        # White (優性白・下不明) が親に含まれる通常モードは、下の色が不定なため
+        # 遺伝子型総当たりでは「White 100%」や誤った色になる。W/w を仮定した専用集計で
+        # 白の割合・母由来で確定できる色を出し、確定できない残りは AOC に集約する (§2.1/§2.2)。
+        # 明示キャリア (explicit_carrier) は「下の色が入力された」ケースなので従来の正確計算に回す。
+        if mode == "normal" and not sire_carriers and not dam_carriers:
+            sire_white = self._is_white_phenotype(sire_color, breed)
+            dam_white = self._is_white_phenotype(dam_color, breed)
+            if sire_white or dam_white:
+                return self._calculate_white_report(
+                    sire_color, dam_color, breed, sire_white, dam_white
+                )
+
         sire_genotypes = self._resolve_parent_genotypes(
             sire_color, "male", breed, mode, sire_carriers
         )
@@ -524,6 +541,105 @@ class CoatColorCalculator:
             assumptions=assumptions,
             carrier_exploration_results=scenarios,
         )
+
+    # --- White (優性白・下不明) 順方向の専用集計 (§2.1 / §2.2) ---
+    #
+    # W/W か W/w かは表現型から区別できないが、順方向表示では「有色の子が出得る」ことを
+    # 見せるため White 親を W/w と仮定する (§2.1/§2.2 の割合はこの仮定に基づく)。
+    # 白の割合・母由来で確定できる色を出し、確定できない残り (父の X が O=赤だった場合や、
+    # White 母の下の色が全不明の場合) は AOC (Any Other Color) に集約する。
+
+    def _is_white_phenotype(self, color: str, breed: str | None) -> bool:
+        """入力色が優性白 (White) に解決されるか。解決不能・例外時は False。"""
+
+        try:
+            resolved = self._resolve_input_color_name(color, breed)
+        except BreedingCalculationError:
+            return False
+        return self._normalize_color_key(resolved) == "White"
+
+    def _calculate_white_report(
+        self,
+        sire_color: str,
+        dam_color: str,
+        breed: str | None,
+        sire_white: bool,
+        dam_white: bool,
+    ) -> CalculationReport:
+        """White 親を含む通常モードの結果を、W/w 仮定 + AOC 集約で構築する。"""
+
+        # 両親を通常経路で検証する (無効な毛色・性別制約・猫種非認定はここで送出)。
+        self._resolve_parent_genotypes(sire_color, "male", breed, "normal")
+        self._resolve_parent_genotypes(dam_color, "female", breed, "normal")
+
+        if sire_white and dam_white:
+            # 両親 White (W/w × W/w): 白 3/4 (M/F 各 37.5%)、有色 1/4 は両親とも下不明 → AOC。
+            results = [
+                KittenResult(sex="Male", color="White", probability_pct=37.5),
+                KittenResult(sex="Female", color="White", probability_pct=37.5),
+                KittenResult(sex="Male", color=_AOC_COLOR, probability_pct=12.5),
+                KittenResult(sex="Female", color=_AOC_COLOR, probability_pct=12.5),
+            ]
+            assumption = (
+                "両親とも White (優性白) のため W/w × W/w を仮定。白 75%、有色 25% は"
+                "両親の下の色が不明なため AOC (Any Other Color) に集約。"
+            )
+        elif sire_white:
+            results = self._white_parent_results("sire", dam_color, breed)
+            assumption = (
+                "父が White (優性白) のため W/w を仮定。オスは母由来で色が確定、"
+                "メスは White(下不明)父の X を受け継ぐため色が定まらず AOC に集約 (§2.1)。"
+            )
+        else:
+            results = self._white_parent_results("dam", sire_color, breed)
+            assumption = (
+                "母が White (優性白) のため W/w を仮定。母の下の色が全不明のため、"
+                "有色の子はオス・メスとも AOC (Any Other Color) に集約 (§2.2)。"
+            )
+
+        assumptions = [
+            "W (優性白): 表現型からは W/W・W/w を区別できないため W/w を仮定 (X/- 展開)",
+            assumption,
+            "AOC: 白親の下の色が未確定な有色カテゴリ。生後の毛色で判明する集約表示",
+        ]
+        return CalculationReport(
+            results=results,
+            matched_probability=1.0,
+            unmatched_probability=0.0,
+            unmatched_genotype_count=0,
+            unmatched_samples=[],
+            mode="normal",
+            opened_loci=["W", *NORMAL_OPENED_LOCI],
+            closed_loci=list(NORMAL_CLOSED_LOCI),
+            assumptions=assumptions,
+            parent_color_notes=None,
+        )
+
+    def _white_parent_results(
+        self, white_side: str, other_color: str, breed: str | None
+    ) -> list[KittenResult]:
+        """片親のみ White のときの結果行を構築する (§2.1 父White / §2.2 母White)。"""
+
+        other_display = self.display_color_name(other_color, breed)
+        # W/w 由来: 白 50% (オス/メス各 25%)。残り 50% が有色。
+        results = [
+            KittenResult(sex="Male", color="White", probability_pct=25.0),
+            KittenResult(sex="Female", color="White", probability_pct=25.0),
+        ]
+        if white_side == "sire":
+            # 父 White (§2.1): オスは母由来で色が確定 → 母の色 (25%)。オスは母の X(O座位) と
+            # 母の優性形質で色が決まり、父 (White) の下地は乗らない扱い。
+            # メスは父 (White・下不明) の X を受け継ぐため、その下地アレル (O=赤の可能性や、
+            # 母が劣性ホモの座位で父の優性が乗るか等) が定まらず、色を確定できない → AOC (25%)。
+            # 母の色が♀限定 (トーティ等) の場合はオスに出せないため、オス有色も AOC に落とす。
+            male_colored = _AOC_COLOR if self._namer.is_female_only_color(other_display) else other_display
+            results.append(KittenResult(sex="Male", color=male_colored, probability_pct=25.0))
+            results.append(KittenResult(sex="Female", color=_AOC_COLOR, probability_pct=25.0))
+        else:
+            # 母 White (§2.2): 母の下 (O座位・常染色体とも) が不明 → 有色はオス・メスとも AOC。
+            results.append(KittenResult(sex="Male", color=_AOC_COLOR, probability_pct=25.0))
+            results.append(KittenResult(sex="Female", color=_AOC_COLOR, probability_pct=25.0))
+        return results
 
     def _resolved_base_loci(
         self, color: str, sex: str, breed: str | None

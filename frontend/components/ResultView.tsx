@@ -1,7 +1,7 @@
 "use client";
 
 import { GenderFemale, GenderMale } from "@phosphor-icons/react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type {
   CalculationResponse,
   CarrierScenarioEntry,
@@ -79,6 +79,103 @@ function formatPct(value: number): string {
   return `${value.toFixed(1)}%`;
 }
 
+// AOC (Any Other Color) は集約カテゴリ。どちらの親が White かで導線文言を切り替える。
+type WhiteSide = "sire" | "dam" | "both" | "none";
+
+// パラメータの親色から White 側を判定する。White は入力サジェストの canonical 正式名なので
+// 前後空白を除いた完全一致で見る (Black-White 等のバイカラーを誤検出しないため includes は使わない)。
+function whiteSideOf(sireColor: string, damColor: string): WhiteSide {
+  const isWhite = (color: string) => color.trim().toLowerCase() === "white";
+  const sire = isWhite(sireColor);
+  const dam = isWhite(damColor);
+  if (sire && dam) return "both";
+  if (sire) return "sire";
+  if (dam) return "dam";
+  return "none";
+}
+
+// AOC 行のフォーカス/ホバー時にだけ開く説明ポップオーバー (§2.3)。
+// デフォルトは非表示。押し付けず、気になったときにだけ「未確定の理由」と「下の色を入力すれば
+// 確定する」導線を出す (explicit_carrier への自然な誘導)。閉じるは外側クリック / Escape / blur。
+function AocInfo({
+  whiteSide,
+  language,
+}: {
+  whiteSide: WhiteSide;
+  language: Language;
+}) {
+  const text = UI_TEXT[language];
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLSpanElement>(null);
+  const tooltipId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(event: MouseEvent) {
+      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  const hint =
+    whiteSide === "sire"
+      ? text.parentResult.aocHintSire
+      : whiteSide === "dam"
+        ? text.parentResult.aocHintDam
+        : whiteSide === "both"
+          ? text.parentResult.aocHintBoth
+          : text.parentResult.aocHintGeneric;
+
+  return (
+    <span
+      ref={containerRef}
+      className="relative ml-1 inline-block align-middle"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        type="button"
+        // click / focus は「開く」に統一 (LocusChip と同じ運用)。閉じるは外側クリック等に任せる。
+        onClick={() => setOpen(true)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        className="flex h-4 w-4 cursor-help items-center justify-center rounded-full border border-slate-300 text-[10px] leading-none text-slate-400 hover:text-slate-600"
+        aria-expanded={open}
+        // aria-describedby は常時付与 (フォーカス瞬間に関連付けが無いと読み上げを取りこぼす)。
+        aria-describedby={tooltipId}
+        aria-label={text.parentResult.aocAria}
+      >
+        ?
+      </button>
+      <span
+        role="tooltip"
+        id={tooltipId}
+        className={`absolute left-0 top-full z-20 mt-1 w-64 max-w-[80vw] rounded-md border border-slate-200 bg-white p-2 text-left text-xs font-normal text-slate-600 shadow-lg ${
+          open ? "block" : "hidden"
+        }`}
+      >
+        <span className="block font-semibold text-slate-800">
+          {text.parentResult.aocTitle}
+        </span>
+        <span className="mt-0.5 block leading-relaxed">
+          {text.parentResult.aocBody}
+        </span>
+        <span className="mt-1 block text-[11px] text-slate-400">
+          {hint} {text.parentResult.aocMore}
+        </span>
+      </span>
+    </span>
+  );
+}
+
 // 確率を整数 % に丸める (結果表示用)。0 超で四捨五入が 0 になる微小値は "<1%"。
 function formatPctInt(value: number): string {
   if (value <= 0) return "0%";
@@ -135,12 +232,14 @@ function SexResultGroup({
   accentClass,
   rows,
   language,
+  whiteSide,
 }: {
   title: string;
   icon: ReactNode;
   accentClass: string;
   rows: ResultEntry[];
   language: Language;
+  whiteSide: WhiteSide;
 }) {
   const text = UI_TEXT[language];
   const [expanded, setExpanded] = useState(false);
@@ -178,6 +277,9 @@ function SexResultGroup({
                 <div className="flex items-center justify-between gap-2 text-sm">
                   <span className="min-w-0 break-words text-slate-700">
                     {group.base}
+                    {group.base === "AOC" && (
+                      <AocInfo whiteSide={whiteSide} language={language} />
+                    )}
                   </span>
                   <span className="shrink-0 tabular-nums text-slate-600">
                     {formatPctInt(group.total)}
@@ -221,9 +323,11 @@ function SexResultGroup({
 function SexSplitResults({
   rows,
   language,
+  whiteSide,
 }: {
   rows: ResultEntry[];
   language: Language;
+  whiteSide: WhiteSide;
 }) {
   const text = UI_TEXT[language];
   const female = rows.filter((row) => row.sex === "Female");
@@ -242,6 +346,7 @@ function SexSplitResults({
         accentClass="bg-sky-50 text-sky-800"
         rows={male}
         language={language}
+        whiteSide={whiteSide}
       />
       <SexResultGroup
         title={text.parentResult.female}
@@ -255,6 +360,7 @@ function SexSplitResults({
         accentClass="bg-pink-50 text-pink-800"
         rows={female}
         language={language}
+        whiteSide={whiteSide}
       />
     </div>
   );
@@ -300,7 +406,8 @@ function CarrierScenario({
         </p>
       )}
       <div className="mt-3">
-        <SexSplitResults rows={scenario.results} language={language} />
+        {/* carrier_exploration は下の色を明示した正確計算のため AOC は出ない。導線は不要。 */}
+        <SexSplitResults rows={scenario.results} language={language} whiteSide="none" />
       </div>
     </div>
   );
@@ -319,6 +426,8 @@ export function ResultView({
   // 入力 (親色 / 猫種 / モード) が変わったら結果カードを remount し、
   // 展開状態 (詳細を見る) を初期 (折りたたみ) に戻す。
   const resultsKey = `${parameters.sire_color}|${parameters.dam_color}|${parameters.breed ?? ""}|${parameters.mode}`;
+  // AOC 行の導線 (どちらの親が White か) を判定する。AOC は White 親のときのみ出る。
+  const whiteSide = whiteSideOf(parameters.sire_color, parameters.dam_color);
   // 展開/固定どちらにも出ない座位 (O=オレンジ・S=白斑・W=優性白・Sp 等) は
   // チップが描画されないため、解説を読めるよう「その他」行で補完する。
   const shownLoci = new Set([
@@ -338,7 +447,12 @@ export function ResultView({
           </span>
         </div>
         <div className="mt-3">
-          <SexSplitResults key={resultsKey} rows={data.results} language={language} />
+          <SexSplitResults
+            key={resultsKey}
+            rows={data.results}
+            language={language}
+            whiteSide={whiteSide}
+          />
         </div>
         <ParentColorNotes notes={data.parent_color_notes} language={language} />
       </section>

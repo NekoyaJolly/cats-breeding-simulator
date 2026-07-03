@@ -194,6 +194,38 @@ def test_litter_inference_does_not_invent_silver_from_non_silver_pair() -> None:
     assert any("説明できません" in contradiction for contradiction in body["contradictions"])
 
 
+def test_litter_inference_white_sire_is_inferable_not_contradiction() -> None:
+    """White(父) × Black から色付きの子が出た実績は矛盾にせず、父 W/w を確定する。
+
+    優性白の下地は表現型で見えないため、拘束されない座位は「下不明」の警告に集約し、
+    座位別逆算で全下地 (数万件) を列挙しない (§3 / WHITE-3)。
+    """
+
+    response = client.post(
+        "/api/v1/litter-inference",
+        json={
+            "sire": {"color": "White"},
+            "dam": {"color": "Black"},
+            "kittens": [
+                {"id": "k1", "sex": "male", "color": "Black"},
+                {"id": "k2", "sex": "female", "color": "Blue"},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["response_category"] == "推定可能"
+    assert body["contradictions"] == []
+    confirmed = _finding_keys(body["confirmed"])
+    # 色付きの子が出た = 父は W/W ではない → W/w 確定。
+    assert ("父猫", "W座位", "W/w") in confirmed
+    # Blue(♀)=d/d から、Black(濃色)母は d を渡せる = D/d 確定。
+    assert ("母猫", "D座位", "D/d") in confirmed
+    # 拘束されない White 父の下地は「下不明」の警告として1本にまとめる (座位を羅列しない)。
+    assert any("下不明" in warning for warning in body["warnings"])
+
+
 def test_litter_inference_warns_for_calico_white_spotting() -> None:
     """Calico系の観察色は、白斑確認の警告を返す。"""
 

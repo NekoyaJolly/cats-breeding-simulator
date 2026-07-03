@@ -166,11 +166,20 @@ def _build_normal_parent_genotypes(phenotype: str, sex: str, base_loci: dict[str
     # 表現型で区別でき、入力の白斑レベルから接合性が確定する (= ヘテロ不可視ではない)。
     # さらに S/S の Van 色を S/s へ展開すると逆引きMAPが汚染され、S/s の子が Van 名へ
     # 誤マッチするため、S は CSV 記載値のまま固定する。
+    #
+    # W (優性白) は展開する。CSV で W/W 固定のままだと配偶子が全て W になり、相手が w/w でも
+    # 子が全員 White になって「White 100%」「White 親のリター推定が矛盾」という誤りが出る
+    # (V9 §2.4 / §4.5)。優性白の表現型からはホモ (W/W) かヘテロ (W/w) か区別できないため、
+    # 逆引き・リター推定が「White 親も w を渡し得る」ことを扱えるよう W/w を候補に含める。
+    # この分岐は CSV 上 W/W を持つ White のみに作用し (他色は全て w/w)、他色の候補は不変。
+    # なお順方向 (normal) の表示割合は、White の下の色が不定なため engine 側で W/w を仮定した
+    # 専用集計 (AOC 集約) を行う (§2.1/§2.2)。ここでの展開は逆引き・リター推定の候補生成に効く。
     dominant_expandable: dict[str, tuple[str, str]] = {
         "D": ("D", "d"),
         "I": ("I", "i"),
         "Mc": ("Mc", "mc"),
         "Ta": ("Ta", "ta"),
+        "W": ("W", "w"),
     }
 
     loci_options: dict[str, list[tuple[str, str]]] = {}
@@ -366,6 +375,42 @@ def build_parent_genotypes(
             seen.add(signature)
             out.append(genotype)
     return out
+
+
+# White (優性白) 親の「下の色」を逆算するための、下地座位の全対立候補。
+# 優性白は下の色を完全にマスクするため、B/D/A/C/I/S/Wb・O座位の下地は表現型から一切分からない。
+# リター推定では、観察子猫が下地アレルを制約する (例: 黒の子は親が B を渡せることを要求) ので、
+# この全候補から surviving_pairs が子猫と整合するものだけを残す。Mc/Ta/Sp は観察照合で無視
+# されるため (litter_inference._ignored_loci_for_observed) 既定値で固定し、候補爆発を抑える。
+# リター推定はこの座位別オプションを使い、観察子猫が要求する範囲だけを座位ごとに逆算する
+# (litter_inference._white_locus_analysis)。全組み合わせ (オス約7万/メス約10万) の遺伝子型を
+# 物質化することはしない — 下地の大半は観察色から拘束されず、列挙は無駄なため (V9 §2.4 / §3)。
+_WHITE_UNDERLYING_OPTIONS: dict[str, list[tuple[str, str]]] = {
+    "B": [("B", "B"), ("B", "b"), ("B", "bl"), ("b", "b"), ("b", "bl"), ("bl", "bl")],
+    "D": [("D", "D"), ("D", "d"), ("d", "d")],
+    "A": [("A", "A"), ("A", "a"), ("a", "a")],
+    "C": [("C", "C"), ("C", "cs"), ("C", "cb"), ("cs", "cs"), ("cb", "cb"), ("cb", "cs")],
+    "I": [("I", "I"), ("I", "i"), ("i", "i")],
+    "S": [("S", "S"), ("S", "s"), ("s", "s")],
+    "Wb": [("Wb", "Wb"), ("Wb", "wb"), ("wb", "wb")],
+    # 優性白の表現型からは W/W か W/w か不明。色付きの子は親が w を渡すことを要求するため、
+    # 座位別逆算で W/w に絞り込まれる (= W/w 確定の逆算根拠になる)。
+    "W": [("W", "W"), ("W", "w")],
+    "Mc": [("Mc", "Mc")],
+    "Ta": [("ta", "ta")],
+    "Sp": [("sp", "sp")],
+}
+
+
+def white_underlying_locus_options(sex: str) -> dict[str, list[tuple[str, str]]]:
+    """White 親の下地 (下不明) の座位別・全対立オプションを返す。O 座位は性別で分ける。"""
+
+    options = dict(_WHITE_UNDERLYING_OPTIONS)
+    if sex == "male":
+        options["O"] = [("O", "Y"), ("o", "Y")]
+    else:
+        options["O"] = [("O", "O"), ("O", "o"), ("o", "o")]
+    return options
 
 
 def _build_phenotype_genotypes() -> dict[str, dict[str, list[ParentGenotype]]]:
