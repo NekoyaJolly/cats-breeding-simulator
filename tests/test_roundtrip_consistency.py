@@ -132,21 +132,18 @@ def _litter_inference(
 def _representative_surviving_pair(
     sire: str, dam: str, breed: str | None, kittens: list[tuple[str, str]]
 ):
-    """リター推定が採用する生存親ペアの代表 (先頭) を返す。無ければ None。
+    """リター推定が採用する代表的な親ペアを返す。無ければ None。
 
-    サービスと同じ候補生成・生存判定を使う (White 親は下地を全不明として開く)。
+    サービス公開 API を使う。White 親は座位別逆算の代表値から組み立てる (全下地列挙をしない)。
     """
 
-    sire_candidates = _LITTER_SERVICE._parent_candidates(sire, "male", breed)
-    dam_candidates = _LITTER_SERVICE._parent_candidates(dam, "female", breed)
     observed = [
-        _LITTER_SERVICE._observed_kitten_profiles(
-            ObservedKitten(id=str(index), sex=sex, color=color), breed
-        )
+        ObservedKitten(id=str(index), sex=sex, color=color)
         for index, (sex, color) in enumerate(kittens)
     ]
-    pairs = _LITTER_SERVICE._surviving_pairs(sire_candidates, dam_candidates, observed)
-    return pairs[0] if pairs else None
+    return _LITTER_SERVICE.representative_parents(
+        LitterParent(sire, breed), LitterParent(dam, breed), observed
+    )
 
 
 def _forward_colors_from_pair(

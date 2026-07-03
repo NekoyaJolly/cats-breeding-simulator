@@ -11,7 +11,7 @@ from cat_breeding_simulator.master_data import (
     BREED_FILTERS,
     ParentGenotype,
     _breed_allele_matches,
-    build_white_underlying_candidates,
+    white_underlying_locus_options,
 )
 
 
@@ -50,6 +50,22 @@ class InferenceFinding:
     genotype: str
     note: str
     support_pct: float
+
+
+@dataclass(frozen=True, slots=True)
+class _LocusAnalysis:
+    """White 親を含むリターの、1座位ぶんの座位別逆算結果。
+
+    proj は「観察子猫を全頭説明できる」親側の値の射影、full はその親の全取り得る値、
+    representative は全頭に整合する代表 (父値, 母値)、pair_count はこの座位の生存ペア数。
+    """
+
+    sire_proj: list[tuple[str, str]]
+    dam_proj: list[tuple[str, str]]
+    sire_full: list[tuple[str, str]]
+    dam_full: list[tuple[str, str]]
+    representative: tuple[tuple[str, str], tuple[str, str]]
+    pair_count: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,11 +126,21 @@ class LitterInferenceService:
         breed = self._shared_breed(sire, dam)
         self._calculator.validate_parent_color(sire.color, "male", breed)
         self._calculator.validate_parent_color(dam.color, "female", breed)
-        sire_candidates = self._parent_candidates(sire.color, "male", breed)
-        dam_candidates = self._parent_candidates(dam.color, "female", breed)
         observed_kittens = [
             self._observed_kitten_profiles(kitten, breed) for kitten in kittens
         ]
+
+        # White (優性白) 親は下の色が表現型で見えないため、下地を全列挙してフィルタする代わりに、
+        # 観察子猫が拘束する座位だけを座位別に逆算する (§3 / Nekoさん指摘: 見えない色は推定不要)。
+        sire_white = self._calculator._is_white_phenotype(sire.color, breed)
+        dam_white = self._calculator._is_white_phenotype(dam.color, breed)
+        if sire_white or dam_white:
+            return self._infer_with_white_parent(
+                sire, dam, breed, kittens, observed_kittens, sire_white, dam_white
+            )
+
+        sire_candidates = self._parent_candidates(sire.color, "male", breed)
+        dam_candidates = self._parent_candidates(dam.color, "female", breed)
 
         surviving_pairs = self._surviving_pairs(
             sire_candidates, dam_candidates, observed_kittens
@@ -153,37 +179,332 @@ class LitterInferenceService:
     def _parent_candidates(
         self, color: str, sex: str, breed: str | None
     ) -> list[ParentGenotype]:
-        """親の遺伝子型候補を返す。White 親だけは下地を全不明として開く (§3)。
+        """非 White 親の遺伝子型候補を返す (resolver + 未確認キャリア展開)。
 
-        通常色は従来どおり resolver + 未確認キャリア展開。White は優性白が下の色を隠すため、
-        CSV の White 行を確定値扱いすると「White 親は a/a ソリッド」等の誤確定を生む。
-        下地を全対立で開き、観察子猫が要求する範囲だけを surviving_pairs に絞らせる。
+        White 親は下地が表現型で見えないため本経路では扱わない。White を含むリターは
+        `_infer_with_white_parent` が座位別に逆算する (全下地の列挙を避ける)。
         """
 
-        if self._calculator._is_white_phenotype(color, breed):
-            candidates = build_white_underlying_candidates(sex)
-            if not breed:
-                return candidates
-            # 猫種指定時は、その猫種の座位制約を満たす下地候補だけに絞る (通常計算と同基準)。
-            constraints = BREED_FILTERS.get(
-                CoatColorCalculator._normalize_breed_key(breed), {}
-            )
-            if not constraints:
-                return candidates
-            return [
-                candidate
-                for candidate in candidates
-                if all(
-                    _breed_allele_matches(candidate.loci[locus], required)
-                    for locus, required in constraints.items()
-                    if locus in candidate.loci
-                )
-            ]
         return self._calculator.parent_genotype_candidates(
             color,
             sex,
             breed,
             include_unconfirmed_carriers=True,
+        )
+
+    # --- White (優性白) 親を含むリターの座位別逆算 (§3 / 全下地列挙を避ける) ---
+    #
+    # 優性白は下の色を表現型で隠すため、下地の各座位は原理的に不定。観察子猫の色が拘束する
+    # 座位だけを座位ごとに逆算し、拘束されない下地は「下不明」と明示するだけにする
+    # (見えていない色は推定しない)。メンデル分離は座位独立なので、親ペアを全列挙せず
+    # 座位別に (父値, 母値) の生存ペアを求め、その射影から親ごとの推定を出す。
+
+    def _infer_with_white_parent(
+        self,
+        sire: LitterParent,
+        dam: LitterParent,
+        breed: str | None,
+        kittens: list[ObservedKitten],
+        observed_kittens: list[list[ObservedProfile]],
+        sire_white: bool,
+        dam_white: bool,
+    ) -> LitterInferenceReport:
+        warnings = self._warnings(kittens)
+        # 観察できない子猫が1頭でもあれば、どの親ペアも全頭説明できない。
+        if any(not profiles for profiles in observed_kittens):
+            return self._white_contradiction_report(warnings)
+
+        analysis = self._white_locus_analysis(
+            sire, dam, breed, sire_white, dam_white, observed_kittens
+        )
+        if analysis is None:
+            return self._white_contradiction_report(warnings)
+
+        confirmed, conditional, inferred, unconfirmed, white_unknown = self._white_findings(
+            analysis, sire_white, dam_white
+        )
+        for role in ("sire", "dam"):
+            loci = white_unknown[role]
+            if loci:
+                names = "・".join(f"{locus}座位" for locus in loci)
+                warnings.append(
+                    f"{_PARENT_LABELS[role]}は優性白のため、観察された子猫からは下の色（下地）を"
+                    f"推定できません（下不明）: {names}"
+                )
+        recommended_tests = self._recommended_tests(conditional, unconfirmed, warnings)
+        pair_count = 1
+        for info in analysis.values():
+            pair_count *= info.pair_count
+        return LitterInferenceReport(
+            response_category="推定可能",
+            candidate_pair_count=pair_count,
+            confirmed=confirmed,
+            conditional=conditional,
+            inferred=inferred,
+            unconfirmed=unconfirmed,
+            contradictions=[],
+            warnings=warnings,
+            recommended_tests=recommended_tests,
+        )
+
+    @staticmethod
+    def _white_contradiction_report(warnings: list[str]) -> LitterInferenceReport:
+        return LitterInferenceReport(
+            response_category="矛盾",
+            candidate_pair_count=0,
+            confirmed=[],
+            conditional=[],
+            inferred=[],
+            unconfirmed=[],
+            contradictions=[
+                "現在の親カラー候補では、観察された全子猫カラー・性別を同時に説明できません。"
+            ],
+            warnings=warnings,
+            recommended_tests=["親猫・子猫のカラー名、性別、白斑有無を再確認してください。"],
+        )
+
+    def _white_locus_analysis(
+        self,
+        sire: LitterParent,
+        dam: LitterParent,
+        breed: str | None,
+        sire_white: bool,
+        dam_white: bool,
+        observed_kittens: list[list[ObservedProfile]],
+    ) -> dict[str, _LocusAnalysis] | None:
+        """座位ごとに (父値, 母値) の生存ペアを求め、親別の射影・代表・件数を返す。
+
+        いずれかの座位で観察子猫を説明できる (父値, 母値) が無ければ矛盾として None を返す。
+        """
+
+        sire_options = self._locus_options_for_parent(sire.color, "male", breed, sire_white)
+        dam_options = self._locus_options_for_parent(dam.color, "female", breed, dam_white)
+
+        analysis: dict[str, _LocusAnalysis] = {}
+        for locus in _LOCUS_ORDER:
+            if locus not in sire_options or locus not in dam_options:
+                continue
+            sire_opts = sire_options[locus]
+            dam_opts = dam_options[locus]
+            # この座位を拘束する子猫の要求 (性別, 許容アレル対集合) を集める。
+            kitten_reqs: list[tuple[str, set[tuple[str, str]]]] = []
+            for profiles in observed_kittens:
+                sex = profiles[0][0]
+                acceptable = {
+                    profile[1][locus] for profile in profiles if locus in profile[1]
+                }
+                if acceptable:
+                    kitten_reqs.append((sex, acceptable))
+
+            if not kitten_reqs:
+                # どの子猫もこの座位を拘束しない → 全ペアが生存 (下不明)。
+                sire_proj = list(sire_opts)
+                dam_proj = list(dam_opts)
+                representative = (sire_opts[0], dam_opts[0])
+                pair_count = len(sire_opts) * len(dam_opts)
+            else:
+                pairs = [
+                    (sire_value, dam_value)
+                    for sire_value in sire_opts
+                    for dam_value in dam_opts
+                    if all(
+                        any(
+                            _pair_produces_locus(locus, sire_value, dam_value, sex, target)
+                            for target in acceptable
+                        )
+                        for sex, acceptable in kitten_reqs
+                    )
+                ]
+                if not pairs:
+                    return None  # この座位で全頭を説明できる親値が無い = 矛盾
+                sire_proj = list(dict.fromkeys(sire_value for sire_value, _ in pairs))
+                dam_proj = list(dict.fromkeys(dam_value for _, dam_value in pairs))
+                representative = pairs[0]
+                pair_count = len(pairs)
+
+            analysis[locus] = _LocusAnalysis(
+                sire_proj=sire_proj,
+                dam_proj=dam_proj,
+                sire_full=list(sire_opts),
+                dam_full=list(dam_opts),
+                representative=representative,
+                pair_count=pair_count,
+            )
+        return analysis
+
+    def _white_findings(
+        self,
+        analysis: dict[str, _LocusAnalysis],
+        sire_white: bool,
+        dam_white: bool,
+    ) -> tuple[
+        list[InferenceFinding],
+        list[InferenceFinding],
+        list[InferenceFinding],
+        list[InferenceFinding],
+        dict[str, list[str]],
+    ]:
+        confirmed: list[InferenceFinding] = []
+        conditional: list[InferenceFinding] = []
+        inferred: list[InferenceFinding] = []
+        unconfirmed: list[InferenceFinding] = []
+        white_unknown: dict[str, list[str]] = {"sire": [], "dam": []}
+
+        for role in ("sire", "dam"):
+            is_white = sire_white if role == "sire" else dam_white
+            label = _PARENT_LABELS[role]
+            for locus in _LOCUS_ORDER:
+                info = analysis.get(locus)
+                if info is None:
+                    continue
+                projection = info.sire_proj if role == "sire" else info.dam_proj
+                full = info.sire_full if role == "sire" else info.dam_full
+
+                if len(projection) == 1:
+                    genotype = self._format_genotype(projection[0], locus)
+                    confirmed.append(
+                        InferenceFinding(
+                            category="確定",
+                            parent=label,
+                            locus=f"{locus}座位",
+                            genotype=genotype,
+                            note="観察された全子猫を説明できる親候補で共通しています。",
+                            support_pct=100.0,
+                        )
+                    )
+                    if locus == "O" and role == "dam" and genotype == "XO/XO":
+                        inferred.append(
+                            InferenceFinding(
+                                category="推定",
+                                parent=label,
+                                locus="O座位",
+                                genotype=genotype,
+                                note="非レッド父との子猫実績から、母猫が全子にOを渡す説明が強く支持されます。",
+                                support_pct=100.0,
+                            )
+                        )
+                    continue
+
+                # White 親の座位が全対立のまま残る = このリターから拘束できない下地 → 下不明。
+                if is_white and set(projection) == set(full):
+                    white_unknown[role].append(locus)
+                    continue
+
+                if locus == "A" and all("A" in pair for pair in projection):
+                    conditional.append(
+                        InferenceFinding(
+                            category="条件付き確定",
+                            parent=label,
+                            locus="A座位",
+                            genotype="A/-",
+                            note="タビー系子猫を説明するにはAを渡せる必要があります。Red/Cream系では見た目だけの判定に注意してください。",
+                            support_pct=100.0,
+                        )
+                    )
+                    continue
+
+                genotypes = " / ".join(
+                    sorted(self._format_genotype(pair, locus) for pair in projection)
+                )
+                note = "候補が複数残るため、追加確認なしでは絞り込めません。"
+                if locus == "B":
+                    note = "チョコレート/シナモンの隠れキャリア有無は、このリター実績だけでは未確認です。"
+                unconfirmed.append(
+                    InferenceFinding(
+                        category="未確認",
+                        parent=label,
+                        locus=f"{locus}座位",
+                        genotype=genotypes,
+                        note=note,
+                        support_pct=round(100.0 / len(projection), 2),
+                    )
+                )
+        return confirmed, conditional, inferred, unconfirmed, white_unknown
+
+    def _locus_options_for_parent(
+        self, color: str, sex: str, breed: str | None, is_white: bool
+    ) -> dict[str, list[tuple[str, str]]]:
+        """親の座位別・取り得るアレル対集合を返す。White は下地全対立、非 White は候補から射影。"""
+
+        if is_white:
+            options = {
+                locus: [_norm_locus_pair(locus, pair) for pair in values]
+                for locus, values in white_underlying_locus_options(sex).items()
+            }
+            if breed:
+                constraints = BREED_FILTERS.get(
+                    CoatColorCalculator._normalize_breed_key(breed), {}
+                )
+                for locus, required in constraints.items():
+                    if locus not in options:
+                        continue
+                    filtered = [
+                        pair for pair in options[locus] if _breed_allele_matches(pair, required)
+                    ]
+                    if filtered:
+                        options[locus] = filtered
+            return options
+
+        candidates = self._parent_candidates(color, sex, breed)
+        options: dict[str, list[tuple[str, str]]] = {}
+        for candidate in candidates:
+            for locus, pair in candidate.loci.items():
+                normalized = _norm_locus_pair(locus, pair)
+                bucket = options.setdefault(locus, [])
+                if normalized not in bucket:
+                    bucket.append(normalized)
+        return options
+
+    def representative_parents(
+        self, sire: LitterParent, dam: LitterParent, kittens: list[ObservedKitten]
+    ) -> tuple[ParentGenotype, ParentGenotype] | None:
+        """観察子猫を全頭説明できる代表的な父母遺伝子型ペアを返す (往復検証用)。無ければ None。
+
+        White 親は座位別逆算の代表値から組み立てる (全下地列挙をしない)。非 White は
+        従来の surviving_pairs から先頭を返す。
+        """
+
+        breed = self._shared_breed(sire, dam)
+        self._calculator.validate_parent_color(sire.color, "male", breed)
+        self._calculator.validate_parent_color(dam.color, "female", breed)
+        observed = [self._observed_kitten_profiles(kitten, breed) for kitten in kittens]
+        sire_white = self._calculator._is_white_phenotype(sire.color, breed)
+        dam_white = self._calculator._is_white_phenotype(dam.color, breed)
+
+        if sire_white or dam_white:
+            if any(not profiles for profiles in observed):
+                return None
+            analysis = self._white_locus_analysis(
+                sire, dam, breed, sire_white, dam_white, observed
+            )
+            if analysis is None:
+                return None
+            return self._representative_from_analysis(analysis)
+
+        sire_candidates = self._parent_candidates(sire.color, "male", breed)
+        dam_candidates = self._parent_candidates(dam.color, "female", breed)
+        pairs = self._surviving_pairs(sire_candidates, dam_candidates, observed)
+        return pairs[0] if pairs else None
+
+    @staticmethod
+    def _representative_from_analysis(
+        analysis: dict[str, _LocusAnalysis],
+    ) -> tuple[ParentGenotype, ParentGenotype]:
+        """座位別逆算の代表値 (各座位で全頭に整合する (父値, 母値)) から親ペアを組み立てる。"""
+
+        sire_loci: dict[str, tuple[str, str]] = {}
+        dam_loci: dict[str, tuple[str, str]] = {}
+        for locus, info in analysis.items():
+            sire_value, dam_value = info.representative
+            sire_loci[locus] = sire_value
+            dam_loci[locus] = dam_value
+        # 照合対象外のパターン座 (Mc/Ta/Sp) は既定値で補う (配偶子生成に全座位が要る)。
+        for locus, default in (("Mc", ("Mc", "Mc")), ("Ta", ("ta", "ta")), ("Sp", ("sp", "sp"))):
+            sire_loci.setdefault(locus, default)
+            dam_loci.setdefault(locus, default)
+        return (
+            ParentGenotype(phenotype="sire", sex="male", loci=sire_loci),
+            ParentGenotype(phenotype="dam", sex="female", loci=dam_loci),
         )
 
     @staticmethod
@@ -477,6 +798,37 @@ def _o_can_produce(
             elif target_sex == "Female" and tuple(sorted((sire_gamete, dam_gamete))) == target_pair:
                 return True
     return False
+
+
+# O 座位のアレル表示順 (O 優性 > o > Y)。順序非依存キー化と全対立比較に使う。
+_O_ALLELE_ORDER: dict[str, int] = {"O": 0, "o": 1, "Y": 2}
+
+
+def _norm_locus_pair(locus: str, pair: tuple[str, str]) -> tuple[str, str]:
+    """座位別に正準化したアレル対を返す (集合比較・表示のブレを防ぐ)。
+
+    O 座位は O>o>Y の優性順、他座位はアルファベット順で固定する。
+    """
+
+    if locus == "O":
+        ordered = sorted(pair, key=lambda allele: _O_ALLELE_ORDER.get(allele, 99))
+    else:
+        ordered = sorted(pair)
+    return (ordered[0], ordered[1])
+
+
+def _pair_produces_locus(
+    locus: str,
+    sire_pair: tuple[str, str],
+    dam_pair: tuple[str, str],
+    target_sex: str,
+    target_pair: tuple[str, str],
+) -> bool:
+    """1座位で、(父値, 母値) が観察子猫の (性別, アレル対) を生成できるか。"""
+
+    if locus == "O":
+        return _o_can_produce(sire_pair, dam_pair, target_sex, target_pair)
+    return _autosomal_can_produce(sire_pair, dam_pair, target_pair)
 
 
 def _locus_satisfaction_mask(

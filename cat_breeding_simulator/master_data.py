@@ -382,6 +382,9 @@ def build_parent_genotypes(
 # リター推定では、観察子猫が下地アレルを制約する (例: 黒の子は親が B を渡せることを要求) ので、
 # この全候補から surviving_pairs が子猫と整合するものだけを残す。Mc/Ta/Sp は観察照合で無視
 # されるため (litter_inference._ignored_loci_for_observed) 既定値で固定し、候補爆発を抑える。
+# リター推定はこの座位別オプションを使い、観察子猫が要求する範囲だけを座位ごとに逆算する
+# (litter_inference._white_locus_analysis)。全組み合わせ (オス約7万/メス約10万) の遺伝子型を
+# 物質化することはしない — 下地の大半は観察色から拘束されず、列挙は無駄なため (V9 §2.4 / §3)。
 _WHITE_UNDERLYING_OPTIONS: dict[str, list[tuple[str, str]]] = {
     "B": [("B", "B"), ("B", "b"), ("B", "bl"), ("b", "b"), ("b", "bl"), ("bl", "bl")],
     "D": [("D", "D"), ("D", "d"), ("d", "d")],
@@ -391,7 +394,7 @@ _WHITE_UNDERLYING_OPTIONS: dict[str, list[tuple[str, str]]] = {
     "S": [("S", "S"), ("S", "s"), ("s", "s")],
     "Wb": [("Wb", "Wb"), ("Wb", "wb"), ("wb", "wb")],
     # 優性白の表現型からは W/W か W/w か不明。色付きの子は親が w を渡すことを要求するため、
-    # surviving_pairs 側で W/w に絞り込まれる (= W/w 確定の逆算根拠になる)。
+    # 座位別逆算で W/w に絞り込まれる (= W/w 確定の逆算根拠になる)。
     "W": [("W", "W"), ("W", "w")],
     "Mc": [("Mc", "Mc")],
     "Ta": [("ta", "ta")],
@@ -399,29 +402,15 @@ _WHITE_UNDERLYING_OPTIONS: dict[str, list[tuple[str, str]]] = {
 }
 
 
-def build_white_underlying_candidates(sex: str) -> list[ParentGenotype]:
-    """White 親の下地を「全不明」として展開した親遺伝子型候補を返す (リター推定用)。
-
-    優性白は下の色を隠すため、CSV の White 行 (o/o・a/a・i/i 等) を確定値として使うと
-    「White 親は a/a ソリッド」等の誤った確定を生む。下地の各座位を全対立で開き、観察子猫が
-    要求する範囲だけを surviving_pairs に絞らせることで、下不明を正しく逆算する (V9 §2.4 / §3)。
-    """
-
-    import itertools
+def white_underlying_locus_options(sex: str) -> dict[str, list[tuple[str, str]]]:
+    """White 親の下地 (下不明) の座位別・全対立オプションを返す。O 座位は性別で分ける。"""
 
     options = dict(_WHITE_UNDERLYING_OPTIONS)
     if sex == "male":
         options["O"] = [("O", "Y"), ("o", "Y")]
     else:
         options["O"] = [("O", "O"), ("O", "o"), ("o", "o")]
-
-    keys = list(options.keys())
-    values_list = [options[key] for key in keys]
-    out: list[ParentGenotype] = []
-    for combination in itertools.product(*values_list):
-        loci = dict(zip(keys, combination))
-        out.append(ParentGenotype(phenotype="White", sex=sex, loci=loci))
-    return out
+    return options
 
 
 def _build_phenotype_genotypes() -> dict[str, dict[str, list[ParentGenotype]]]:
