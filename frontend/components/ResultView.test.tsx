@@ -37,13 +37,12 @@ function buildResponse(
   };
 }
 
-// 父 White × 母 Black の §2.1 出力 (AOC を含む)。
+// 父 White × 母 Black の §2.1 出力 (オス=母の色、メス=AOC)。
 const WHITE_SIRE_RESULTS: ResultEntry[] = [
   { sex: "Male", color: "White", probability_pct: 25 },
   { sex: "Female", color: "White", probability_pct: 25 },
   { sex: "Male", color: "Black", probability_pct: 25 },
-  { sex: "Female", color: "Black", probability_pct: 12.5 },
-  { sex: "Female", color: "AOC", probability_pct: 12.5 },
+  { sex: "Female", color: "AOC", probability_pct: 25 },
 ];
 
 describe("ResultView AOC", () => {

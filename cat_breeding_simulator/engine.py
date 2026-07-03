@@ -588,7 +588,7 @@ class CoatColorCalculator:
             results = self._white_parent_results("sire", dam_color, breed)
             assumption = (
                 "父が White (優性白) のため W/w を仮定。オスは母由来で色が確定、"
-                "メスは半分が母の色・半分は父の赤系が乗り不定のため AOC に集約 (§2.1)。"
+                "メスは White(下不明)父の X を受け継ぐため色が定まらず AOC に集約 (§2.1)。"
             )
         else:
             results = self._white_parent_results("dam", sire_color, breed)
@@ -627,13 +627,14 @@ class CoatColorCalculator:
             KittenResult(sex="Female", color="White", probability_pct=25.0),
         ]
         if white_side == "sire":
-            # 父 White (§2.1): オスは母由来のO・母の優性形質で確定 → 母の色 (25%)。
-            # メスは父の X が o(非赤) なら母の色 (12.5%)、O(赤) なら父の赤系が乗り不定 → AOC (12.5%)。
-            # 母の色が♀限定 (トーティ等) の場合はオスに出せないため、オス有色は AOC に落とす。
+            # 父 White (§2.1): オスは母由来で色が確定 → 母の色 (25%)。オスは母の X(O座位) と
+            # 母の優性形質で色が決まり、父 (White) の下地は乗らない扱い。
+            # メスは父 (White・下不明) の X を受け継ぐため、その下地アレル (O=赤の可能性や、
+            # 母が劣性ホモの座位で父の優性が乗るか等) が定まらず、色を確定できない → AOC (25%)。
+            # 母の色が♀限定 (トーティ等) の場合はオスに出せないため、オス有色も AOC に落とす。
             male_colored = _AOC_COLOR if self._namer.is_female_only_color(other_display) else other_display
             results.append(KittenResult(sex="Male", color=male_colored, probability_pct=25.0))
-            results.append(KittenResult(sex="Female", color=other_display, probability_pct=12.5))
-            results.append(KittenResult(sex="Female", color=_AOC_COLOR, probability_pct=12.5))
+            results.append(KittenResult(sex="Female", color=_AOC_COLOR, probability_pct=25.0))
         else:
             # 母 White (§2.2): 母の下 (O座位・常染色体とも) が不明 → 有色はオス・メスとも AOC。
             results.append(KittenResult(sex="Male", color=_AOC_COLOR, probability_pct=25.0))

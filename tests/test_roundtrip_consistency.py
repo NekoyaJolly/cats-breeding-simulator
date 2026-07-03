@@ -320,14 +320,17 @@ def _forward_rows(sire: str, dam: str) -> set[tuple[str, str, float]]:
 
 
 def test_white_sire_forward_matches_spec_2_1() -> None:
-    """父 White × 母 Black は §2.1 (白50% + 母の色37.5% + AOC12.5%) と一致する。"""
+    """父 White × 母 Black は §2.1 と一致する。
+
+    オスは母由来で色が確定 (White25% + 母の色25%)。メスは White(下不明)父の X を受け継ぎ
+    色が定まらないため、母の色に割らず全て AOC (White25% + AOC25%)。
+    """
 
     assert _forward_rows("White", "Black") == {
         ("Male", "White", 25.0),
         ("Female", "White", 25.0),
         ("Male", "Black", 25.0),
-        ("Female", "Black", 12.5),
-        ("Female", "AOC", 12.5),
+        ("Female", "AOC", 25.0),
     }
 
 

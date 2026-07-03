@@ -2384,7 +2384,7 @@
    "diagnostics": {
     "assumptions": [
      "W (優性白): 表現型からは W/W・W/w を区別できないため W/w を仮定 (X/- 展開)",
-     "父が White (優性白) のため W/w を仮定。オスは母由来で色が確定、メスは半分が母の色・半分は父の赤系が乗り不定のため AOC に集約 (§2.1)。",
+     "父が White (優性白) のため W/w を仮定。オスは母由来で色が確定、メスは White(下不明)父の X を受け継ぐため色が定まらず AOC に集約 (§2.1)。",
      "AOC: 白親の下の色が未確定な有色カテゴリ。生後の毛色で判明する集約表示"
     ],
     "closed_loci": [
@@ -2431,13 +2431,8 @@
      "sex": "Male"
     },
     {
-     "color": "Black",
-     "probability_pct": 12.5,
-     "sex": "Female"
-    },
-    {
      "color": "AOC",
-     "probability_pct": 12.5,
+     "probability_pct": 25.0,
      "sex": "Female"
     }
    ],
