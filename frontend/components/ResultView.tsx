@@ -74,6 +74,40 @@ function ParentColorNotes({
   );
 }
 
+// 通常モードの計算範囲を平易に説明する畳める注記。
+// 隠れ劣性キャリアを展開しない設計上、理論上は出るが確定できない毛色を出さないため、
+// 「なぜ出ないのか」と回避策 (明示キャリアモード) を伝える。normal モードのときだけ表示する。
+function NormalModeNote({ language }: { language: Language }) {
+  const text = UI_TEXT[language];
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+      <div className="flex items-start justify-between gap-2">
+        <p className="min-w-0">
+          <span className="font-medium text-slate-700">
+            {text.parentResult.normalScopeTitle}
+          </span>
+          {" — "}
+          {text.parentResult.normalScopeSummary}
+        </p>
+        <button
+          type="button"
+          onClick={() => setOpen((value) => !value)}
+          className="shrink-0 rounded px-2 py-0.5 text-xs font-medium text-slate-500 hover:bg-slate-100"
+          aria-expanded={open}
+        >
+          {open ? text.parentResult.close : text.parentResult.normalScopeMore}
+        </button>
+      </div>
+      {open && (
+        <p className="mt-2 leading-relaxed">
+          {text.parentResult.normalScopeDetails}
+        </p>
+      )}
+    </div>
+  );
+}
+
 // 確率を小数1桁の % 文字列に整形する (診断値など正確さ優先の箇所で使う)。
 function formatPct(value: number): string {
   return `${value.toFixed(1)}%`;
@@ -455,6 +489,7 @@ export function ResultView({
           />
         </div>
         <ParentColorNotes notes={data.parent_color_notes} language={language} />
+        {data.mode === "normal" && <NormalModeNote language={language} />}
       </section>
 
       <section className="rounded-md bg-slate-100 p-4 text-sm">
