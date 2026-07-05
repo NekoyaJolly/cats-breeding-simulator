@@ -115,7 +115,7 @@ describe("ResultView conditional colors", () => {
     };
   }
 
-  it("normal モードで条件付きカラーがあるとき、畳みで表示され開くと中身が見える", async () => {
+  it("normal モードで条件付きカラーがあるとき、デフォルト展開で中身が一覧でき、畳める", async () => {
     render(
       <ResultView
         data={withConditional(buildResponse("Black", "Black", BASE_RESULTS))}
@@ -124,11 +124,7 @@ describe("ResultView conditional colors", () => {
     );
 
     const toggle = screen.getByRole("button", { name: /もしこの色が出たら/ });
-    // デフォルトは畳んだ状態 (押し付けない)。
-    expect(toggle).toHaveAttribute("aria-expanded", "false");
-    expect(screen.queryByText("ブルー系")).toBeNull();
-
-    await userEvent.click(toggle);
+    // デフォルトは展開状態 (確定色と一緒に一覧で見える)。
     expect(toggle).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByText("ブルー系")).toBeInTheDocument();
     expect(
@@ -136,6 +132,11 @@ describe("ResultView conditional colors", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Blue")).toBeInTheDocument();
     expect(screen.getByText(/最大/)).toBeInTheDocument();
+
+    // 任意で畳める。
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByText("ブルー系")).toBeNull();
   });
 
   it("conditional_color_groups が空ならセクションを描画しない", () => {

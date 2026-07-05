@@ -459,7 +459,8 @@ function ConditionalColorSection({
   language: Language;
 }) {
   const text = UI_TEXT[language];
-  const [open, setOpen] = useState(false);
+  // デフォルトで開いておき、確定色と一緒に一覧で見えるようにする (畳みは任意で残す)。
+  const [open, setOpen] = useState(true);
   return (
     <section className="rounded-md border border-amber-200 bg-amber-50/60">
       <button
@@ -583,15 +584,17 @@ export function ResultView({
         </div>
         <ParentColorNotes notes={data.parent_color_notes} language={language} />
         {data.mode === "normal" && <NormalModeNote language={language} />}
+        {/* 「もしこの色が出たら」= 確定色と同じ予測結果パネル内にドッキングし、
+            デフォルト展開で一覧できるようにする (normal かつ条件付きカラー群があるときだけ)。 */}
+        {data.mode === "normal" && data.conditional_color_groups.length > 0 && (
+          <div className="mt-3">
+            <ConditionalColorSection
+              groups={data.conditional_color_groups}
+              language={language}
+            />
+          </div>
+        )}
       </section>
-
-      {/* 「もしこの色が出たら」= normal モードで条件付きカラー群があるときだけ表示する。 */}
-      {data.mode === "normal" && data.conditional_color_groups.length > 0 && (
-        <ConditionalColorSection
-          groups={data.conditional_color_groups}
-          language={language}
-        />
-      )}
 
       <section className="rounded-md bg-slate-100 p-4 text-sm">
         <h3 className="font-semibold text-slate-700">
