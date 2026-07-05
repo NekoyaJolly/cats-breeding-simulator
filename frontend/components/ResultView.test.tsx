@@ -123,7 +123,7 @@ describe("ResultView conditional colors", () => {
       />,
     );
 
-    const toggle = screen.getByRole("button", { name: /もしこの色が出たら/ });
+    const toggle = screen.getByRole("button", { name: /この色が出たら/ });
     // デフォルトは展開状態 (確定色と一緒に一覧で見える)。
     expect(toggle).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByText("ブルー系")).toBeInTheDocument();
@@ -147,7 +147,7 @@ describe("ResultView conditional colors", () => {
       />,
     );
     expect(
-      screen.queryByRole("button", { name: /もしこの色が出たら/ }),
+      screen.queryByRole("button", { name: /この色が出たら/ }),
     ).toBeNull();
   });
 
@@ -159,7 +159,7 @@ describe("ResultView conditional colors", () => {
     };
     render(<ResultView data={explicit} language="ja" />);
     expect(
-      screen.queryByRole("button", { name: /もしこの色が出たら/ }),
+      screen.queryByRole("button", { name: /この色が出たら/ }),
     ).toBeNull();
   });
 });
