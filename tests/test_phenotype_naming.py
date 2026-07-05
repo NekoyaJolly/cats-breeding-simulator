@@ -125,6 +125,59 @@ def test_matching_color_does_not_leak_ruddy_without_breed_context() -> None:
     assert namer.find_matching_color(kitten, "Blue Silver", "Silver", "Somali") == "Ruddy"
 
 
+def test_ticked_breed_dilute_prefers_ticked_tabby_variant() -> None:
+    """ティックド猫種の希釈個体は逆引きで "Blue Ticked Tabby"(猫種呼称) を選ぶ。
+
+    回帰: expressed_genotype_key が Ta/Mc/Sp を落とすため、希釈アグーチの逆引き候補には
+    汎用 "Blue Tabby" と猫種呼称 "Blue Ticked Tabby" が同順で並ぶ。以前は親名スコアが
+    引き分けると先頭の汎用 "Blue Tabby" が選ばれ、下流の表示名解決 (Blue Ticked Tabby→
+    Abyssinian→Blue) に載らず生の "Blue Tabby" が残っていた。ティックド猫種文脈では
+    Ticked 変種を優先する。
+    """
+
+    namer = PhenotypeNamer()
+    # 希釈 (d/d)・ティックド (Ta/Ta)・アグーチの子猫。親カラーは "Ruddy" (ticked 語を含まない)。
+    loci = {
+        "B": ("B", "B"),
+        "D": ("d", "d"),
+        "A": ("A", "A"),
+        "C": ("C", "C"),
+        "W": ("w", "w"),
+        "S": ("s", "s"),
+        "Mc": ("Mc", "Mc"),
+        "Ta": ("Ta", "Ta"),
+        "Sp": ("sp", "sp"),
+        "I": ("i", "i"),
+        "Wb": ("wb", "wb"),
+        "O": ("o", "Y"),
+    }
+    kitten = KittenGenotype(sex="Male", loci=loci)
+
+    # ティックド猫種では Ticked 変種を選ぶ (品種呼称の直接名 "Blue" は CSV に存在しないため)。
+    assert namer.find_matching_color(kitten, "Ruddy", "Ruddy", "Abyssinian") == "Blue Ticked Tabby"
+    assert namer.find_matching_color(kitten, "Ruddy", "Ruddy", "Somali") == "Blue Ticked Tabby"
+    # 非ティックド文脈では従来どおり汎用タビー名 (後方互換)。
+    assert namer.find_matching_color(kitten, "Ruddy", "Ruddy", None) == "Blue Tabby"
+
+
+@pytest.mark.parametrize("breed", ["Abyssinian", "Somali"])
+def test_ticked_breed_dilute_kitten_displays_as_breed_name(breed: str) -> None:
+    """回帰(統合): ティックド猫種の Ruddy×Ruddy で希釈個体が品種表示名 "Blue" で出る。
+
+    生の "Blue Tabby" / "Blue Ticked Tabby" が結果に残らないこと。
+    """
+
+    from cat_breeding_simulator.engine import CoatColorCalculator
+
+    calculator = CoatColorCalculator()
+    report = calculator.calculate_report("Ruddy", "Ruddy", breed=breed, mode="normal")
+    colors = {result.color for result in report.results}
+    assert "Blue" in colors
+    assert "Ruddy" in colors
+    assert "Blue Tabby" not in colors
+    assert "Blue Ticked Tabby" not in colors
+
+
 def test_construct_fallback_dominant_white_is_white() -> None:
     """優性白 (W/-) は遺伝背景に依らず "White"。"""
 

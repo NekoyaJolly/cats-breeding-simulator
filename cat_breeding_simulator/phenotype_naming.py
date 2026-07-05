@@ -373,11 +373,35 @@ class PhenotypeNamer:
         dam_words = set(dam_color.lower().split())
         parent_words = sire_words.union(dam_words)
 
+        # ティックド猫種 (Abyssinian/Somali) は全タビーがティックド固定。expressed_genotype_key が
+        # Ta/Mc/Sp を落とすため、逆引き候補には "Blue Tabby"(汎用) と "Blue Ticked Tabby"(猫種呼称)
+        # が同順で並び、親名スコアが引き分けると汎用名が選ばれ品種表示名 (Blue) へ変換されない。
+        # そこでティックド猫種文脈でのみ猫種呼称に微小ボーナスを与え引き分けを解消する。
+        # 優先度: breed_specific 直接名 (Ruddy) > ティックドタビー別名 (Blue Ticked Tabby) > 汎用。
+        # ボーナスは親名一致 (20/語) より小さく保ち、親名駆動のパターン選択を阻害しない。
+        is_ticked_breed = bool(breed) and (
+            "abyssinian" in breed.lower() or "somali" in breed.lower()
+        )
+
+        def ticked_breed_rank(color_name: str) -> int:
+            if not is_ticked_breed:
+                return 0
+            resolved = COLOR_MASTER.resolve(color_name)
+            if (
+                resolved is not None
+                and resolved.status == "breed_specific"
+                and breed_context_matches(breed, resolved.breed_context)
+            ):
+                return 2
+            if "ticked" in color_name.lower().split():
+                return 1
+            return 0
+
         def score(color_name: str) -> int:
             base_score = priority_map.get(color_name, 0)
             color_words = color_name.lower().split()
             match_count = sum(1 for w in color_words if w in parent_words)
-            return base_score + match_count * 20
+            return base_score + match_count * 20 + ticked_breed_rank(color_name)
 
         candidates.sort(key=score, reverse=True)
         return candidates[0]
