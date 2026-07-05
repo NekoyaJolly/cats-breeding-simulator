@@ -83,6 +83,17 @@ class ParentColorNoteEntry(BaseModel):
     blocked_factors: list[str]   # 子に再現できない劣性因子 (相手親が持たない)
 
 
+class ConditionalColorGroupEntry(BaseModel):
+    """「もしこの色が出たら」の 1 色系統グループ (normal モード専用)。"""
+
+    family_label: str                              # 色系統ラベル 例: "ブルー系"
+    reverse_inference_label: str                   # 逆推論ラベル
+    conditional_probability_pct: float             # 当該系統色の条件付き合計確率
+    colors: list[str]                              # この系統の具体色名
+    assumed_carriers: dict[str, dict[str, str]]    # 例: {"sire": {"D": "D/d"}, "dam": {"D": "D/d"}}
+    scenario: str                                  # 機械用ID
+
+
 class CalculationResponse(BaseModel):
     """計算APIの出力。"""
 
@@ -95,6 +106,11 @@ class CalculationResponse(BaseModel):
     carrier_exploration_results: list[CarrierScenarioEntry] | None = None
     # 入力した親色が子に出ないときの注釈 (normal モードのみ、無ければ空配列)。
     parent_color_notes: list[ParentColorNoteEntry] = Field(default_factory=list)
+    # 「もしこの色が出たら」(P2)。normal モードのみ非 null。
+    # confirmed_results: 隠れキャリアを仮定しない確定色のみ。
+    confirmed_results: list[ResultEntry] | None = None
+    # conditional_color_groups: 確定色には出ないが隠れキャリアがあれば出る色の色系統グループ。
+    conditional_color_groups: list[ConditionalColorGroupEntry] = Field(default_factory=list)
 
 
 class ColorOption(BaseModel):
@@ -368,6 +384,25 @@ def calculate_endpoint(payload: CalculationRequest) -> CalculationResponse:
                 blocked_factors=note.blocked_factors,
             )
             for note in (report.parent_color_notes or [])
+        ],
+        confirmed_results=(
+            [
+                ResultEntry(sex=e.sex, color=e.color, probability_pct=e.probability_pct)
+                for e in report.confirmed_results
+            ]
+            if report.confirmed_results is not None
+            else None
+        ),
+        conditional_color_groups=[
+            ConditionalColorGroupEntry(
+                family_label=group.family_label,
+                reverse_inference_label=group.reverse_inference_label,
+                conditional_probability_pct=group.conditional_probability_pct,
+                colors=group.colors,
+                assumed_carriers=group.assumed_carriers,
+                scenario=group.scenario,
+            )
+            for group in (report.conditional_color_groups or [])
         ],
     )
 

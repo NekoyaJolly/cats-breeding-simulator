@@ -18,6 +18,12 @@ SUPPORTED_MODES: tuple[str, ...] = ("normal", "explicit_carrier", "carrier_explo
 NORMAL_OPENED_LOCI: tuple[str, ...] = ("A", "D", "I", "Mc", "Ta")
 NORMAL_CLOSED_LOCI: tuple[str, ...] = ("B", "C", "Wb")
 
+# カテゴリA (優性ヘテロ未確定) としてヘテロ展開する座位。P2「もしこの色が出たら」の
+# 確定色 (confirmed_results) 計算では、この座位群の X/- 展開を抑止して「隠れキャリアを
+# 仮定しない確定色のみ」を得る (expand_category_a=False)。W (優性白) はこの集合に含めず、
+# 確定色計算でも W/w 仮定を維持する。
+_CATEGORY_A_EXPAND_LOCI: frozenset[str] = frozenset(NORMAL_OPENED_LOCI)
+
 
 @dataclass(frozen=True, slots=True)
 class ParentGenotype:
@@ -118,8 +124,17 @@ class ColorBase:
     o: tuple[str, str]                      # O_Locus (例: ("o","o"), ("O","o"))
 
 
-def _build_normal_parent_genotypes(phenotype: str, sex: str, base_loci: dict[str, tuple[str, str]]) -> list[ParentGenotype]:
+def _build_normal_parent_genotypes(
+    phenotype: str,
+    sex: str,
+    base_loci: dict[str, tuple[str, str]],
+    expand_category_a: bool = True,
+) -> list[ParentGenotype]:
     """通常モード用の親遺伝子型候補を構築する。
+
+    expand_category_a=False のときは、カテゴリA座位 (A/D/I/Mc/Ta) の X/- ヘテロ展開を
+    抑止する (「もしこの色が出たら」の確定色計算用)。W (優性白) は対象外で、常に W/w を
+    仮定する (下の色が不定でも White 親が w を渡し得るため)。デフォルト True で後方互換。
 
     「優性表現型のヘテロ未確定ルール (Dominant Expressed Unknown Rule)」に従う。
     優性形質が表現されている座は、表現型だけからホモ接合と断定できないため
@@ -193,8 +208,11 @@ def _build_normal_parent_genotypes(phenotype: str, sex: str, base_loci: dict[str
         hetero = dominant_expandable.get(locus)
         # 優性形質が「優性ホモ」で表現されている場合のみ X/- としてヘテロを追加する。
         # 劣性ホモ (カテゴリB) や B/C/Wb (カテゴリC) はここで展開しない。
+        # expand_category_a=False の確定色計算では、カテゴリA座位 (A/D/I/Mc/Ta) の
+        # 展開だけを抑止する (W はカテゴリA外なので常に展開する)。
         if hetero is not None and val == (hetero[0], hetero[0]):
-            options.append(hetero)
+            if expand_category_a or locus not in _CATEGORY_A_EXPAND_LOCI:
+                options.append(hetero)
         loci_options[locus] = options
 
     keys = list(loci_options.keys())
@@ -343,11 +361,15 @@ def build_parent_genotypes(
     sex: str,
     mode: str = "normal",
     carriers: dict[str, str] | None = None,
+    expand_category_a: bool = True,
 ) -> list[ParentGenotype]:
     """指定モードに応じた親遺伝子型候補を生成する。
 
     - normal: 未明示キャリアを閉じる (A/B/C/Wb 非展開、D/I/Mc/Ta のみ X/- 展開)。
     - explicit_carrier: normal を基準に、carriers で指定された座位のみ上書きで開ける。
+
+    expand_category_a=False のときはカテゴリA座位 (A/D/I/Mc/Ta) の X/- 展開を抑止する
+    (「もしこの色が出たら」の確定色計算用)。デフォルト True で後方互換。
 
     carrier_exploration は本関数では扱わない (Phase 2)。色が未知なら空リストを返す。
     """
@@ -369,7 +391,7 @@ def build_parent_genotypes(
         else:
             sex_loci["O"] = entry.o
 
-        genotypes = _build_normal_parent_genotypes(color, sex, sex_loci)
+        genotypes = _build_normal_parent_genotypes(color, sex, sex_loci, expand_category_a)
         if mode == "explicit_carrier" and carriers:
             genotypes = _apply_explicit_carriers(genotypes, color, sex, carriers)
 

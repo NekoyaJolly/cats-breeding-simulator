@@ -329,3 +329,100 @@ def test_carrier_exploration_results_separated_from_normal(calc) -> None:
 def test_unknown_mode_rejected(calc) -> None:
     with pytest.raises(BreedingCalculationError):
         calc.calculate("Black", "Black", mode="bogus_mode")
+
+
+# --- P2「もしこの色が出たら」(confirmed_results / conditional_color_groups) ---
+
+
+def test_color_family_grouping_labels() -> None:
+    """色系統グルーピング: BaseSeries×Dilution・ポイント・セピア・シルバーのラベル合成。"""
+
+    from cat_breeding_simulator.color_master import color_family
+
+    assert color_family("Blue") == "ブルー系"          # black + dilute
+    assert color_family("Cinnamon") == "シナモン系"     # cinnamon + dense
+    assert color_family("Fawn") == "フォーン系"         # cinnamon + dilute
+    assert color_family("Sable") == "セピア系"          # C/cb セピアは「もし出たら」に入れる
+    assert color_family("Seal Point") == "ポイント系"   # C/cs ポイントは除外対象
+    assert color_family("Silver") == "シルバー系"
+
+
+def test_confirmed_results_excludes_category_a_colors(calc) -> None:
+    """確定色 (confirmed_results) は隠れキャリア由来のカテゴリA色 (希釈ブルー) を含まない。
+
+    Ruddy×Ruddy(Abyssinian) は既存 results には D/- 展開で Blue が出るが、confirmed_results は
+    Ruddy のみ (確定的な希釈は無い)。B2: 既存 results 側は不変で Blue を残す。
+    """
+
+    report = calc.calculate_report("Ruddy", "Ruddy", breed="Abyssinian", mode="normal")
+    confirmed = {r.color for r in (report.confirmed_results or [])}
+    assert confirmed == {"Ruddy"}
+    # B2: 既存 results は不変 (カテゴリA 展開で Blue が出るまま)。
+    assert any(r.color == "Blue" for r in report.results)
+
+
+def test_conditional_blue_group_with_reverse_inference(calc) -> None:
+    """Ruddy×Ruddy(Abyssinian): 「ブルー系」が両親 D/d で約25%、ポイント系は出ない。"""
+
+    report = calc.calculate_report("Ruddy", "Ruddy", breed="Abyssinian", mode="normal")
+    groups = report.conditional_color_groups or []
+    blue = [g for g in groups if g.family_label == "ブルー系"]
+    assert blue, "ブルー系グループが無い"
+    assert "Blue" in blue[0].colors
+    assert abs(blue[0].conditional_probability_pct - 25.0) < 0.5
+    assert blue[0].reverse_inference_label == "この色が出たら両親が D/d 保因と確定します"
+    assert blue[0].assumed_carriers == {"sire": {"D": "D/d"}, "dam": {"D": "D/d"}}
+    # ポイント (C/cs 由来) は色系統に入れない。
+    assert not any(g.family_label == "ポイント系" for g in groups)
+
+
+def test_conditional_excludes_point_even_when_point_offspring_possible(calc) -> None:
+    """片親 Point (cs/cs) × Full でも、conditional にポイント系は出さない (色数過多のため除外)。"""
+
+    report = calc.calculate_report("Seal Point", "Black", breed=None, mode="normal")
+    groups = report.conditional_color_groups or []
+    assert groups, "条件付きグループが生成されていない"
+    assert not any(g.family_label == "ポイント系" for g in groups)
+    assert not any("Point" in color for g in groups for color in g.colors)
+
+
+def test_conditional_recessive_parent_reverse_inference_single_parent(calc) -> None:
+    """片親が劣性発現 (Chocolate=b/b) のとき、相手 (Black) の B/b 保因を単親逆推論で提示する。"""
+
+    report = calc.calculate_report("Chocolate", "Black", breed=None, mode="normal")
+    groups = report.conditional_color_groups or []
+    choco = [g for g in groups if g.family_label == "チョコレート系"]
+    assert choco, "チョコレート系グループが無い"
+    assert choco[0].reverse_inference_label == "この色が出たら母が B/b 保因と確定します"
+    assert choco[0].assumed_carriers == {"dam": {"B": "B/b"}}
+
+
+def test_conditional_sepia_group_shown_point_excluded(calc) -> None:
+    """セピアが絡む交配ではセピア系を「もしこの色が出たら」に出し、ポイントは出さない。
+
+    Champagne × Sable (Burmese): 両親セピア (cb/cb)。片親 Champagne が b/b を発現するため
+    相手 Sable の B/b 保因を仮定するとチョコ系セピア (Champagne) が条件付きで出る。セピアは
+    含め、ポイント (cs 由来) は色系統に入れない。
+    """
+
+    report = calc.calculate_report("Champagne", "Sable", breed="Burmese", mode="normal")
+    groups = report.conditional_color_groups or []
+    sepia = [g for g in groups if g.family_label == "セピア系"]
+    assert sepia, "セピア系グループが無い"
+    assert sepia[0].colors  # 具体的なセピア色が含まれる
+    assert "C/cb" in sepia[0].reverse_inference_label or "B/b" in sepia[0].reverse_inference_label
+    assert not any(g.family_label == "ポイント系" for g in groups)
+
+
+def test_conditional_only_normal_mode(calc) -> None:
+    """confirmed_results / conditional_color_groups は normal モードのみ設定される。"""
+
+    explicit = calc.calculate_report(
+        "Seal Point", "Black", breed=None,
+        mode="explicit_carrier", dam_carriers={"C": "C/cs"},
+    )
+    assert explicit.confirmed_results is None
+    assert explicit.conditional_color_groups is None
+    exploration = calc.calculate_report("Seal Point", "Black", breed=None, mode="carrier_exploration")
+    assert exploration.confirmed_results is None
+    assert exploration.conditional_color_groups is None
