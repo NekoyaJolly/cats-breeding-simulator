@@ -57,16 +57,19 @@ COLUMNS: tuple[str, ...] = (
 # -White / -White Van の合成は resolver 側の接尾辞 peel が担うため、ここでは基底名のみ列挙する。
 # ---------------------------------------------------------------------------
 
-# Abyssinian / Somali: ティックドタビーを猫種別呼称へ。現行 engine.py のハードコード挙動を保持する。
-#   Brown/Black Ticked Tabby -> Ruddy、Blue -> Blue、Cinnamon -> Cinnamon、Fawn -> Fawn、Red -> Red。
+# Abyssinian / Somali: ティックドタビーを猫種別呼称へ。
+#   Brown/Black Ticked Tabby -> Ruddy、Blue -> Blue、Fawn -> Fawn。
+#   Abyssinian/Somali の「Red」(Sorrel) はシナモン (bl/bl) のティックドタビーなので、
+#   シナモン系ティックド (Cinnamon Ticked Tabby) を猫種呼称「Red」で表示する。
 #   "* Silver Ticked Tabby" は " Ticked Tabby" を落として "* Silver" にする (現行の総称ストリップ相当)。
 ABY_BREEDS: tuple[str, ...] = ("Abyssinian", "Somali")
 ABY_RULES: tuple[tuple[str, str], ...] = (
     ("Brown Ticked Tabby", "Ruddy"),
     ("Black Ticked Tabby", "Ruddy"),
     ("Blue Ticked Tabby", "Blue"),
-    ("Cinnamon Ticked Tabby", "Cinnamon"),
+    ("Cinnamon Ticked Tabby", "Red"),
     ("Fawn Ticked Tabby", "Fawn"),
+    # 一般オレンジの Red Ticked Tabby も Aby 文脈では「Red」表示にする (通常は出現しない冗長保険)。
     ("Red Ticked Tabby", "Red"),
     ("Silver Ticked Tabby", "Silver"),
     ("Blue Silver Ticked Tabby", "Blue Silver"),

@@ -1434,9 +1434,13 @@ class CoatColorCalculator:
                 elif phenotype_lower == "cinnamon":
                     phenotype = "Cinnamon Ticked Tabby"
                 elif phenotype_lower == "fawn":
+                    # Abyssinian/Somali の「Fawn」= 希釈シナモン (bl/bl d/d) のティックドタビー。
                     phenotype = "Fawn Ticked Tabby"
                 elif phenotype_lower == "red":
-                    phenotype = "Red Ticked Tabby"
+                    # Abyssinian/Somali の「Red」= Sorrel = シナモン (bl/bl) のティックドタビー。
+                    # 一般の「Red」(伴性オレンジ O) とは別物なので、猫種文脈でのみシナモン系へ寄せる。
+                    # 一般オレンジの Red Ticked Tabby は遺伝子型を持たないため、ここへ解決させない。
+                    phenotype = "Cinnamon Ticked Tabby"
 
         # cat_color_master.csv による入力名の解決 (alias 受理 + 通常モードでの制限)。
         phenotype = self._resolve_input_color_name(phenotype, breed)

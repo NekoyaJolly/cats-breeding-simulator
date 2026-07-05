@@ -419,3 +419,4 @@ tortoiseshell_white,calico,alias,Tortoiseshell-White,,同一概念: Tortoiseshel
 aov,,excluded,AOV,,,general,solid,unknown,non_orange,dense,solid,non_silver,none,full,none,unrestricted,false,false,0,261,AOV,review_required,運用上の非カラー区分。通常計算・入力候補に使わない。
 any_other_color,,excluded,Any Other Color,,,general,solid,unknown,non_orange,dense,solid,non_silver,none,full,none,unrestricted,false,false,0,260,Any Other Color,review_required,運用上の非カラー区分。通常計算・入力候補に使わない。
 smoke,,excluded,Smoke,,,general,smoke,black,non_orange,dense,solid,smoke,none,full,none,unrestricted,false,false,0,324,Smoke,review_required,基色を持たないカテゴリ名。具体色柄ではないため通常計算・入力候補から除外。 / 遺伝子座はマップ未収載のため名前から推定。
+fawn_ticked_tabby,fawn_ticked_tabby,canonical,Fawn Ticked Tabby,,,general,tabby,cinnamon,non_orange,dilute,agouti,non_silver,none,full,ticked,unrestricted,true,true,90,512,Fawn Ticked Tabby,current_map,希釈シナモン (bl/bl d/d) のティックドタビー。Abyssinian/Somali の Fawn 呼称に対応。
