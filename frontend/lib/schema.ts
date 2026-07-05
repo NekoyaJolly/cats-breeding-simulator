@@ -44,6 +44,19 @@ export const parentColorNoteSchema = z.object({
 });
 export type ParentColorNote = z.infer<typeof parentColorNoteSchema>;
 
+// 「もしこの色が出たら」= 隠れキャリアを仮定した場合にのみ出る条件付きカラー群
+// (api.py ConditionalColorGroup に対応)。確定色 (confirmed_results) とは分離して表示し、
+// 「この色が出たら親の遺伝子型が確定する (逆推論)」という気付きを提供する。
+export const conditionalColorGroupSchema = z.object({
+  family_label: z.string(), // 例 "ブルー系"
+  reverse_inference_label: z.string(), // 例 "この色が出たら両親が D/d 保因と確定します"
+  conditional_probability_pct: z.number(), // 隠れキャリア仮定時の条件付き確率
+  colors: z.array(z.string()), // 例 ["Blue"]
+  assumed_carriers: z.record(z.record(z.string())), // 例 {"sire":{"D":"D/d"},"dam":{"D":"D/d"}}
+  scenario: z.string(),
+});
+export type ConditionalColorGroup = z.infer<typeof conditionalColorGroupSchema>;
+
 // 計算 API レスポンス全体 (api.py CalculationResponse に対応)
 export const calculationResponseSchema = z.object({
   status: z.string(),
@@ -57,6 +70,12 @@ export const calculationResponseSchema = z.object({
     dam_carriers: z.record(z.string()).nullable().optional(),
   }),
   results: z.array(resultEntrySchema),
+  // 隠れキャリアを仮定しない「確定色」のみ (normal モードで返る)。
+  // 無い場合 (後方互換) はメイン表示で results にフォールバックする。
+  confirmed_results: z.array(resultEntrySchema).nullable().optional(),
+  // 「もしこの色が出たら」= 隠れキャリア仮定時のみ出る条件付きカラー群
+  // (normal モードのみ、該当なしや他モードでは空配列)。
+  conditional_color_groups: z.array(conditionalColorGroupSchema).optional().default([]),
   diagnostics: modeDiagnosticsSchema,
   // carrier_exploration_mode のときのみ非 null。
   carrier_exploration_results: z.array(carrierScenarioEntrySchema).nullable().optional(),

@@ -5,6 +5,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type {
   CalculationResponse,
   CarrierScenarioEntry,
+  ConditionalColorGroup,
   ParentColorNote,
   ResultEntry,
 } from "@/lib/schema";
@@ -447,6 +448,98 @@ function CarrierScenario({
   );
 }
 
+// 「もしこの色が出たら」セクション。隠れキャリアを仮定した場合にのみ出る条件付きカラーを、
+// 確定色 (メイン結果) とは分離してアコーディオンで表示する。デフォルトは畳んだ状態にし、
+// 「出たら親の遺伝子型が確定する (逆推論)」という気付きを押し付けずに提供する。
+function ConditionalColorSection({
+  groups,
+  language,
+}: {
+  groups: ConditionalColorGroup[];
+  language: Language;
+}) {
+  const text = UI_TEXT[language];
+  const [open, setOpen] = useState(false);
+  return (
+    <section className="rounded-md border border-amber-200 bg-amber-50/60">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left"
+        aria-expanded={open}
+      >
+        <span className="min-w-0">
+          <span className="text-base font-semibold text-amber-900">
+            {text.parentResult.conditionalTitle}
+          </span>
+          <span className="mt-0.5 block text-xs font-normal text-amber-700">
+            {text.parentResult.conditionalHint}
+          </span>
+        </span>
+        <span className="shrink-0 text-xs font-medium text-amber-700">
+          {open ? text.parentResult.close : text.parentResult.conditionalOpen}
+        </span>
+      </button>
+      {open && (
+        <div className="space-y-3 px-4 pb-4">
+          {groups.map((group) => {
+            const assumed = Object.entries(group.assumed_carriers);
+            return (
+              <div
+                key={group.scenario}
+                className="rounded-md border border-amber-200 bg-white/70 p-3"
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <h4 className="text-sm font-semibold text-amber-900">
+                    {group.family_label}
+                  </h4>
+                  <span className="shrink-0 text-xs tabular-nums text-amber-700">
+                    {text.parentResult.conditionalMaxPct}
+                    {formatPctInt(group.conditional_probability_pct)}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs leading-relaxed text-amber-800">
+                  {group.reverse_inference_label}
+                </p>
+                {group.colors.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {group.colors.map((color) => (
+                      <span
+                        key={color}
+                        className="rounded-full border border-amber-300 bg-amber-100 px-2 py-0.5 text-xs text-amber-900"
+                      >
+                        {color}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {assumed.length > 0 && (
+                  <ul className="mt-2 space-y-0.5 text-xs text-amber-800">
+                    {assumed.map(([parent, loci]) => (
+                      <li key={parent} className="flex flex-wrap items-center gap-1">
+                        <span className="font-medium">{parent}</span>:
+                        {Object.entries(loci).map(([locus, genotype]) => (
+                          <span
+                            key={`${parent}-${locus}`}
+                            className="inline-flex items-center gap-0.5"
+                          >
+                            <LocusChip locus={locus} />
+                            <span>={genotype}</span>
+                          </span>
+                        ))}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function ResultView({
   data,
   language,
@@ -483,7 +576,7 @@ export function ResultView({
         <div className="mt-3">
           <SexSplitResults
             key={resultsKey}
-            rows={data.results}
+            rows={data.confirmed_results ?? data.results}
             language={language}
             whiteSide={whiteSide}
           />
@@ -491,6 +584,14 @@ export function ResultView({
         <ParentColorNotes notes={data.parent_color_notes} language={language} />
         {data.mode === "normal" && <NormalModeNote language={language} />}
       </section>
+
+      {/* 「もしこの色が出たら」= normal モードで条件付きカラー群があるときだけ表示する。 */}
+      {data.mode === "normal" && data.conditional_color_groups.length > 0 && (
+        <ConditionalColorSection
+          groups={data.conditional_color_groups}
+          language={language}
+        />
+      )}
 
       <section className="rounded-md bg-slate-100 p-4 text-sm">
         <h3 className="font-semibold text-slate-700">
