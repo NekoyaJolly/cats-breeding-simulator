@@ -582,9 +582,7 @@ export function ResultView({
             whiteSide={whiteSide}
           />
         </div>
-        <ParentColorNotes notes={data.parent_color_notes} language={language} />
-        {data.mode === "normal" && <NormalModeNote language={language} />}
-        {/* 「もしこの色が出たら」= 確定色と同じ予測結果パネル内にドッキングし、
+        {/* 「もしこの色が出たら」= オス・メス(確定色)のすぐ下にドッキングし、
             デフォルト展開で一覧できるようにする (normal かつ条件付きカラー群があるときだけ)。 */}
         {data.mode === "normal" && data.conditional_color_groups.length > 0 && (
           <div className="mt-3">
@@ -594,6 +592,9 @@ export function ResultView({
             />
           </div>
         )}
+        {/* 入力色が子に出ない場合の注意書き → もし出たら の下、通常モード注記の上。 */}
+        <ParentColorNotes notes={data.parent_color_notes} language={language} />
+        {data.mode === "normal" && <NormalModeNote language={language} />}
       </section>
 
       <section className="rounded-md bg-slate-100 p-4 text-sm">
