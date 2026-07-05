@@ -491,11 +491,11 @@ class CoatColorCalculator:
         """mode に応じた opened_loci / closed_loci / assumptions を構築する。"""
 
         assumptions = [
-            "A (タビー): A/A 相当に固定 (A/a 非展開)",
+            "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+            "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
             "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
             "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
             "Wb (ワイドバンド): 非展開",
-            "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
             "S (白斑): 入力レベルで確定 (非展開)",
         ]
         opened = list(NORMAL_OPENED_LOCI)

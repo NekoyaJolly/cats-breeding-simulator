@@ -11,8 +11,12 @@ AUTOSOMAL_LOCI: tuple[str, ...] = ("B", "D", "A", "C", "W", "S", "Mc", "Ta", "Sp
 SUPPORTED_MODES: tuple[str, ...] = ("normal", "explicit_carrier", "carrier_exploration")
 
 # normal_mode で X/- 展開する座位 (優性ヘテロ未確定) と、閉じる座位 (キャリア非展開)。
-NORMAL_OPENED_LOCI: tuple[str, ...] = ("D", "I", "Mc", "Ta")
-NORMAL_CLOSED_LOCI: tuple[str, ...] = ("A", "B", "C", "Wb")
+# A (タビー) は D/I/Mc/Ta と同じ「優性ヘテロ未確定」として展開する。タビー猫は表現型からは
+# A/A (純ホモ) か A/a (ソリッドを隠し持つヘテロ) か区別できないため両方を計算対象にする。
+# これにより タビー×タビー から (両親が A/a の場合) ソリッドの子が正しい確率で出る。
+# 逆方向 (a/a×a/a → タビー) は配偶子に A が無いため原理的に発生せず、不可逆ルールは保たれる。
+NORMAL_OPENED_LOCI: tuple[str, ...] = ("A", "D", "I", "Mc", "Ta")
+NORMAL_CLOSED_LOCI: tuple[str, ...] = ("B", "C", "Wb")
 
 
 @dataclass(frozen=True, slots=True)
@@ -122,19 +126,18 @@ def _build_normal_parent_genotypes(phenotype: str, sex: str, base_loci: dict[str
     X/- = {X/X, X/x} の両方を計算対象に含める。
 
     - カテゴリA (表現型確定・優性ヘテロ不確定 / 通常モードでも展開する):
-        D 濃色 -> D/-, I シルバー -> I/-, Mc マッカレル -> Mc/-, Ta ティックド -> Ta/-。
-    - カテゴリA' (タビーの A-locus / 通常モードでは展開しない):
-        A タビーは normal_mode では A/A 相当として扱い A/a を展開しない。
-        理由: A/a を展開すると a/a×a/a が成立し、タビー親から Solid / Tortie /
-        Calico / Smoke (いずれも a/a 前提) が出てしまう。A/a は explicit_carrier_mode /
-        carrier_exploration_mode でのみ使う。
+        A タビー -> A/-, D 濃色 -> D/-, I シルバー -> I/-, Mc マッカレル -> Mc/-,
+        Ta ティックド -> Ta/-。
+        A (タビー) はタビー猫が A/A か A/a か表現型から区別できないため両方を展開し、
+        両親が A/a のとき生じるソリッドの子 (a/a) を正しい確率で出す。逆方向
+        (a/a×a/a → タビー) は配偶子に A が無く発生しないため不可逆ルールは維持される。
     - カテゴリB (表現型確定・劣性固定 / 固定する):
         d/d, a/a, cs/cs, cb/cb, cb/cs, i/i, s/s など。CSVの劣性ホモはそのまま固定。
     - カテゴリC (表現型から要求されない潜在キャリア / 通常モードでは展開しない):
         B/b チョコ, B/bl シナモン, C/cs ポイント, C/cb セピア, Wb ワイドバンド。
         明示キャリア情報または血統・産子履歴がある場合のみ explicit_carrier で扱う。
 
-    シミュレーター正本 V9 §2.4 に準拠 (A・Wb の非展開を含む)。
+    シミュレーター正本 V9 §2.4 に準拠 (A はカテゴリA として展開、Wb は非展開)。
     """
 
     import itertools
@@ -157,10 +160,11 @@ def _build_normal_parent_genotypes(phenotype: str, sex: str, base_loci: dict[str
 
     # カテゴリA: 優性ホモで記載されている座に、ヘテロ (優性/劣性) の可能性を加える。
     #
-    # A (タビー) は除外する。normal_mode では A を A/A 相当に固定し A/a を展開しない。
-    #   A/a を展開すると a/a×a/a が成立し、タビー親から Solid / Tortie / Calico / Smoke
-    #   (a/a 前提) が出てしまうため。A/a は explicit_carrier / carrier_exploration でのみ扱う。
-    # Wb (ワイドバンド) も除外する。normal_mode では Wb を展開しない (Shell/Shaded/Chinchilla/
+    # A (タビー) も展開する。normal_mode で A/- を {A/A, A/a} として扱う。タビー猫は表現型からは
+    #   純ホモ (A/A) かソリッドキャリア (A/a) か区別できないため、両親が A/a の場合に生じる
+    #   ソリッドの子 (a/a) を正しい確率で出す。逆方向 (a/a×a/a → タビー) は配偶子に A が
+    #   無いため発生しない (不可逆ルールは維持)。生じ得る低確率カラーの増加は表示側で抑制する。
+    # Wb (ワイドバンド) は除外する。normal_mode では Wb を展開しない (Shell/Shaded/Chinchilla/
     #   Golden の wide band キャリアを自動展開しない)。Wb は explicit_carrier 等でのみ扱う。
     # S (白斑) は除外する。白斑は不完全優性で S/S(Van) と S/s(バイカラー/-White) は
     # 表現型で区別でき、入力の白斑レベルから接合性が確定する (= ヘテロ不可視ではない)。
@@ -175,6 +179,7 @@ def _build_normal_parent_genotypes(phenotype: str, sex: str, base_loci: dict[str
     # なお順方向 (normal) の表示割合は、White の下の色が不定なため engine 側で W/w を仮定した
     # 専用集計 (AOC 集約) を行う (§2.1/§2.2)。ここでの展開は逆引き・リター推定の候補生成に効く。
     dominant_expandable: dict[str, tuple[str, str]] = {
+        "A": ("A", "a"),
         "D": ("D", "d"),
         "I": ("I", "i"),
         "Mc": ("Mc", "mc"),
@@ -187,7 +192,7 @@ def _build_normal_parent_genotypes(phenotype: str, sex: str, base_loci: dict[str
         options = [val]
         hetero = dominant_expandable.get(locus)
         # 優性形質が「優性ホモ」で表現されている場合のみ X/- としてヘテロを追加する。
-        # 劣性ホモ (カテゴリB) や B/C/A/Wb (カテゴリC/A') はここで展開しない。
+        # 劣性ホモ (カテゴリB) や B/C/Wb (カテゴリC) はここで展開しない。
         if hetero is not None and val == (hetero[0], hetero[0]):
             options.append(hetero)
         loci_options[locus] = options

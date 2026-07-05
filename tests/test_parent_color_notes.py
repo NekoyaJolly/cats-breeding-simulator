@@ -31,9 +31,10 @@ def test_lilac_not_in_offspring_of_black_based_dam() -> None:
     assert note["parent"] == "sire"
     assert note["color"] == "Lilac"
     factors = " / ".join(str(f) for f in note["blocked_factors"])
-    # 母が黒(B)・タビー(A)のため、チョコレート(b) と 非アグーチ/ソリッド(a) が原因。
+    # 母は黒(B/B)なのでチョコレート(b) が唯一の阻害因子。
+    # A はカテゴリA として展開されるため母(A/-)は a を渡し得る → 非アグーチ(a) は阻害因子でない。
     assert "チョコレート" in factors
-    assert "ソリッド" in factors or "非アグーチ" in factors
+    assert "ソリッド" not in factors and "非アグーチ" not in factors
 
 
 def test_same_color_parents_have_no_note() -> None:

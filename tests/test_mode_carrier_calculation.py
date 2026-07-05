@@ -65,10 +65,18 @@ def test_b_locus_explicit_chocolate_series_50(calc) -> None:
 
 # --- A-locus (タビー/ソリッド) ---
 
-def test_a_locus_normal_no_solid(calc) -> None:
-    """Tabby × Tabby は normal では Solid を出さない (A/a 非展開, 全出力タビー系)。"""
+def test_a_locus_normal_produces_solid(calc) -> None:
+    """Tabby × Tabby は normal でも Solid を出す (A をカテゴリA として X/- 展開)。
+
+    タビー猫は A/A か A/a か表現型で区別できないため、両親が A/a のとき (各50% → 両方25%)
+    子の 1/4 が a/a となり、全体で約 6.25% がソリッドになる。
+    逆方向 (a/a × a/a → タビー) は配偶子に A が無いため発生しない (不可逆ルール維持)。
+    """
     results = calc.calculate("Brown Tabby", "Brown Tabby", mode="normal")
-    assert all("Tabby" in r.color for r in results)
+    solid = round(sum(r.probability_pct for r in results if "Tabby" not in r.color), 3)
+    assert abs(solid - 6.25) < 0.5
+    solid_cross = calc.calculate("Black", "Black", mode="normal")
+    assert all("Tabby" not in r.color for r in solid_cross)
 
 
 def test_a_locus_explicit_solid_25(calc) -> None:
@@ -234,10 +242,12 @@ def test_c_locus_point_pair_never_returns_full_color(
 
 # --- 130×204 normal (全出力タビー/パッチドタビー系) ---
 
-def test_130x204_normal_all_tabby(calc) -> None:
+def test_130x204_normal_includes_solid(calc) -> None:
+    """A をカテゴリA として展開するため、タビー親同士でも normal で a/a 前提カラー
+    (Solid / Smoke / Tortie 等) が出る。未分類ゼロ・合計100% の不変条件は維持する。"""
     report = calc.calculate_report("Silver Tabby", "Blue Pt Tabby-White", breed=None, mode="normal")
     non_tabby = sorted({r.color for r in report.results if "Tabby" not in r.color})
-    assert not non_tabby, f"130×204 normal に非タビー系が出力された: {non_tabby}"
+    assert non_tabby, "A 展開後は a/a 前提カラー (非タビー系) が出るはず"
     assert report.unmatched_probability == 0
     assert abs(round(sum(r.probability_pct for r in report.results), 4) - 100.0) < 0.01
 
@@ -247,7 +257,7 @@ def test_130x204_normal_all_tabby(calc) -> None:
 def test_normal_mode_metadata(calc) -> None:
     report = calc.calculate_report("Silver Tabby", "Blue Pt Tabby-White", breed=None, mode="normal")
     assert report.mode == "normal"
-    assert "A" in (report.closed_loci or [])
+    assert "A" in (report.opened_loci or [])  # A はカテゴリA として展開座位に移動
     assert "C" in (report.closed_loci or [])
     assert "D" in (report.opened_loci or [])
     assert report.assumptions
@@ -283,13 +293,19 @@ def test_carrier_exploration_reveals_point_from_one_point_parent(calc) -> None:
     assert abs(round(sum(r.probability_pct for r in point_scenario.results), 4) - 100.0) < 0.01
 
 
-def test_carrier_exploration_reveals_solid_from_one_solid_parent(calc) -> None:
-    """片親 Solid (a/a) × 相手 Tabby の場合、相手 A/a キャリア仮説で Solid が出現する。"""
+def test_normal_reveals_solid_from_tabby_parent_without_carrier_mode(calc) -> None:
+    """A をカテゴリA として normal で展開するため、Brown Tabby × Black では
+    carrier_exploration を使わずとも normal 時点でソリッドが出る。
+
+    A/a の可能性は normal がカバーするため、carrier_exploration の A/a シナリオは
+    normal に対する新規色を追加しない (new_colors が空)。B/C 系の潜在キャリア探索とは異なる。
+    """
+    normal = calc.calculate_report("Brown Tabby", "Black", breed=None, mode="normal")
+    assert any("Tabby" not in r.color for r in normal.results)  # normal で既にソリッドが出る
     report = calc.calculate_report("Brown Tabby", "Black", breed=None, mode="carrier_exploration")
-    scenarios = report.carrier_exploration_results or []
-    a_scenarios = [s for s in scenarios if s.scenario.startswith("A_")]
-    assert a_scenarios
-    assert a_scenarios[0].new_colors  # ソリッドが新規に現れる
+    a_scenarios = [s for s in (report.carrier_exploration_results or []) if s.scenario.startswith("A_")]
+    for scenario in a_scenarios:
+        assert not scenario.new_colors  # normal が既にカバー = 新規色なし
 
 
 def test_carrier_exploration_no_scenario_when_both_dominant(calc) -> None:
