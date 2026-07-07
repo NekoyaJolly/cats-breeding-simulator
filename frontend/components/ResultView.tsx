@@ -483,10 +483,23 @@ function ConditionalColorBadge({
         : hasFemale
           ? SEX_FEMALE_COLOR
           : "rgba(0,0,0,0.12)";
+  // 性別は枠線色だけでなく、色以外の手段 (aria-label / title) でも伝える (色覚多様性・スクリーン
+  // リーダー対応)。♂=Male / ♀=Female。
+  const sexLabel =
+    hasMale && hasFemale
+      ? "♂♀ Male & Female"
+      : hasMale
+        ? "♂ Male"
+        : hasFemale
+          ? "♀ Female"
+          : "";
+  const badgeLabel = sexLabel ? `${color} — ${sexLabel}` : color;
   return (
     <span
       className="inline-flex rounded-full p-[2px] shadow-sm"
       style={{ background: borderBackground }}
+      title={badgeLabel}
+      aria-label={badgeLabel}
     >
       <span
         className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold"

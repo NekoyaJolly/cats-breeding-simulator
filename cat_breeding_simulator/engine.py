@@ -1212,7 +1212,8 @@ class CoatColorCalculator:
           1. 片親が劣性発現 → 相手にキャリアを開ける (_carrier_options_for。B/C/D/A)。
           2. 両親とも優性発現 → 両親にヘテロを仮定する (_dominant_het_options_for。A/D/I)。
         各シナリオの結果から confirmed_colors に無い色 (= 条件付きで出る色) を抽出し、色系統で
-        まとめる。ポイント (C/cs 由来) は除外し、シナモン/チョコは猫種非認定なら落とす。
+        まとめる。ポイント (C/cs 由来) も含める (相手がポイントなら子にポイントが出る = C 座位を
+        逆推論できるため)。シナモン/チョコは猫種非認定なら落とす。
         """
 
         sire_base = self._resolved_base_loci(sire_color, "male", breed)

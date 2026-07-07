@@ -12,7 +12,11 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from cat_breeding_simulator.engine import BreedingCalculationError, CoatColorCalculator
+from cat_breeding_simulator.engine import (
+    BreedingCalculationError,
+    CalculationReport,
+    CoatColorCalculator,
+)
 from main import app
 
 client = TestClient(app)
@@ -149,8 +153,8 @@ def test_breed_color_policy_documents_tonkinese_classes() -> None:
 _ABY_SOMALI = ("Abyssinian", "Somali")
 
 
-def _colors(report: object) -> set[str]:
-    return {result.color for result in report.results}  # type: ignore[attr-defined]
+def _colors(report: CalculationReport) -> set[str]:
+    return {result.color for result in report.results}
 
 
 @pytest.mark.parametrize("breed", _ABY_SOMALI)
