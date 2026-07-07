@@ -106,7 +106,8 @@ def test_i_locus_explicit_silver_50(calc) -> None:
         "Silver Tabby", "Brown Tabby",
         mode="explicit_carrier", sire_carriers={"I": "I/i"},
     )
-    assert abs(_pct(results, "Silver") - 50.0) < 0.5
+    # シルバー表現型 = 銀タビー (Silver) + ソリッド銀 (Smoke)。合わせて 50%。
+    assert abs(_pct(results, "Silver") + _pct(results, "Smoke") - 50.0) < 0.5
 
 
 # --- S-locus (白斑) ---
@@ -344,7 +345,7 @@ def test_color_family_grouping_labels() -> None:
     assert color_family("Fawn") == "フォーン系"         # cinnamon + dilute
     assert color_family("Sable") == "セピア系"          # C/cb セピアは「もし出たら」に入れる
     assert color_family("Seal Point") == "ポイント系"   # C/cs ポイントは除外対象
-    assert color_family("Silver") == "シルバー系"
+    assert color_family("Silver Tabby") == "シルバー系"  # I/- はシルバー系 (bare "Silver" は廃止)
 
 
 def test_confirmed_results_excludes_category_a_colors(calc) -> None:
@@ -376,14 +377,21 @@ def test_conditional_blue_group_with_reverse_inference(calc) -> None:
     assert not any(g.family_label == "ポイント系" for g in groups)
 
 
-def test_conditional_excludes_point_even_when_point_offspring_possible(calc) -> None:
-    """片親 Point (cs/cs) × Full でも、conditional にポイント系は出さない (色数過多のため除外)。"""
+def test_conditional_includes_point_when_point_parent(calc) -> None:
+    """片親 Point (cs/cs) × Full のとき、conditional にポイント系を出す。
+
+    相手が C/cs 保因なら子にポイントが出る = C 座位を逆推論できるため、出得るポイント色を
+    「もしこの色が出たら」に羅列する (相手が Point な組み合わせでの C 推定を助ける)。
+    """
 
     report = calc.calculate_report("Seal Point", "Black", breed=None, mode="normal")
     groups = report.conditional_color_groups or []
     assert groups, "条件付きグループが生成されていない"
-    assert not any(g.family_label == "ポイント系" for g in groups)
-    assert not any("Point" in color for g in groups for color in g.colors)
+    point_groups = [g for g in groups if g.family_label == "ポイント系"]
+    assert point_groups, "相手が Point なのに条件付きにポイント系が出ていない"
+    # ポイント色は C 座位 (C/cs) の逆推論として出る。
+    assert any("Point" in color for g in point_groups for color in g.colors)
+    assert all("C" in g.assumed_carriers.get("dam", {}) for g in point_groups)
 
 
 def test_conditional_recessive_parent_reverse_inference_single_parent(calc) -> None:

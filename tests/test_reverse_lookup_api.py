@@ -259,7 +259,8 @@ def test_reverse_lookup_resolves_target_with_registered_breed_context() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "success"
-    assert body["target_color"] == "Sable"
+    # Burmese の Sable は登録呼称 "Sable Brown" で表示される (入力 "Sable" は別名として受理)。
+    assert body["target_color"] == "Sable Brown"
     assert len(body["candidates"]) == 1
     candidate = body["candidates"][0]
     assert candidate["category"] == "確定で期待できる"

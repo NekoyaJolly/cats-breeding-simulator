@@ -282,7 +282,9 @@ def test_display_map_tonkinese_solid_class_names() -> None:
     assert resolve("Sable", "Tonkinese") == "Natural Solid"
     assert resolve("Champagne", "Tonkinese") == "Champagne Solid"
     assert resolve("Platinum", "Tonkinese") == "Platinum Solid"
-    assert resolve("Sable", "Burmese") == "Sable"
+    # Burmese は Sable を登録呼称 "Sable Brown" で表示する。EB は "Brown"。
+    assert resolve("Sable", "Burmese") == "Sable Brown"
+    assert resolve("Sable", "European Burmese") == "Brown"
 
 
 def test_display_map_burmese_blue_name() -> None:
@@ -345,7 +347,9 @@ def test_breed_colors_endpoint_constrained() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["constrained"] is True
-    assert "Sable" in body["colors"]
+    # 猫種案内も display_alias で猫種呼称へ揃える (Sable → Sable Brown)。
+    assert "Sable Brown" in body["colors"]
+    assert "Sable" not in body["colors"]  # 内部名は出さない
     assert "Black" not in body["colors"]  # Black は Burmese 非対応
 
 

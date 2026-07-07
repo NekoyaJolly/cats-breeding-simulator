@@ -116,10 +116,30 @@ JBT_RULES: tuple[tuple[str, str], ...] = (
     ("Blue Cream Smoke-White", "Dilute Smoke Mike"),
 )
 
-# Burmese: 内部の sepia dilute solid 名を登録表示へ復元する。
+# European Burmese: セピアソリッド (a/a cb/cb) を EB 呼称へ。Burmese と遺伝同一・別呼称。
+# 注意: "burmese" は "european burmese" の部分文字列なので、解決層 (_matching_breed_keys) の
+# 部分一致で Burmese 行も EB 入力にヒットする。EB 呼称を優先させるため _rows() では
+# EB ブロックを Burmese ブロックより「先」に追加し、CSV 上で先に現れるようにする。
+EU_BURMESE_BREEDS: tuple[str, ...] = ("European Burmese",)
+EU_BURMESE_RULES: tuple[tuple[str, str], ...] = (
+    ("Sable", "Brown"),         # 黒濃セピア
+    ("Blue Solid", "Blue"),     # 黒淡セピア
+    ("Champagne", "Chocolate"), # チョコ濃セピア
+    ("Platinum", "Lilac"),      # チョコ淡セピア
+    # 伴性オレンジ/トーティ (3c)。内部 "… Sepia" 名を EB 呼称へ。
+    ("Red Sepia", "Red"),
+    ("Cream Sepia", "Cream"),
+    ("Brown Tortie Sepia", "Brown Tortie"),
+    ("Blue Tortie Sepia", "Blue Tortie"),
+    ("Chocolate Tortie Sepia", "Chocolate Tortie"),
+    ("Lilac Tortie Sepia", "Lilac Tortie"),
+)
+
+# Burmese: 内部の sepia solid 名を登録表示 (Sable Brown / Blue) へ復元する。
 BUR_BREEDS: tuple[str, ...] = ("Burmese",)
 BUR_RULES: tuple[tuple[str, str], ...] = (
-    ("Blue Solid", "Blue"),
+    ("Sable", "Sable Brown"),   # 黒濃セピア (Burmese の登録呼称)
+    ("Blue Solid", "Blue"),     # 黒淡セピア
 )
 
 # Tonkinese: engine 内部の Sepia/Burmese 系名を Solid class 表示へ復元する。
@@ -190,6 +210,18 @@ def _rows() -> list[dict[str, str]]:
                 f"{breed} の三毛系呼称。一般表示は CanonicalPhenotype のまま。",
             )
 
+    # European Burmese を Burmese より先に追加する ("burmese" 部分一致で Burmese 行も EB 入力に
+    # ヒットするため、CSV で EB を先に置き解決層で EB 呼称を優先させる)。
+    for breed in EU_BURMESE_BREEDS:
+        for canonical, breed_name in EU_BURMESE_RULES:
+            add(
+                canonical,
+                canonical,
+                breed,
+                breed_name,
+                f"{breed} のセピア呼称。一般表示は CanonicalPhenotype のまま。",
+            )
+
     for breed in BUR_BREEDS:
         for canonical, breed_name in BUR_RULES:
             add(
@@ -197,7 +229,7 @@ def _rows() -> list[dict[str, str]]:
                 canonical,
                 breed,
                 breed_name,
-                f"{breed} のセピア希釈呼称。一般表示は CanonicalPhenotype のまま。",
+                f"{breed} のセピア呼称。一般表示は CanonicalPhenotype のまま。",
             )
 
     for breed in TON_BREEDS:

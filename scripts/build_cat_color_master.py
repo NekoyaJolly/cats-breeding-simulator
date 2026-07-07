@@ -277,6 +277,12 @@ ALIAS_TARGETS: dict[str, str] = {
     "chestnut tabby": "Chocolate Tabby",
     "chestnut silver tabby": "Chocolate Silver Tabby",
     "chestnut patched tabby": "Chocolate Patched Tabby",
+    # 一般則: 裸の "X Spotted" は "X Spotted Tabby"、裸の "X Shaded" は "X Shaded Silver" と
+    # 同一概念 (スポテッドはタビー柄の一種、シェイデッドはシルバーティッピングの度合い)。
+    # 別 canonical に分かれて出力の重複表現になるのを防ぐため alias 統合する。
+    # 現状データ上の裸名は Blue のみ (他色は元から完全形)。新たな裸名が出たらここへ追加する。
+    "blue spotted": "Blue Spotted Tabby",
+    "blue shaded": "Blue Shaded Silver",
 }
 
 # 猫種固有呼称の検出: (判定するトークン/部分文字列, BreedContext)
@@ -286,7 +292,9 @@ BREED_SPECIFIC_RULES: list[tuple[str, str]] = [
     ("usual", "Abyssinian"),
     ("sorrel", "Abyssinian"),
     ("mink", "Tonkinese"),
-    ("blue solid", "Tonkinese"),
+    # Blue Solid (希釈セピア黒 a/a cb/cb B/B d/d) は Tonkinese/Burmese/EB 共通の遺伝子型。
+    # ("burmese" は "european burmese" の部分文字列なので両者をカバーする)。
+    ("blue solid", "Tonkinese/Burmese"),
     ("champagne point", "Tonkinese"),
     ("champagne solid", "Tonkinese"),
     ("platinum point", "Tonkinese"),
@@ -294,6 +302,16 @@ BREED_SPECIFIC_RULES: list[tuple[str, str]] = [
     ("sable", "Burmese"),
     ("champagne", "Burmese"),
     ("platinum", "Burmese"),
+    # "Sepia Agouti" は Singapura の固有色 (アグーチ=ティックド)。Burmese は a/a ソリッドで
+    # アグーチ色を持たないため、"sepia" 単独ルールより先に、より特定な語で Singapura へ寄せる。
+    ("sepia agouti", "Singapura"),
+    # European Burmese の伴性オレンジ/トーティのセピア色 (内部 "… Sepia" 名)。"sepia" 単独
+    # ルールより先に、より特定な語で EB へ寄せる。"tortie sepia" は 4 トーティを一括で捕捉。
+    ("red sepia", "European Burmese"),
+    ("cream sepia", "European Burmese"),
+    ("tortie sepia", "European Burmese"),
+    # Australian Mist のセピアアグーチタビー (Seal/Blue/Chocolate/Lilac Sepia Tabby)。
+    ("sepia tabby", "Australian Mist"),
     ("sepia", "Burmese"),
     ("natural mink", "Tonkinese"),
     ("natural point", "Tonkinese"),
@@ -306,8 +324,10 @@ BREED_SPECIFIC_RULES: list[tuple[str, str]] = [
     ("ebony", "Oriental"),
     ("chestnut", "Oriental"),
     ("lavender", "Oriental"),
-    ("mitted", "Ragdoll"),
-    ("bi-color", "Ragdoll"),
+    # Mitted / Bi-Color は Ragdoll と Snowshoe が共有する固有呼称 (Snowshoe は Point Bi-Color /
+    # Point Mitted を使う)。Birman は Point & White として扱い、このグループには入れない。
+    ("mitted", "Ragdoll/Snowshoe"),
+    ("bi-color", "Ragdoll/Snowshoe"),
 ]
 
 # 自動判断できず人間レビューに回す概念 (依頼プロンプトの review 指定相当)

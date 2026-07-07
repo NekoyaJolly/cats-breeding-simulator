@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, field_validator
 from cat_breeding_simulator.breed_color_policy import allowed_color_names_for_breed
 from cat_breeding_simulator.color_master import COLOR_MASTER
 from cat_breeding_simulator.color_reading_ja import reading_ja
+from cat_breeding_simulator.display_alias_map import DISPLAY_ALIAS_MAP
 from cat_breeding_simulator.engine import BreedingCalculationError, CoatColorCalculator
 from cat_breeding_simulator.feedback import (
     MAX_MESSAGE_LENGTH,
@@ -90,6 +91,7 @@ class ConditionalColorGroupEntry(BaseModel):
     reverse_inference_label: str                   # 逆推論ラベル
     conditional_probability_pct: float             # 当該系統色の条件付き合計確率
     colors: list[str]                              # この系統の具体色名
+    color_sexes: dict[str, list[str]] = Field(default_factory=dict)  # 色名 → 出得る性別
     assumed_carriers: dict[str, dict[str, str]]    # 例: {"sire": {"D": "D/d"}, "dam": {"D": "D/d"}}
     scenario: str                                  # 機械用ID
 
@@ -399,6 +401,7 @@ def calculate_endpoint(payload: CalculationRequest) -> CalculationResponse:
                 reverse_inference_label=group.reverse_inference_label,
                 conditional_probability_pct=group.conditional_probability_pct,
                 colors=group.colors,
+                color_sexes=group.color_sexes,
                 assumed_carriers=group.assumed_carriers,
                 scenario=group.scenario,
             )
@@ -548,15 +551,22 @@ def colors_endpoint() -> ColorsResponse:
 
     colors: list[ColorOption] = []
     for option in COLOR_MASTER.list_input_colors():
-        reading = reading_ja(option.value)
-        # カナ読みも突合キーに含める (日本語入力での絞り込み用)。重複は順序保持で除去。
-        keywords = list(dict.fromkeys([*option.keywords, reading]))
         # 一般色の BreedContext=general は猫種名ではないため "" に正規化する。
         # breed_specific のときだけ猫種名が入る契約に揃える。
         breed_context = "" if option.breed_context == "general" else option.breed_context
+        # 猫種固有色は、内部名 (Sable / Red Sepia 等) ではなく猫種別表示名 (Sable Brown / Red 等)
+        # を候補値として出す。他の猫種固有色 (Ruddy 等) は master PrimaryName が既に表示名だが、
+        # Burmese/EB は内部名が PrimaryName のため、ここで display_alias を通して揃える。
+        # 送信値が表示名になってもエンジンの入力エイリアスが内部名へ戻すため計算は通る。
+        value = option.value
+        if breed_context:
+            value = DISPLAY_ALIAS_MAP.resolve_display_name(option.value, breed_context.split("/")[0])
+        reading = reading_ja(value)
+        # 内部名も突合キーに残す (内部名/カナ読みでも絞り込めるように)。重複は順序保持で除去。
+        keywords = list(dict.fromkeys([value, option.value, *option.keywords, reading]))
         colors.append(
             ColorOption(
-                value=option.value,
+                value=value,
                 reading_ja=reading,
                 status=option.status,
                 breed_context=breed_context,
@@ -595,22 +605,32 @@ def breed_colors_endpoint(breed: str) -> BreedColorsResponse:
     # /calculate と同じ基準 (VALID_BREEDS) で未対応の猫種は弾く (API 間で挙動を揃える)。
     if breed_key not in VALID_BREEDS:
         raise HTTPException(status_code=422, detail=f"未対応の猫種です: '{breed}'")
+    # 猫種案内でも /colors サジェスト・計算結果と同じく、猫種別表示名 (display_alias) へ揃える。
+    # 表示レイヤの統一ルール: 内部/一般名は必ず display_alias を通して猫種呼称へ変換する
+    # (例: Burmese の Sable → Sable Brown)。
+    def _to_breed_display(names: list[str]) -> list[str]:
+        seen_set: set[str] = set()
+        out: list[str] = []
+        for name in names:
+            display = DISPLAY_ALIAS_MAP.resolve_display_name(name, breed_key)
+            if display not in seen_set:
+                seen_set.add(display)
+                out.append(display)
+        return sorted(out)
+
     policy_colors = allowed_color_names_for_breed(breed_key)
     if policy_colors is not None:
-        return BreedColorsResponse(breed=breed, constrained=True, colors=policy_colors)
+        return BreedColorsResponse(breed=breed, constrained=True, colors=_to_breed_display(policy_colors))
 
     keys = recognized_color_keys_for_breed(breed_key)
     if keys is None:
         return BreedColorsResponse(breed=breed, constrained=False, colors=[])
-    # 生の遺伝マップ名を canonical 表示名へ寄せ、重複を除去 (set 併用で O(n)) してソートする。
-    seen_set: set[str] = set()
-    seen: list[str] = []
-    for key in keys:
-        display = COLOR_MASTER.canonical_name(key)
-        if display not in seen_set:
-            seen_set.add(display)
-            seen.append(display)
-    return BreedColorsResponse(breed=breed, constrained=True, colors=sorted(seen))
+    # 生の遺伝マップ名を canonical → 猫種別表示名へ寄せ、重複を除去してソートする。
+    return BreedColorsResponse(
+        breed=breed,
+        constrained=True,
+        colors=_to_breed_display([COLOR_MASTER.canonical_name(key) for key in keys]),
+    )
 
 
 class FeedbackRequest(BaseModel):

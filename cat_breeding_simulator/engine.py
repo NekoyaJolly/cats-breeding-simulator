@@ -43,6 +43,29 @@ ProbabilityMap = dict[tuple[str, str], float]
 # (V9 §2.4 / 指示書 §2.3・§7)。順方向の色行とは別扱いで最後段に付与する。
 _AOC_COLOR = "AOC"
 
+# Burmese / European Burmese はセピアソリッド (a/a cb/cb)。両者は遺伝同一だが色の呼称が異なる。
+# 入力の猫種別呼称を、エンジン内部のセピア遺伝子型名 (cat_color_genetic_map.csv のキー) へ寄せる。
+# Abyssinian の「Blue -> Blue Ticked Tabby」等と同じ入力リマップ方式。出力表示は
+# cat_color_display_alias_map.csv (猫種別) が担当する。3c 以降で Red/Cream/各 Tortie を追加する。
+_BURMESE_INPUT_ALIAS: dict[str, str] = {
+    "sable brown": "Sable",   # 黒濃セピア (Burmese の Sable Brown)
+    "blue": "Blue Solid",     # 黒淡セピア (希釈セーブル)
+}
+_EUROPEAN_BURMESE_INPUT_ALIAS: dict[str, str] = {
+    "brown": "Sable",          # 黒濃セピア
+    "blue": "Blue Solid",      # 黒淡セピア
+    "chocolate": "Champagne",  # チョコ濃セピア
+    "lilac": "Platinum",       # チョコ淡セピア
+    # 伴性オレンジ/トーティのセピア (3c)。内部名は既存の一般色 (Red/Cream/…Tortie) と
+    # 遺伝子型が異なる (セピア cb/cb) ため衝突を避けて "… Sepia" の専用内部色を用意する。
+    "red": "Red Sepia",
+    "cream": "Cream Sepia",
+    "brown tortie": "Brown Tortie Sepia",
+    "blue tortie": "Blue Tortie Sepia",
+    "chocolate tortie": "Chocolate Tortie Sepia",
+    "lilac tortie": "Lilac Tortie Sepia",
+}
+
 _TONKINESE_BREED_KEY = "Tonkinese"
 _TONKINESE_POINT_CLASS_COLORS: frozenset[str] = frozenset(
     {"Natural Point", "Blue Point", "Champagne Point", "Platinum Point"}
@@ -134,6 +157,10 @@ def _carrier_options_for(
         # 片親 d/d 希釈 → 相手が D/d なら子に d/d (希釈) が条件付きで増える
         if recessive_alleles == ("d", "d") and dominant_alleles != ("d", "d"):
             return [(("D", "d"), "D/d (希釈キャリア)")]
+    elif locus == "I":
+        # 片親 i/i 非シルバー (ゴールデン前提) → 相手が I/i なら子に i/i (非シルバー/ゴールデン) が出得る
+        if recessive_alleles == ("i", "i") and dominant_alleles != ("i", "i"):
+            return [(("I", "i"), "I/i (非シルバーキャリア)")]
     return []
 
 
@@ -207,6 +234,7 @@ class ConditionalColorGroup:
     reverse_inference_label: str                   # 逆推論 例: "この色が出たら両親が D/d 保因と確定します"
     conditional_probability_pct: float             # 当該系統色の合計確率 (この仮説の条件付き)
     colors: list[str]                              # この系統に含まれる具体色名
+    color_sexes: dict[str, list[str]]              # 色名 → 出得る性別 例: {"Seal Point": ["Female","Male"]}
     assumed_carriers: dict[str, dict[str, str]]    # 例: {"sire": {"D": "D/d"}, "dam": {"D": "D/d"}}
     scenario: str                                  # 機械用ID 例: "D_d_on_both"
 
@@ -611,7 +639,7 @@ class CoatColorCalculator:
             "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
             "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
             "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-            "Wb (ワイドバンド): 非展開",
+            "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
             "S (白斑): 入力レベルで確定 (非展開)",
         ]
         opened = list(NORMAL_OPENED_LOCI)
@@ -791,6 +819,11 @@ class CoatColorCalculator:
             if display in offspring_colors:
                 continue  # 親色が子に出るなら注釈不要
             blocked = self._blocking_recessive_factors(color, sex, other_color, other_sex, breed)
+            if not blocked:
+                # 遺伝的ブロッカーを特定できない不一致は、ティッピング度合い (Chinchilla vs Shaded) や
+                # 命名差による表示上の相違である可能性が高い (遺伝子型としては子に出ている)。理由を
+                # 示せない「この色は出現しません」注釈は誤解を招くため出さない。
+                continue
             notes.append(
                 ParentColorNote(parent=parent, color=display, blocked_factors=blocked)
             )
@@ -1059,6 +1092,7 @@ class CoatColorCalculator:
         "B": ("B", "B"),
         "C": ("C", "C"),
         "D": ("D", "D"),
+        "I": ("i", "i"),
     }
 
     def _build_carrier_scenarios(
@@ -1190,7 +1224,9 @@ class CoatColorCalculator:
         scenarios: list[tuple[str, dict[str, dict[str, str]], dict[str, str] | None, dict[str, str] | None]] = []
 
         # 1. 片親劣性発現 → 相手にキャリアを開ける。
-        for locus in ("A", "B", "C", "D"):
+        # I を含む: 片親 i/i (非シルバー/ゴールデン前提) × 相手シルバー I/- のとき、相手が I/i なら
+        # 子に非シルバー(ゴールデン)が条件付きで出る (D の希釈と同型の関係)。
+        for locus in ("A", "B", "C", "D", "I"):
             default = self._CARRIER_LOCUS_DEFAULTS[locus]
             sire_alleles = sire_base.get(locus, default)
             dam_alleles = dam_base.get(locus, default)
@@ -1233,14 +1269,17 @@ class CoatColorCalculator:
             )
             if not results:
                 continue
-            # confirmed に無い色 (= 条件付きで出る色) を色ごとに合算する。
+            # confirmed に無い色 (= 条件付きで出る色) を色ごとに合算する。性別も記録する
+            # (バッジ枠線で♂♀どちらに出るか示すため)。
             new_by_color: dict[str, float] = {}
+            color_sexes: dict[str, set[str]] = {}
             for result in results:
                 if result.color in confirmed_colors:
                     continue
                 new_by_color[result.color] = (
                     new_by_color.get(result.color, 0.0) + result.probability_pct
                 )
+                color_sexes.setdefault(result.color, set()).add(result.sex)
             if not new_by_color:
                 continue
             # 色系統でまとめる。
@@ -1249,8 +1288,8 @@ class CoatColorCalculator:
                 family_colors.setdefault(color_family(color), []).append(color)
 
             for family, colors in family_colors.items():
-                if family == COLOR_FAMILY_POINT:
-                    continue  # ポイント (色数過多) は「もしこの色が出たら」に入れない
+                # ポイント (C/cs) も表示する: 相手がポイントのとき「子にポイントが出たら相手が
+                # C/cs 保因」と C 座位を推定できるため、出得るポイント色を羅列する意味がある。
                 selected = sorted(set(colors))
                 # シナモン/チョコは、猫種が当該系統色を認定していなければ落とす。
                 if breed and family in _CINNAMON_CHOCO_FAMILIES:
@@ -1271,6 +1310,7 @@ class CoatColorCalculator:
                         reverse_inference_label=self._reverse_inference_label(assumed),
                         conditional_probability_pct=probability,
                         colors=selected,
+                        color_sexes={c: sorted(color_sexes[c]) for c in selected},
                         assumed_carriers=assumed,
                         scenario=scenario_id,
                     )
@@ -1441,6 +1481,11 @@ class CoatColorCalculator:
                     # 一般の「Red」(伴性オレンジ O) とは別物なので、猫種文脈でのみシナモン系へ寄せる。
                     # 一般オレンジの Red Ticked Tabby は遺伝子型を持たないため、ここへ解決させない。
                     phenotype = "Cinnamon Ticked Tabby"
+            # European Burmese を先に判定する ("burmese" は "european burmese" の部分文字列のため)。
+            elif "european burmese" in breed_lower:
+                phenotype = _EUROPEAN_BURMESE_INPUT_ALIAS.get(phenotype.lower(), phenotype)
+            elif "burmese" in breed_lower:
+                phenotype = _BURMESE_INPUT_ALIAS.get(phenotype.lower(), phenotype)
 
         # cat_color_master.csv による入力名の解決 (alias 受理 + 通常モードでの制限)。
         phenotype = self._resolve_input_color_name(phenotype, breed)

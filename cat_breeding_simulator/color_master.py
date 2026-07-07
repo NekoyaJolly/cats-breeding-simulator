@@ -288,6 +288,19 @@ COLOR_FAMILY_SEPIA = "セピア系"
 COLOR_FAMILY_SILVER = "シルバー系"
 
 
+# ティッピングの度合い語 (Shell/Shaded/Chinchilla)。単語境界で剥がす ("Tortoiseshell" 内の
+# "shell" は語境界が無いので誤マッチしない)。
+_TIPPING_DEGREE_RE = re.compile(r"\b(?:Shell|Shaded|Chinchilla)\b\s*", re.IGNORECASE)
+
+
+def _strip_tipping_markers(name: str) -> str:
+    """構築名 (例 "Shell Blue Cream (Golden)") から度合い語と "(Golden)" を剥がして基底名を得る。"""
+
+    stripped = re.sub(r"\s*\(Golden\)\s*$", "", name, flags=re.IGNORECASE)
+    stripped = _TIPPING_DEGREE_RE.sub("", stripped)
+    return " ".join(stripped.split())
+
+
 def color_family(name: str) -> str:
     """色名を色系統ラベルへ合成する (「もしこの色が出たら」のグルーピング単位)。
 
@@ -296,6 +309,12 @@ def color_family(name: str) -> str:
     """
 
     resolved = COLOR_MASTER.resolve(name)
+    if resolved is None:
+        # ワイドバンド構築名 (Shell Tortoiseshell (Golden) 等) は master 未登録なので、度合い語と
+        # "(Golden)" を剥がした基底トーティ名 (Tortoiseshell / Blue Cream) で再解決し系統を得る。
+        stripped = _strip_tipping_markers(name)
+        if stripped and stripped != name:
+            resolved = COLOR_MASTER.resolve(stripped)
     if resolved is None:
         return COLOR_FAMILY_OTHER
     if resolved.point_state == "point":

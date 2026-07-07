@@ -74,6 +74,13 @@ def expressed_genotype_key(loci: dict[str, tuple[str, str]], sex: str) -> tuple:
     else:
         base = "cinnamon"
 
+    # 純オレンジ (赤/クリーム) は赤色素 (フェオメラニン) が eumelanin (黒/チョコ/シナモン) を
+    # マスクするため、B 座位の base 差は表現型に現れない。逆引きキーを base 非依存にして、
+    # b/b・bl/bl 由来の赤も黒ベースの赤と同一表現型 (Red 等) に分類する。トーティ (O/o) は
+    # 黒/チョコ斑が可視のため base を残す (Brown Tortie と Chocolate Tortie を区別する)。
+    if orange == "orange":
+        base = "black"
+
     dilute = "dilute" if loci["D"][0] == "d" and loci["D"][1] == "d" else "dense"
     agouti = "agouti" if "A" in loci["A"] else "solid"
 
@@ -101,7 +108,11 @@ def expressed_genotype_key(loci: dict[str, tuple[str, str]], sex: str) -> tuple:
         spotting = "none"
 
     silver = "silver" if "I" in loci["I"] else "non_silver"
-    wideband = "wide" if "Wb" in loci["Wb"] else "narrow"
+    # ワイドバンド (ゴールデン/tipping の本体) は劣性で近似する (一次資料: CORIN の wideband 変異は
+    # 劣性)。実際はポリジーンだが単一座位・劣性ホモ発現として扱う。よって Wb/Wb のみワイドバンド
+    # 発現 (ゴールデン/チンチラ/シェーデッド)、ヘテロ Wb/wb はキャリア (非発現) となる。これにより
+    # ゴールデン × 非保因 → F1 は全キャリアで非ゴールデン、という実際の遺伝を再現する。
+    wideband = "wide" if loci["Wb"] == ("Wb", "Wb") else "narrow"
 
     return (
         orange,
@@ -235,6 +246,11 @@ def _color_base_from_row(color: str, locus_cols: list[str], row: dict[str, str])
         or "choco" in color_lower
         or "champagne" in color_lower
         or "platinum" in color_lower
+        # Chestnut は Oriental 文脈での Chocolate の呼び換え (master でも chocolate の alias)。
+        # 名前推定のチョコ判定に含めないと B/B (黒) と誤コードされるため明示する。
+        or "chestnut" in color_lower
+        # Lavender も Oriental 文脈での Lilac (希釈チョコ b/b d/d) の呼び換え。同様に明示する。
+        or "lavender" in color_lower
     ):
         b_allele = ("b", "b")
     elif "cinnamon" in color_lower or "fawn" in color_lower:
