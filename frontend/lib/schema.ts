@@ -52,6 +52,7 @@ export const conditionalColorGroupSchema = z.object({
   reverse_inference_label: z.string(), // 例 "この色が出たら両親が D/d 保因と確定します"
   conditional_probability_pct: z.number(), // 隠れキャリア仮定時の条件付き確率
   colors: z.array(z.string()), // 例 ["Blue"]
+  color_sexes: z.record(z.array(z.string())).default({}), // 色名→出得る性別 例 {"Blue":["Male","Female"]}
   assumed_carriers: z.record(z.record(z.string())), // 例 {"sire":{"D":"D/d"},"dam":{"D":"D/d"}}
   scenario: z.string(),
 });

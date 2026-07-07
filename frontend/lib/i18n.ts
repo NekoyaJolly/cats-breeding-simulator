@@ -181,8 +181,8 @@ export const UI_TEXT = {
       none: "なし",
       assumptions: "前提条件:",
       carrierScenarioTitle: "全キャリア探索シナリオ (参考・通常結果とは分離)",
-      confirmedTitle: "確定して出る",
-      conditionalTitle: "子猫にこの色が出たら",
+      confirmedTitle: "確定カラー",
+      conditionalTitle: "If This Color Appears",
       conditionalHint:
         "隠れ遺伝子次第で出る色。出たら親の遺伝子型が判明します。",
       conditionalOpen: "見る",
@@ -466,8 +466,8 @@ export const UI_TEXT = {
       assumptions: "Assumptions:",
       carrierScenarioTitle:
         "Carrier exploration scenarios (reference, separated from normal results)",
-      confirmedTitle: "Colors you will get",
-      conditionalTitle: "If your kitten is this color",
+      confirmedTitle: "Confirmed colors",
+      conditionalTitle: "If This Color Appears",
       conditionalHint:
         "Colors that appear only with hidden genes. If they show, the parents' genotypes are revealed.",
       conditionalOpen: "View",

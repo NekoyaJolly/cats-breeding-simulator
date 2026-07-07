@@ -108,6 +108,7 @@ describe("ResultView conditional colors", () => {
             "この色が出たら両親が D/d 保因と確定します",
           conditional_probability_pct: 25,
           colors: ["Blue"],
+          color_sexes: { Blue: ["Female", "Male"] },
           assumed_carriers: { sire: { D: "D/d" }, dam: { D: "D/d" } },
           scenario: "dilute",
         },
@@ -123,20 +124,23 @@ describe("ResultView conditional colors", () => {
       />,
     );
 
-    const toggle = screen.getByRole("button", { name: /この色が出たら/ });
+    const toggle = screen.getByRole("button", { name: /If This Color/ });
     // デフォルトは展開状態 (確定色と一緒に一覧で見える)。
     expect(toggle).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByText("ブルー系")).toBeInTheDocument();
+    // グルーピングは色系統でなく遺伝子座 (原因キャリア) 単位。原因は逆推論の説明文に出る。
     expect(
       screen.getByText(/この色が出たら両親が D\/d 保因と確定します/),
     ).toBeInTheDocument();
+    // 出る色は色見本バッジで並ぶ。
     expect(screen.getByText("Blue")).toBeInTheDocument();
     expect(screen.getByText(/最大/)).toBeInTheDocument();
 
     // 任意で畳める。
     await userEvent.click(toggle);
     expect(toggle).toHaveAttribute("aria-expanded", "false");
-    expect(screen.queryByText("ブルー系")).toBeNull();
+    expect(
+      screen.queryByText(/この色が出たら両親が D\/d 保因と確定します/),
+    ).toBeNull();
   });
 
   it("conditional_color_groups が空ならセクションを描画しない", () => {
@@ -147,7 +151,7 @@ describe("ResultView conditional colors", () => {
       />,
     );
     expect(
-      screen.queryByRole("button", { name: /この色が出たら/ }),
+      screen.queryByRole("button", { name: /If This Color/ }),
     ).toBeNull();
   });
 
@@ -159,7 +163,7 @@ describe("ResultView conditional colors", () => {
     };
     render(<ResultView data={explicit} language="ja" />);
     expect(
-      screen.queryByRole("button", { name: /この色が出たら/ }),
+      screen.queryByRole("button", { name: /If This Color/ }),
     ).toBeNull();
   });
 });
