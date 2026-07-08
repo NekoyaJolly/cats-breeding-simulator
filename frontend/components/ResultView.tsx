@@ -4,7 +4,6 @@ import { GenderFemale, GenderMale } from "@phosphor-icons/react";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type {
   CalculationResponse,
-  CarrierScenarioEntry,
   ConditionalColorGroup,
   ParentColorNote,
   ResultEntry,
@@ -402,53 +401,6 @@ function SexSplitResults({
   );
 }
 
-// carrier_exploration の 1 シナリオ。通常結果とは別枠で表示する。
-function CarrierScenario({
-  scenario,
-  language,
-}: {
-  scenario: CarrierScenarioEntry;
-  language: Language;
-}) {
-  const text = UI_TEXT[language];
-  const assumed = Object.entries(scenario.assumed_carriers);
-  return (
-    <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
-      <h4 className="text-sm font-semibold text-amber-900">{scenario.label}</h4>
-      <p className="mt-1 text-xs text-amber-700">
-        {text.parentResult.basis}: {scenario.probability_basis}
-        {scenario.prior_probability_applied
-          ? ` / ${text.parentResult.priorApplied}`
-          : ` / ${text.parentResult.conditional}`}
-      </p>
-      {assumed.length > 0 && (
-        <ul className="mt-2 space-y-0.5 text-xs text-amber-800">
-          {assumed.map(([parent, loci]) => (
-            <li key={parent} className="flex flex-wrap items-center gap-1">
-              <span className="font-medium">{parent}</span>:
-              {Object.entries(loci).map(([locus, genotype]) => (
-                <span key={`${parent}-${locus}`} className="inline-flex items-center gap-0.5">
-                  <LocusChip locus={locus} />
-                  <span>={genotype}</span>
-                </span>
-              ))}
-            </li>
-          ))}
-        </ul>
-      )}
-      {scenario.new_colors.length > 0 && (
-        <p className="mt-2 text-xs text-amber-800">
-          {text.parentResult.newCoats}: {scenario.new_colors.join(", ")}
-        </p>
-      )}
-      <div className="mt-3">
-        {/* carrier_exploration は下の色を明示した正確計算のため AOC は出ない。導線は不要。 */}
-        <SexSplitResults rows={scenario.results} language={language} whiteSide="none" />
-      </div>
-    </div>
-  );
-}
-
 // 遺伝子座 (シナリオ) 単位でまとめた条件付きカラー。同一 scenario の色系統グループを統合する。
 // colors は 基本色名 → 出得る性別集合 (バッジ枠線で♂♀を示すため)。
 type LocusConditionalGroup = {
@@ -636,7 +588,6 @@ export function ResultView({
 }) {
   const text = UI_TEXT[language];
   const { diagnostics, parameters } = data;
-  const carrierScenarios = data.carrier_exploration_results ?? [];
   // 入力 (親色 / 猫種 / モード) が変わったら結果カードを remount し、
   // 展開状態 (詳細を見る) を初期 (折りたたみ) に戻す。
   const resultsKey = `${parameters.sire_color}|${parameters.dam_color}|${parameters.breed ?? ""}|${parameters.mode}`;
@@ -741,21 +692,6 @@ export function ResultView({
           </div>
         )}
       </section>
-
-      {carrierScenarios.length > 0 && (
-        <section className="space-y-3">
-          <h3 className="text-base font-semibold">
-            {text.parentResult.carrierScenarioTitle}
-          </h3>
-          {carrierScenarios.map((scenario) => (
-            <CarrierScenario
-              key={`${resultsKey}-${scenario.scenario}`}
-              scenario={scenario}
-              language={language}
-            />
-          ))}
-        </section>
-      )}
     </div>
   );
 }

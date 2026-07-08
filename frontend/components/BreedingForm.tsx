@@ -30,7 +30,6 @@ import { FloatingSelect } from "./FloatingField";
 const MODES = [
   { value: "normal", labelKey: "normal" },
   { value: "explicit_carrier", labelKey: "explicitCarrier" },
-  { value: "carrier_exploration", labelKey: "carrierExploration" },
 ] as const;
 
 type CalculationMode = (typeof MODES)[number]["value"];

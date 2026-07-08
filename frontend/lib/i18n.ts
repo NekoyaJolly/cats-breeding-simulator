@@ -133,7 +133,6 @@ export const UI_TEXT = {
       modes: {
         normal: "通常 (normal)",
         explicitCarrier: "明示キャリア (explicit_carrier)",
-        carrierExploration: "全キャリア探索 (carrier_exploration)",
       },
       carrierHelp:
         "隠れキャリアを「座位:遺伝子型」のカンマ区切りで指定 (例:",
@@ -180,17 +179,12 @@ export const UI_TEXT = {
       genotypeCount: "遺伝子型",
       none: "なし",
       assumptions: "前提条件:",
-      carrierScenarioTitle: "全キャリア探索シナリオ (参考・通常結果とは分離)",
       confirmedTitle: "確定カラー",
       conditionalTitle: "If This Color Appears",
       conditionalHint:
         "隠れ遺伝子次第で出る色。出たら親の遺伝子型が判明します。",
       conditionalOpen: "見る",
       conditionalMaxPct: "最大 ",
-      basis: "根拠",
-      priorApplied: "事前確率あり",
-      conditional: "条件付き",
-      newCoats: "新規に出現する色柄",
       aocTitle: "AOC とは",
       aocBody:
         "AOC = Any Other Color（白親の下の色が未確定なため、生後の毛色で判明します）",
@@ -417,7 +411,6 @@ export const UI_TEXT = {
       modes: {
         normal: "Normal",
         explicitCarrier: "Explicit carriers",
-        carrierExploration: "Carrier exploration",
       },
       carrierHelp:
         "Enter hidden carriers as comma-separated locus:genotype values (e.g.",
@@ -464,18 +457,12 @@ export const UI_TEXT = {
       genotypeCount: "genotypes",
       none: "None",
       assumptions: "Assumptions:",
-      carrierScenarioTitle:
-        "Carrier exploration scenarios (reference, separated from normal results)",
       confirmedTitle: "Confirmed colors",
       conditionalTitle: "If This Color Appears",
       conditionalHint:
         "Colors that appear only with hidden genes. If they show, the parents' genotypes are revealed.",
       conditionalOpen: "View",
       conditionalMaxPct: "up to ",
-      basis: "Basis",
-      priorApplied: "prior applied",
-      conditional: "conditional",
-      newCoats: "Newly possible coats",
       aocTitle: "About AOC",
       aocBody:
         "AOC = Any Other Color (the White parent's underlying coat is undetermined, so it shows after birth).",
