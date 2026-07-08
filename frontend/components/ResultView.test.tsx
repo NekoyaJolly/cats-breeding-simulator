@@ -193,4 +193,21 @@ describe("ResultView full distribution", () => {
     await userEvent.click(toggles[0]);
     expect(screen.getAllByText("Chocolate").length).toBeGreaterThan(0);
   });
+
+  it("白斑レベル (-White) は合算されず副次行で表示される", () => {
+    const results: ResultEntry[] = [
+      { sex: "Male", color: "Silver Tabby", probability_pct: 25 },
+      { sex: "Male", color: "Silver Tabby-White", probability_pct: 25 },
+      { sex: "Female", color: "Silver Tabby", probability_pct: 25 },
+      { sex: "Female", color: "Silver Tabby-White", probability_pct: 25 },
+    ];
+    render(
+      <ResultView
+        data={buildResponse("Silver Tabby", "Silver Tabby-White", results)}
+        language="ja"
+      />,
+    );
+    // ベース色 (Silver Tabby) に集約されつつ、-White の内訳が副次行 (└ -White) で残る。
+    expect(screen.getAllByText(/└ -White/).length).toBeGreaterThan(0);
+  });
 });

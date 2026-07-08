@@ -149,15 +149,23 @@ function SectionLabel({
   );
 }
 
-function SexMark({ sex }: { sex: "Male" | "Female" }) {
+// ♂/♀ の視覚記号 + スクリーンリーダー向けの性別テキスト (記号は aria-hidden なので
+// sr-only テキストで性別を必ず読み上げ可能にする)。
+function SexMark({ sex, language }: { sex: "Male" | "Female"; language: Language }) {
+  const text = UI_TEXT[language];
   return (
-    <span
-      aria-hidden="true"
-      className="text-xs font-bold"
-      style={{ color: sex === "Male" ? "var(--r-male)" : "var(--r-female)" }}
-    >
-      {sex === "Male" ? "♂" : "♀"}
-    </span>
+    <>
+      <span
+        aria-hidden="true"
+        className="text-xs font-bold"
+        style={{ color: sex === "Male" ? "var(--r-male)" : "var(--r-female)" }}
+      >
+        {sex === "Male" ? "♂" : "♀"}
+      </span>
+      <span className="sr-only">
+        {sex === "Male" ? text.parentResult.male : text.parentResult.female}
+      </span>
+    </>
   );
 }
 
@@ -183,7 +191,7 @@ function ConfirmedColors({
           style={{ background: "var(--r-surface-2)", color: "var(--r-ink)" }}
         >
           <Swatch color={group.base} size={16} />
-          <SexMark sex={sex} />
+          <SexMark sex={sex} language={language} />
           <span className="font-medium">{group.base}</span>
           <span style={{ color: "var(--r-muted)" }} className="tabular-nums">
             {formatPctInt(group.total)}
@@ -263,6 +271,21 @@ function SexDistribution({
             opacity: 0.8,
           }}
         />
+      )}
+      {/* 白斑レベル (-White / -White Van) の内訳。合算で消えないよう副次行で残す。 */}
+      {group.whites.length > 0 && (
+        <div className="mt-0.5 flex flex-col gap-0.5 pl-6">
+          {group.whites.map((white) => (
+            <div
+              key={white.label}
+              className="flex items-center justify-between gap-2 text-[10px]"
+              style={{ color: "var(--r-muted)" }}
+            >
+              <span>└ {white.label}</span>
+              <span className="shrink-0 tabular-nums">{formatPctInt(white.pct)}</span>
+            </div>
+          ))}
+        </div>
       )}
     </li>
   );
