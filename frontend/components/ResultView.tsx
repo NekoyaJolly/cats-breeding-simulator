@@ -123,8 +123,10 @@ function SectionLabel({
 
 // ♂/♀ の視覚記号 + スクリーンリーダー向けの性別テキスト (記号は aria-hidden なので
 // sr-only テキストで性別を必ず読み上げ可能にする)。
-// 性別の並び順 (Male → Female)。想定外値の除外にも使う。
-const SEX_RANK: Record<string, number> = { Male: 0, Female: 1 };
+// 性別の並び順 (Male → Female)。明示チェックで Object.prototype キーを拾わないようにする。
+function sexRank(sex: string): number {
+  return sex === "Male" ? 0 : sex === "Female" ? 1 : 9;
+}
 
 function SexMark({ sex, language }: { sex: string; language: Language }) {
   const text = UI_TEXT[language];
@@ -161,7 +163,9 @@ function ColorChip({
   language: Language;
 }) {
   // Male/Female のみに絞り、Male → Female の順に並べる (想定外値を除外・順序固定)。
-  const marks = sexes.filter((sex) => sex in SEX_RANK).sort((a, b) => SEX_RANK[a] - SEX_RANK[b]);
+  const marks = sexes
+    .filter((sex) => sex === "Male" || sex === "Female")
+    .sort((a, b) => sexRank(a) - sexRank(b));
   return (
     <span
       className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs"
@@ -194,9 +198,7 @@ function ConfirmedColors({
   const text = UI_TEXT[language];
   // -White を合算せず各色をそのままチップ化する (白斑を隠さない)。オス→メス、確率降順。
   const sorted = [...rows].sort(
-    (a, b) =>
-      (SEX_RANK[a.sex] ?? 9) - (SEX_RANK[b.sex] ?? 9) ||
-      b.probability_pct - a.probability_pct,
+    (a, b) => sexRank(a.sex) - sexRank(b.sex) || b.probability_pct - a.probability_pct,
   );
   return (
     <div
