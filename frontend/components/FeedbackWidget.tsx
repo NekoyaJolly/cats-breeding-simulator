@@ -250,7 +250,7 @@ export function FeedbackWidget() {
               rows={4}
               autoFocus
               placeholder={text.placeholder}
-              className="mt-3 w-full resize-none rounded-md border border-line p-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40"
+              className="mt-3 w-full resize-none rounded-md border border-line bg-surface p-2 text-sm text-ink placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40"
             />
             <div className="mt-1 text-right text-xs text-muted">
               {message.length} / {MAX_LENGTH}

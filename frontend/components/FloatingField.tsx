@@ -31,7 +31,7 @@ type FloatingSelectProps = {
 } & Pick<SelectHTMLAttributes<HTMLSelectElement>, "aria-label">;
 
 const fieldBaseClass =
-  "h-11 w-full rounded-md border border-line bg-surface py-2 text-base leading-6 shadow-sm transition focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40 disabled:cursor-not-allowed disabled:bg-bg disabled:text-muted sm:text-sm sm:leading-5";
+  "h-11 w-full rounded-md border border-line bg-surface py-2 text-base leading-6 text-ink placeholder:text-muted shadow-sm transition focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40 disabled:cursor-not-allowed disabled:bg-bg disabled:text-muted sm:text-sm sm:leading-5";
 const floatingLabelBaseClass =
   "absolute left-3 z-[1] truncate bg-surface px-1 transition-all duration-150";
 const floatingLabelClass =
