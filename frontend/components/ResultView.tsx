@@ -126,6 +126,7 @@ function Swatch({ color, size = 16 }: { color: string; size?: number }) {
 }
 
 // セクション見出し (色付きの丸 + ラベル + 補足)。
+// <button> や <span> の子として置くため、ブロック要素 (<p>) ではなくインラインの <span> を返す。
 function SectionLabel({
   tick,
   children,
@@ -134,7 +135,7 @@ function SectionLabel({
   children: ReactNode;
 }) {
   return (
-    <p
+    <span
       className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider"
       style={{ color: tick }}
     >
@@ -144,7 +145,7 @@ function SectionLabel({
         style={{ background: tick }}
       />
       {children}
-    </p>
+    </span>
   );
 }
 
