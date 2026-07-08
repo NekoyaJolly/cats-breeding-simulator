@@ -306,8 +306,7 @@ CFA/TICA 差・猫種固有呼称の扱い:
 | `no_breed_filter` | 猫種制約を適用しない (フィルタ挙動) |
 | `normal_mode` | 通常計算モード |
 | `explicit_carrier_mode` | 明示キャリア計算モード |
-| `carrier_exploration_mode` | 全キャリア探索モード (通常結果と完全分離) |
 | `general` | 表示文脈が一般用途 (`BreedContext=general`) |
 | `unrestricted` | 性別制限なし (`SexRestriction=unrestricted`) |
 
-> `breed_unselected` と `no_breed_filter` はいずれも「未明示キャリアを全て通常結果に混ぜる」という意味ではない。未明示キャリアの総当たりは必ず `carrier_exploration_mode` として `normal_mode` から分離する ([`01_シミュレーター正本_V9.md`](./01_シミュレーター正本_V9.md) §2.3)。
+> `breed_unselected` と `no_breed_filter` はいずれも「未明示キャリアを全て通常結果に混ぜる」という意味ではない。未明示キャリア由来の色は通常結果 (確定色) に混ぜず、推定色 `conditional_color_groups` として「もし出たら」提示する ([`01_シミュレーター正本_V9.md`](./01_シミュレーター正本_V9.md) §2.3 / §8.3)。
