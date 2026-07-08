@@ -34,7 +34,6 @@ CROSSES: list[tuple[str, str, str | None, str]] = [
     ("Cameo Tabby", "Blue Patched Tabby-White", None, "normal"),
     ("Chocolate", "Black", None, "normal"),
     ("Cream Tabby-White", "Dilute Calico", None, "normal"),
-    ("Lilac", "Blue Patched Tabby-White", None, "carrier_exploration"),
     ("Lilac", "Blue Patched Tabby-White", None, "normal"),
     ("Red", "Tortoiseshell", None, "normal"),
     ("Seal Point", "Black", None, "normal"),

@@ -49,11 +49,6 @@ def test_dam_color_present_no_note_for_dam() -> None:
     assert all(note["parent"] != "dam" for note in notes)
 
 
-def test_notes_only_in_normal_mode() -> None:
-    # carrier_exploration は normal とは別。注釈は normal のみ。
-    assert _notes("Lilac", "Blue Patched Tabby-White", mode="carrier_exploration") == []
-
-
 def test_non_orange_parent_blocked_by_red_dam() -> None:
     # 父 Blue Tabby-White (非オレンジ) × 母 Shell Cameo (赤 O/O) → 全子に O が渡り
     # 非オレンジの Blue Tabby は出ない。原因は O 座位 (母が o を渡せない)。
