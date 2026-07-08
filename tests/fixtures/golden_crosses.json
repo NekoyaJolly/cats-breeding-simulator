@@ -1,7 +1,6 @@
 {
  "Black Smoke|Cream|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -183,7 +182,6 @@
  },
  "Black|Black|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -290,7 +288,6 @@
  },
  "Blue Tabby-White|Shell Cameo|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -670,7 +667,6 @@
  },
  "Blue|Cream Tabby|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -794,7 +790,6 @@
  },
  "Brown Tabby|Brown Tabby|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -938,7 +933,6 @@
  },
  "Cameo Tabby|Blue Patched Tabby-White|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -1520,7 +1514,6 @@
  },
  "Chinchilla Golden|Black|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -1661,7 +1654,6 @@
  },
  "Chinchilla Golden|Cream Tabby-White|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -1915,7 +1907,6 @@
  },
  "Chinchilla Silver|Shaded Silver|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -2122,7 +2113,6 @@
  },
  "Chocolate|Black|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -2251,7 +2241,6 @@
  },
  "Cinnamon|Black|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -2380,7 +2369,6 @@
  },
  "Cream Tabby-White|Dilute Calico|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -2602,394 +2590,8 @@
   },
   "status": 200
  },
- "Lilac|Blue Patched Tabby-White|-|carrier_exploration": {
-  "body": {
-   "carrier_exploration_results": [
-    {
-     "assumed_carriers": {
-      "dam": {
-       "A": "A/a"
-      }
-     },
-     "label": "Blue Patched Tabby-White が A/a (ソリッドキャリア) と仮定 (Lilac は A 劣性を発現)",
-     "new_colors": [],
-     "prior_probability_applied": false,
-     "probability_basis": "conditional_on_other_parent_carrier",
-     "results": [
-      {
-       "color": "Blue",
-       "probability_pct": 6.25,
-       "sex": "Female"
-      },
-      {
-       "color": "Blue Cream",
-       "probability_pct": 6.25,
-       "sex": "Female"
-      },
-      {
-       "color": "Blue Patched Tabby",
-       "probability_pct": 6.25,
-       "sex": "Female"
-      },
-      {
-       "color": "Blue Patched Tabby-White",
-       "probability_pct": 6.25,
-       "sex": "Female"
-      },
-      {
-       "color": "Blue Tabby",
-       "probability_pct": 6.25,
-       "sex": "Female"
-      },
-      {
-       "color": "Blue Tabby-White",
-       "probability_pct": 6.25,
-       "sex": "Female"
-      },
-      {
-       "color": "Blue-White",
-       "probability_pct": 6.25,
-       "sex": "Female"
-      },
-      {
-       "color": "Dilute Calico",
-       "probability_pct": 6.25,
-       "sex": "Female"
-      },
-      {
-       "color": "Blue",
-       "probability_pct": 6.25,
-       "sex": "Male"
-      },
-      {
-       "color": "Blue Tabby",
-       "probability_pct": 6.25,
-       "sex": "Male"
-      },
-      {
-       "color": "Blue Tabby-White",
-       "probability_pct": 6.25,
-       "sex": "Male"
-      },
-      {
-       "color": "Blue-White",
-       "probability_pct": 6.25,
-       "sex": "Male"
-      },
-      {
-       "color": "Cream",
-       "probability_pct": 6.25,
-       "sex": "Male"
-      },
-      {
-       "color": "Cream Tabby",
-       "probability_pct": 6.25,
-       "sex": "Male"
-      },
-      {
-       "color": "Cream Tabby-White",
-       "probability_pct": 6.25,
-       "sex": "Male"
-      },
-      {
-       "color": "Cream-White",
-       "probability_pct": 6.25,
-       "sex": "Male"
-      }
-     ],
-     "scenario": "A_a_on_dam"
-    },
-    {
-     "assumed_carriers": {
-      "dam": {
-       "B": "B/b"
-      }
-     },
-     "label": "Blue Patched Tabby-White が B/b (チョコレートキャリア) と仮定 (Lilac は B 劣性を発現)",
-     "new_colors": [
-      "Lilac",
-      "Lilac Cream",
-      "Lilac Cream-White",
-      "Lilac Patched Tabby",
-      "Lilac Patched Tabby-White",
-      "Lilac Tabby",
-      "Lilac Tabby-White",
-      "Lilac-White"
-     ],
-     "prior_probability_applied": false,
-     "probability_basis": "conditional_on_other_parent_carrier",
-     "results": [
-      {
-       "color": "Cream Tabby",
-       "probability_pct": 9.375,
-       "sex": "Male"
-      },
-      {
-       "color": "Cream Tabby-White",
-       "probability_pct": 9.375,
-       "sex": "Male"
-      },
-      {
-       "color": "Blue Patched Tabby",
-       "probability_pct": 4.6875,
-       "sex": "Female"
-      },
-      {
-       "color": "Blue Patched Tabby-White",
-       "probability_pct": 4.6875,
-       "sex": "Female"
-      },
-      {
-       "color": "Blue Tabby",
-       "probability_pct": 4.6875,
-       "sex": "Female"
-      },
-      {
-       "color": "Blue Tabby-White",
-       "probability_pct": 4.6875,
-       "sex": "Female"
-      },
-      {
-       "color": "Lilac Patched Tabby",
-       "probability_pct": 4.6875,
-       "sex": "Female"
-      },
-      {
-       "color": "Lilac Patched Tabby-White",
-       "probability_pct": 4.6875,
-       "sex": "Female"
-      },
-      {
-       "color": "Lilac Tabby",
-       "probability_pct": 4.6875,
-       "sex": "Female"
-      },
-      {
-       "color": "Lilac Tabby-White",
-       "probability_pct": 4.6875,
-       "sex": "Female"
-      },
-      {
-       "color": "Blue Tabby",
-       "probability_pct": 4.6875,
-       "sex": "Male"
-      },
-      {
-       "color": "Blue Tabby-White",
-       "probability_pct": 4.6875,
-       "sex": "Male"
-      },
-      {
-       "color": "Lilac Tabby",
-       "probability_pct": 4.6875,
-       "sex": "Male"
-      },
-      {
-       "color": "Lilac Tabby-White",
-       "probability_pct": 4.6875,
-       "sex": "Male"
-      },
-      {
-       "color": "Cream",
-       "probability_pct": 3.125,
-       "sex": "Male"
-      },
-      {
-       "color": "Cream-White",
-       "probability_pct": 3.125,
-       "sex": "Male"
-      },
-      {
-       "color": "Blue",
-       "probability_pct": 1.5625,
-       "sex": "Female"
-      },
-      {
-       "color": "Blue Cream",
-       "probability_pct": 1.5625,
-       "sex": "Female"
-      },
-      {
-       "color": "Blue-White",
-       "probability_pct": 1.5625,
-       "sex": "Female"
-      },
-      {
-       "color": "Dilute Calico",
-       "probability_pct": 1.5625,
-       "sex": "Female"
-      },
-      {
-       "color": "Lilac",
-       "probability_pct": 1.5625,
-       "sex": "Female"
-      },
-      {
-       "color": "Lilac Cream",
-       "probability_pct": 1.5625,
-       "sex": "Female"
-      },
-      {
-       "color": "Lilac Cream-White",
-       "probability_pct": 1.5625,
-       "sex": "Female"
-      },
-      {
-       "color": "Lilac-White",
-       "probability_pct": 1.5625,
-       "sex": "Female"
-      },
-      {
-       "color": "Blue",
-       "probability_pct": 1.5625,
-       "sex": "Male"
-      },
-      {
-       "color": "Blue-White",
-       "probability_pct": 1.5625,
-       "sex": "Male"
-      },
-      {
-       "color": "Lilac",
-       "probability_pct": 1.5625,
-       "sex": "Male"
-      },
-      {
-       "color": "Lilac-White",
-       "probability_pct": 1.5625,
-       "sex": "Male"
-      }
-     ],
-     "scenario": "B_b_on_dam"
-    }
-   ],
-   "conditional_color_groups": [],
-   "confirmed_results": null,
-   "diagnostics": {
-    "assumptions": [
-     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
-     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
-     "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
-     "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
-     "S (白斑): 入力レベルで確定 (非展開)",
-     "carrier_exploration: 各シナリオは『片親の劣性発現に対し相手がキャリア』の条件付き結果。事前確率 (キャリア頻度) は掛けない。normal results とは分離して提示する。"
-    ],
-    "closed_loci": [
-     "B",
-     "C",
-     "Wb"
-    ],
-    "matched_probability": 1.0,
-    "opened_loci": [
-     "A",
-     "D",
-     "I",
-     "Mc",
-     "Ta"
-    ],
-    "unmatched_genotype_count": 0,
-    "unmatched_probability": 0.0
-   },
-   "mode": "carrier_exploration",
-   "parameters": {
-    "breed": null,
-    "dam_carriers": null,
-    "dam_color": "Blue Patched Tabby-White",
-    "mode": "carrier_exploration",
-    "sire_carriers": null,
-    "sire_color": "Lilac"
-   },
-   "parent_color_notes": [],
-   "results": [
-    {
-     "color": "Blue Patched Tabby",
-     "probability_pct": 9.375,
-     "sex": "Female"
-    },
-    {
-     "color": "Blue Patched Tabby-White",
-     "probability_pct": 9.375,
-     "sex": "Female"
-    },
-    {
-     "color": "Blue Tabby",
-     "probability_pct": 9.375,
-     "sex": "Female"
-    },
-    {
-     "color": "Blue Tabby-White",
-     "probability_pct": 9.375,
-     "sex": "Female"
-    },
-    {
-     "color": "Blue Tabby",
-     "probability_pct": 9.375,
-     "sex": "Male"
-    },
-    {
-     "color": "Blue Tabby-White",
-     "probability_pct": 9.375,
-     "sex": "Male"
-    },
-    {
-     "color": "Cream Tabby",
-     "probability_pct": 9.375,
-     "sex": "Male"
-    },
-    {
-     "color": "Cream Tabby-White",
-     "probability_pct": 9.375,
-     "sex": "Male"
-    },
-    {
-     "color": "Blue",
-     "probability_pct": 3.125,
-     "sex": "Female"
-    },
-    {
-     "color": "Blue Cream",
-     "probability_pct": 3.125,
-     "sex": "Female"
-    },
-    {
-     "color": "Blue-White",
-     "probability_pct": 3.125,
-     "sex": "Female"
-    },
-    {
-     "color": "Dilute Calico",
-     "probability_pct": 3.125,
-     "sex": "Female"
-    },
-    {
-     "color": "Blue",
-     "probability_pct": 3.125,
-     "sex": "Male"
-    },
-    {
-     "color": "Blue-White",
-     "probability_pct": 3.125,
-     "sex": "Male"
-    },
-    {
-     "color": "Cream",
-     "probability_pct": 3.125,
-     "sex": "Male"
-    },
-    {
-     "color": "Cream-White",
-     "probability_pct": 3.125,
-     "sex": "Male"
-    }
-   ],
-   "status": "success"
-  },
-  "status": 200
- },
  "Lilac|Blue Patched Tabby-White|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -3254,7 +2856,6 @@
  },
  "Natural Mink|Natural Mink|Tonkinese|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -3461,7 +3062,6 @@
  },
  "Red Tabby|Blue Chinchilla Golden|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -3616,7 +3216,6 @@
  },
  "Red|Tortoiseshell|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -3773,7 +3372,6 @@
  },
  "Sable|Sable|Burmese|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -3874,7 +3472,6 @@
  },
  "Seal Point|Black|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -4003,7 +3600,6 @@
  },
  "Seal Point|Seal Point|Siamese|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -4104,7 +3700,6 @@
  },
  "Silver Tabby|Black|-|explicit_carrier": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [],
    "confirmed_results": null,
    "diagnostics": {
@@ -4230,7 +3825,6 @@
  },
  "Silver Tabby|Blue Patched Tabby-White|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -4812,7 +4406,6 @@
  },
  "Silver Tabby|Dilute Calico|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -5388,7 +4981,6 @@
  },
  "White|Black|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [],
    "confirmed_results": null,
    "diagnostics": {

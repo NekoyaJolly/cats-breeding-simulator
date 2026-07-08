@@ -2,7 +2,7 @@
 
 normal_mode では未明示キャリア (B/b, B/bl, C/cs, C/cb, A/a, Wb) を閉じる。
 explicit_carrier_mode では sire_carriers / dam_carriers で指定された座位のみ開ける。
-carrier_exploration_mode は Phase 2 (本テストでは明示エラーを検証)。
+未明示キャリア由来の色は通常結果 (確定色) に混ぜず、推定色 conditional_color_groups として提示する。
 
 シミュレーター正本 V9 §2.1〜2.4 に準拠。運用正本 §5 のテスト構成に合わせ、
 モード/キャリア挙動の必須テストを本ファイルに集約する。
@@ -274,59 +274,6 @@ def test_explicit_carrier_metadata_opens_locus(calc) -> None:
     assert "C" not in (report.closed_loci or [])
 
 
-# --- carrier_exploration_mode (Phase 2) ---
-
-def test_carrier_exploration_reveals_point_from_one_point_parent(calc) -> None:
-    """片親 Point (cs/cs) × 相手 Full の場合、相手 C/cs キャリア仮説で Point が出現する。
-
-    normal の results には Point は出ず、carrier_exploration_results に分離される。
-    """
-    report = calc.calculate_report("Seal Point", "Black", breed=None, mode="carrier_exploration")
-    # baseline (normal) には Point が出ない
-    assert not any("Point" in r.color for r in report.results)
-    scenarios = report.carrier_exploration_results or []
-    c_scenarios = [s for s in scenarios if s.scenario.startswith("C_")]
-    assert c_scenarios, "C キャリアシナリオが生成されていない"
-    point_scenario = c_scenarios[0]
-    assert any("Point" in color for color in point_scenario.new_colors)
-    assert point_scenario.probability_basis == "conditional_on_other_parent_carrier"
-    assert point_scenario.prior_probability_applied is False
-    assert abs(round(sum(r.probability_pct for r in point_scenario.results), 4) - 100.0) < 0.01
-
-
-def test_normal_reveals_solid_from_tabby_parent_without_carrier_mode(calc) -> None:
-    """A をカテゴリA として normal で展開するため、Brown Tabby × Black では
-    carrier_exploration を使わずとも normal 時点でソリッドが出る。
-
-    A/a の可能性は normal がカバーするため、carrier_exploration の A/a シナリオは
-    normal に対する新規色を追加しない (new_colors が空)。B/C 系の潜在キャリア探索とは異なる。
-    """
-    normal = calc.calculate_report("Brown Tabby", "Black", breed=None, mode="normal")
-    assert any("Tabby" not in r.color for r in normal.results)  # normal で既にソリッドが出る
-    report = calc.calculate_report("Brown Tabby", "Black", breed=None, mode="carrier_exploration")
-    a_scenarios = [s for s in (report.carrier_exploration_results or []) if s.scenario.startswith("A_")]
-    for scenario in a_scenarios:
-        assert not scenario.new_colors  # normal が既にカバー = 新規色なし
-
-
-def test_carrier_exploration_no_scenario_when_both_dominant(calc) -> None:
-    """両親が同型 (Black=a/a, B/B, C/C, D/D) では、片親劣性発現の条件が無く scenario を生成しない。
-
-    両親とも隠れキャリアかもしれない、という探索は自動生成しない (禁止事項)。
-    """
-    report = calc.calculate_report("Black", "Black", breed=None, mode="carrier_exploration")
-    assert report.carrier_exploration_results == []
-
-
-def test_carrier_exploration_results_separated_from_normal(calc) -> None:
-    """carrier_exploration の new_colors は normal results に混ざらない。"""
-    report = calc.calculate_report("Seal Point", "Black", breed=None, mode="carrier_exploration")
-    normal_colors = {r.color for r in report.results}
-    for scenario in report.carrier_exploration_results or []:
-        for color in scenario.new_colors:
-            assert color not in normal_colors
-
-
 def test_unknown_mode_rejected(calc) -> None:
     with pytest.raises(BreedingCalculationError):
         calc.calculate("Black", "Black", mode="bogus_mode")
@@ -431,6 +378,3 @@ def test_conditional_only_normal_mode(calc) -> None:
     )
     assert explicit.confirmed_results is None
     assert explicit.conditional_color_groups is None
-    exploration = calc.calculate_report("Seal Point", "Black", breed=None, mode="carrier_exploration")
-    assert exploration.confirmed_results is None
-    assert exploration.conditional_color_groups is None

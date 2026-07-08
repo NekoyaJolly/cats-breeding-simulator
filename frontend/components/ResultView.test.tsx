@@ -36,7 +36,6 @@ function buildResponse(
       unmatched_probability: 0,
       unmatched_genotype_count: 0,
     },
-    carrier_exploration_results: null,
     parent_color_notes: [],
   };
 }

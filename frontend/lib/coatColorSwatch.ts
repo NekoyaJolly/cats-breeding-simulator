@@ -98,8 +98,27 @@ function solidBase(words: string[]): string {
   return eumelaninBase(words);
 }
 
+// 左下コーナーに白のくさびを重ねて三毛 (キャリコ) の白斑を表現する。
+function withCalicoWhite(bg: string): string {
+  return `linear-gradient(310deg, ${WHITE_HEX} 0 32%, rgba(0,0,0,0) 32% 100%), ${bg}`;
+}
+
 /** 毛色名 → 色見本の CSS background 文字列。 */
 export function coatSwatchBackground(name: string): string {
+  // キャリコ = トーティ + 白斑 (三毛)。ダイリュートキャリコは希釈トーティ (青×クリーム) + 白斑。
+  // 「Dilute Calico」は色名に青/クリームを含まないため、希釈色語 (Blue Cream) を補って
+  // baseSwatchBackground の希釈判定に乗せる。Smoke/Silver/Van 等の修飾語は名前に残したまま
+  // 保持する (丸ごと Tortoiseshell 等へ置換すると "Smoke Calico" 等の下地が落ちるため)。
+  // 最後にキャリコには白斑を重ねて3色にする。従来は「dilute」を希釈と解釈できず
+  // Calico と Dilute Calico が同色 (黒×赤) で、かつ白斑が乗っていなかった。
+  const isCalico = /\bcalico\b/i.test(name);
+  const normalized = name.replace(/\bdilute\s+calico\b/i, "Blue Cream Calico");
+  const bg = baseSwatchBackground(normalized);
+  return isCalico ? withCalicoWhite(bg) : bg;
+}
+
+// 毛色名 → 色見本 CSS background の本体。キャリコの三毛処理は coatSwatchBackground が行う。
+function baseSwatchBackground(name: string): string {
   const lower = name.toLowerCase();
   const words = lower.split(/[\s()\-]+/).filter(Boolean);
 

@@ -277,9 +277,10 @@ PR 作成からマージ判断・次 Phase 着手までの「AI が自走、Owne
 
 ### 1. 計算モードの分離 (シミュレーター正本 §2)
 
-- **normal (通常モード)**: 通常UI/API。親の表現型・猫種・性別から **確定できる遺伝子条件のみ** 使用。
+- **normal (通常モード)**: 通常UI/API。親の表現型・猫種・性別から **確定できる遺伝子条件のみ** 使用。結果はレポート形式で、確定色 (`confirmed_results`) / 周辺確率 (`results`) / 推定色 (`conditional_color_groups`) を提示する。
 - **explicit_carrier (明示キャリアモード)**: ユーザーが親の隠れキャリアを明示した場合のみ、未表現キャリア由来カラーを通常結果に含めてよい。
-- **carrier_exploration (全キャリア探索モード)**: 研究/検証用。結果は `carrier_exploration_results` として通常結果と **完全分離** する。通常結果に混ぜてはならない。
+
+> **廃止 (V9.x)**: `carrier_exploration` (全キャリア探索モード) は廃止した。通常モードの周辺確率 `results` と推定色 `conditional_color_groups` が探索目的を包含・上回るため。モードは `normal` / `explicit_carrier` の2つ (正本 §2.3)。
 
 ### 2. 優性表現型のヘテロ未確定ルール (シミュレーター正本 §2.4) ★最重要
 

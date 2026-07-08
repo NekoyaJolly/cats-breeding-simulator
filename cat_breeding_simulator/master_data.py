@@ -8,7 +8,7 @@ from dataclasses import dataclass
 AUTOSOMAL_LOCI: tuple[str, ...] = ("B", "D", "A", "C", "W", "S", "Mc", "Ta", "Sp", "I", "Wb")
 
 # サポートする計算モード。
-SUPPORTED_MODES: tuple[str, ...] = ("normal", "explicit_carrier", "carrier_exploration")
+SUPPORTED_MODES: tuple[str, ...] = ("normal", "explicit_carrier")
 
 # normal_mode で X/- 展開する座位 (優性ヘテロ未確定) と、閉じる座位 (キャリア非展開)。
 # A (タビー) は D/I/Mc/Ta と同じ「優性ヘテロ未確定」として展開する。タビー猫は表現型からは
@@ -387,7 +387,7 @@ def build_parent_genotypes(
     expand_category_a=False のときはカテゴリA座位 (A/D/I/Mc/Ta) の X/- 展開を抑止する
     (「もしこの色が出たら」の確定色計算用)。デフォルト True で後方互換。
 
-    carrier_exploration は本関数では扱わない (Phase 2)。色が未知なら空リストを返す。
+    色が未知なら空リストを返す。
     """
 
     entries = COLOR_BASE_LOCI.get(color)

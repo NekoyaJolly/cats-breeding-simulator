@@ -23,19 +23,6 @@ export const modeDiagnosticsSchema = z.object({
 });
 export type ModeDiagnostics = z.infer<typeof modeDiagnosticsSchema>;
 
-// carrier_exploration の条件付きシナリオ (api.py CarrierScenarioEntry に対応)。
-// 通常結果とは完全分離して表示する (シミュレーター正本 §2)。
-export const carrierScenarioEntrySchema = z.object({
-  scenario: z.string(),
-  label: z.string(),
-  assumed_carriers: z.record(z.record(z.string())),
-  probability_basis: z.string(),
-  prior_probability_applied: z.boolean(),
-  results: z.array(resultEntrySchema),
-  new_colors: z.array(z.string()),
-});
-export type CarrierScenarioEntry = z.infer<typeof carrierScenarioEntrySchema>;
-
 // 入力した親色が子に出現しないときの注釈 (api.py ParentColorNoteEntry に対応)。
 export const parentColorNoteSchema = z.object({
   parent: z.string(), // "sire" / "dam"
@@ -78,8 +65,6 @@ export const calculationResponseSchema = z.object({
   // (normal モードのみ、該当なしや他モードでは空配列)。
   conditional_color_groups: z.array(conditionalColorGroupSchema).optional().default([]),
   diagnostics: modeDiagnosticsSchema,
-  // carrier_exploration_mode のときのみ非 null。
-  carrier_exploration_results: z.array(carrierScenarioEntrySchema).nullable().optional(),
   // 入力した親色が子に出ないときの注釈 (normal モードのみ、無ければ空配列)。
   parent_color_notes: z.array(parentColorNoteSchema).optional().default([]),
 });
