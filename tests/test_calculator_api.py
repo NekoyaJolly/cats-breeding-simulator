@@ -282,7 +282,9 @@ def test_display_map_tonkinese_solid_class_names() -> None:
     assert resolve("Sable", "Tonkinese") == "Natural Solid"
     assert resolve("Champagne", "Tonkinese") == "Champagne Solid"
     assert resolve("Platinum", "Tonkinese") == "Platinum Solid"
-    assert resolve("Sable", "Burmese") == "Sable"
+    # Burmese は Sable を登録呼称 "Sable Brown" で表示する。EB は "Brown"。
+    assert resolve("Sable", "Burmese") == "Sable Brown"
+    assert resolve("Sable", "European Burmese") == "Brown"
 
 
 def test_display_map_burmese_blue_name() -> None:
@@ -296,8 +298,8 @@ def test_display_map_burmese_blue_name() -> None:
 def test_ui_path_130x204_only_tabby_via_api() -> None:
     """UI 経路 (API → ColorNameResolver 経由) で 130×204 を計算し、出力健全性を検証する。
 
-    A を normal_mode で展開しないため、全出力はタビー/パッチドタビー系 (Solid/Smoke/
-    Tortie/Calico は出ない)。出力名は canonical 形 (Pt→Patched)。合計は 100%。
+    A をカテゴリA として展開するため、タビー親同士でも a/a 前提のソリッド系が出る。
+    出力名は canonical 形 (Pt→Patched)。合計は 100%。
     """
 
     # 猫種は指定しない (この経路は猫種非依存。以前は breed="Any" を黙って無視させていたが、
@@ -311,9 +313,8 @@ def test_ui_path_130x204_only_tabby_via_api() -> None:
     assert results
 
     colors = {r["color"] for r in results}
-    # 全出力がタビー系 (a/a 前提の Solid/Smoke/Tortie/Calico が無い)
-    non_tabby = sorted(c for c in colors if "Tabby" not in c)
-    assert not non_tabby, f"UI経路で非タビー系が出力された: {non_tabby}"
+    # A 展開により a/a 前提のソリッド系が出る (旧仕様の「全出力タビー系」からの意図的変更)
+    assert sorted(c for c in colors if "Tabby" not in c), "A 展開後はソリッド系が出るはず"
     # 出力名は canonical 形 (略記 Pt が単語として残らない)
     assert not [c for c in colors if "Pt" in c.split()]
     # 母 O/o 由来の Patched Tabby が出る
@@ -346,7 +347,9 @@ def test_breed_colors_endpoint_constrained() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["constrained"] is True
-    assert "Sable" in body["colors"]
+    # 猫種案内も display_alias で猫種呼称へ揃える (Sable → Sable Brown)。
+    assert "Sable Brown" in body["colors"]
+    assert "Sable" not in body["colors"]  # 内部名は出さない
     assert "Black" not in body["colors"]  # Black は Burmese 非対応
 
 
@@ -789,6 +792,9 @@ def test_spotted_breed_keeps_spotted_in_output() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["results"]
+    # Egyptian Mau は品種として A/A 固定 (スポット必須・ソリッドは出ない) なので、
+    # 全出力が Spotted 系になる。A をカテゴリA として展開しても、品種の A/A 制約が
+    # 親遺伝子型を A/A に絞るため a/a のソリッドは生じない (cat_breed_genetic_map.csv)。
     assert all("Spotted" in result["color"] for result in payload["results"])
 
 
@@ -839,9 +845,10 @@ def test_spotted_propagates_by_phenotype_without_breed() -> None:
 
 
 def test_classic_tabby_inputtable_and_named() -> None:
-    """Classic タビー (mc/mc) が入力可能で、出力の柄に Classic を保持する。
+    """Classic タビー (mc/mc) が入力可能で、タビー柄の子は Classic を保持する。
 
-    mc/mc × mc/mc は不可逆で Mc/- を生まないため、子は全て Classic タビーになる。
+    mc/mc × mc/mc は不可逆で Mc/- を生まないため、柄を持つ子は全て Classic タビーになる。
+    A 展開により a/a のソリッド (柄なし) も出るため、検証は「タビー柄の子は Classic」に限定する。
     """
 
     response = client.post(
@@ -851,7 +858,11 @@ def test_classic_tabby_inputtable_and_named() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["results"]
-    assert all("Classic" in result["color"] for result in payload["results"])
+    assert all(
+        "Classic" in result["color"]
+        for result in payload["results"]
+        if "Tabby" in result["color"]
+    )
 
 
 def test_oriental_tabby_names_canonicalize_to_general() -> None:

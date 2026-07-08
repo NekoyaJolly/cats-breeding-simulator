@@ -25,8 +25,14 @@ from cat_breeding_simulator.master_data import (
     ParentGenotype,
     build_parent_genotypes,
     expressed_genotype_key,
+    recognized_color_keys_for_breed,
 )
-from cat_breeding_simulator.color_master import COLOR_MASTER, breed_context_matches
+from cat_breeding_simulator.color_master import (
+    COLOR_MASTER,
+    COLOR_FAMILY_POINT,
+    breed_context_matches,
+    color_family,
+)
 from cat_breeding_simulator.phenotype_naming import PhenotypeNamer
 
 
@@ -36,6 +42,29 @@ ProbabilityMap = dict[tuple[str, str], float]
 # 実在の毛色ではないため canonical 正規化・表示名解決 (display_alias_map) の対象に含めない
 # (V9 §2.4 / 指示書 §2.3・§7)。順方向の色行とは別扱いで最後段に付与する。
 _AOC_COLOR = "AOC"
+
+# Burmese / European Burmese はセピアソリッド (a/a cb/cb)。両者は遺伝同一だが色の呼称が異なる。
+# 入力の猫種別呼称を、エンジン内部のセピア遺伝子型名 (cat_color_genetic_map.csv のキー) へ寄せる。
+# Abyssinian の「Blue -> Blue Ticked Tabby」等と同じ入力リマップ方式。出力表示は
+# cat_color_display_alias_map.csv (猫種別) が担当する。3c 以降で Red/Cream/各 Tortie を追加する。
+_BURMESE_INPUT_ALIAS: dict[str, str] = {
+    "sable brown": "Sable",   # 黒濃セピア (Burmese の Sable Brown)
+    "blue": "Blue Solid",     # 黒淡セピア (希釈セーブル)
+}
+_EUROPEAN_BURMESE_INPUT_ALIAS: dict[str, str] = {
+    "brown": "Sable",          # 黒濃セピア
+    "blue": "Blue Solid",      # 黒淡セピア
+    "chocolate": "Champagne",  # チョコ濃セピア
+    "lilac": "Platinum",       # チョコ淡セピア
+    # 伴性オレンジ/トーティのセピア (3c)。内部名は既存の一般色 (Red/Cream/…Tortie) と
+    # 遺伝子型が異なる (セピア cb/cb) ため衝突を避けて "… Sepia" の専用内部色を用意する。
+    "red": "Red Sepia",
+    "cream": "Cream Sepia",
+    "brown tortie": "Brown Tortie Sepia",
+    "blue tortie": "Blue Tortie Sepia",
+    "chocolate tortie": "Chocolate Tortie Sepia",
+    "lilac tortie": "Lilac Tortie Sepia",
+}
 
 _TONKINESE_BREED_KEY = "Tonkinese"
 _TONKINESE_POINT_CLASS_COLORS: frozenset[str] = frozenset(
@@ -128,7 +157,47 @@ def _carrier_options_for(
         # 片親 d/d 希釈 → 相手が D/d なら子に d/d (希釈) が条件付きで増える
         if recessive_alleles == ("d", "d") and dominant_alleles != ("d", "d"):
             return [(("D", "d"), "D/d (希釈キャリア)")]
+    elif locus == "I":
+        # 片親 i/i 非シルバー (ゴールデン前提) → 相手が I/i なら子に i/i (非シルバー/ゴールデン) が出得る
+        if recessive_alleles == ("i", "i") and dominant_alleles != ("i", "i"):
+            return [(("I", "i"), "I/i (非シルバーキャリア)")]
     return []
+
+
+# 「もしこの色が出たら」の両親優性ヘテロ仮定に用いる、座位別のヘテロ遺伝子型。
+# A (タビー→ソリッド)・D (濃色→ブルー等希釈)・I (非シルバー→シルバー) の 3 座位のみ扱う。
+# B/C はここでは扱わない (B チョコ/シナモン・C セピア/ポイントは片親劣性発現の
+# _carrier_options_for 経路が担当する。ポイントは表示除外、セピアは色数が少なく散らからない)。
+_DOMINANT_HET_ALLELES: dict[str, tuple[str, str]] = {
+    "A": ("A", "a"),
+    "D": ("D", "d"),
+    "I": ("I", "i"),
+}
+
+# シナモン/チョコ系 (B座位由来) の色系統ラベル。猫種指定時に、その猫種が当該系統色を
+# 認定していなければ「もしこの色が出たら」から落とす (品種に存在しない色を出さない)。
+_CINNAMON_CHOCO_FAMILIES: frozenset[str] = frozenset(
+    {"シナモン系", "フォーン系", "チョコレート系", "ライラック系"}
+)
+
+
+def _dominant_het_options_for(
+    locus: str, sire_alleles: tuple[str, str], dam_alleles: tuple[str, str]
+) -> tuple[tuple[str, str], str] | None:
+    """「もしこの色が出たら」normal 専用: 両親とも優性ホモで表現している座位について、
+    両親を優性ヘテロ (X/x) と仮定する (carrier 遺伝子型, "X/x" 文字列) を返す。該当なしは None。
+
+    例: 両親とも濃色 (D/D) → 両親 D/d 仮定で子にブルー (d/d) が条件付きで出る。
+    片親でも劣性発現している場合は _carrier_options_for が担当するため、ここでは扱わない。
+    """
+
+    hetero = _DOMINANT_HET_ALLELES.get(locus)
+    if hetero is None:
+        return None
+    dominant = hetero[0]
+    if sire_alleles == (dominant, dominant) and dam_alleles == (dominant, dominant):
+        return (hetero, f"{hetero[0]}/{hetero[1]}")
+    return None
 
 
 @dataclass(frozen=True, slots=True)
@@ -151,6 +220,23 @@ class CarrierScenario:
     prior_probability_applied: bool                # 事前確率を掛けたか (常に False)
     results: list[KittenResult]                    # この仮説の条件付き結果 (合計100%)
     new_colors: list[str]                          # baseline (normal) に無く、この仮説で現れる色
+
+
+@dataclass(frozen=True, slots=True)
+class ConditionalColorGroup:
+    """「もしこの色が出たら」の 1 色系統グループ (normal モード専用)。
+
+    確定色 (confirmed_results) には出ないが、隠れキャリアがあれば出る色を色系統でまとめ、
+    「この色が出たら両親が◯◯保因と確定」という逆推論ラベルを付ける。
+    """
+
+    family_label: str                              # 色系統ラベル 例: "ブルー系"
+    reverse_inference_label: str                   # 逆推論 例: "この色が出たら両親が D/d 保因と確定します"
+    conditional_probability_pct: float             # 当該系統色の合計確率 (この仮説の条件付き)
+    colors: list[str]                              # この系統に含まれる具体色名
+    color_sexes: dict[str, list[str]]              # 色名 → 出得る性別 例: {"Seal Point": ["Female","Male"]}
+    assumed_carriers: dict[str, dict[str, str]]    # 例: {"sire": {"D": "D/d"}, "dam": {"D": "D/d"}}
+    scenario: str                                  # 機械用ID 例: "D_d_on_both"
 
 
 @dataclass(frozen=True, slots=True)
@@ -185,6 +271,11 @@ class CalculationReport:
     carrier_exploration_results: list[CarrierScenario] | None = None
     # 入力した親色が子に出現しないときの注釈 (normal モードのみ)。
     parent_color_notes: list[ParentColorNote] | None = None
+    # 「もしこの色が出たら」(P2)。既存 results の意味は変えず追加するオプショナルフィールド。
+    # confirmed_results: 隠れキャリアを仮定しない確定色のみ (カテゴリA 非展開)。normal のみ。
+    confirmed_results: list[KittenResult] | None = None
+    # conditional_color_groups: 確定色には出ないが隠れキャリアがあれば出る色の色系統グループ。
+    conditional_color_groups: list[ConditionalColorGroup] | None = None
 
 
 class BreedingCalculationError(ValueError):
@@ -356,6 +447,14 @@ class CoatColorCalculator:
             parent_color_notes=(
                 list(report.parent_color_notes) if report.parent_color_notes is not None else None
             ),
+            confirmed_results=(
+                list(report.confirmed_results) if report.confirmed_results is not None else None
+            ),
+            conditional_color_groups=(
+                list(report.conditional_color_groups)
+                if report.conditional_color_groups is not None
+                else None
+            ),
         )
 
     def _calculate_report_impl(
@@ -418,6 +517,67 @@ class CoatColorCalculator:
                 "この交配では母猫の有効な遺伝子型が残りませんでした。毛色と猫種の組み合わせをご確認ください。"
             )
 
+        (
+            aggregate,
+            matched_probability,
+            unmatched_probability,
+            unmatched_keys,
+            unmatched_samples,
+        ) = self._aggregate_cross(sire_genotypes, dam_genotypes, sire_color, dam_color, breed)
+
+        results = self._to_results(aggregate, unmatched_probability)
+        opened_loci, closed_loci, assumptions = self._build_mode_metadata(
+            mode, sire_carriers, dam_carriers
+        )
+        # 入力した親色が子に出ないときの注釈 (劣性形質の理解補助)。normal モードのみ。
+        offspring_colors = {phenotype for (_sex, phenotype) in aggregate}
+        parent_color_notes = (
+            self._build_parent_color_notes(sire_color, dam_color, breed, offspring_colors)
+            if mode == "normal"
+            else None
+        )
+
+        # 「もしこの色が出たら」(P2)。既存 results は不変のまま、normal モードでのみ
+        # 確定色 (カテゴリA 非展開) と条件付き色系統グループを追加フィールドとして付与する。
+        confirmed_results: list[KittenResult] | None = None
+        conditional_color_groups: list[ConditionalColorGroup] | None = None
+        if mode == "normal" and not sire_carriers and not dam_carriers:
+            confirmed_results, confirmed_colors = self._build_confirmed_results(
+                sire_color, dam_color, breed
+            )
+            conditional_color_groups = self._build_conditional_color_groups(
+                sire_color, dam_color, breed, confirmed_colors
+            )
+
+        return CalculationReport(
+            results=results,
+            matched_probability=round(matched_probability, 6),
+            unmatched_probability=round(unmatched_probability, 6),
+            unmatched_genotype_count=len(unmatched_keys),
+            unmatched_samples=unmatched_samples,
+            mode=mode,
+            opened_loci=opened_loci,
+            closed_loci=closed_loci,
+            assumptions=assumptions,
+            parent_color_notes=parent_color_notes or None,
+            confirmed_results=confirmed_results,
+            conditional_color_groups=conditional_color_groups,
+        )
+
+    def _aggregate_cross(
+        self,
+        sire_genotypes: list[ParentGenotype],
+        dam_genotypes: list[ParentGenotype],
+        sire_color: str,
+        dam_color: str,
+        breed: str | None,
+    ) -> tuple[ProbabilityMap, float, float, set[tuple[str, tuple]], list[dict[str, object]]]:
+        """親候補ペアを総当たりで交配し、(色・性別) 別確率と未分類診断を集計する。
+
+        既存 results と確定色 (confirmed_results) の両方から同一ロジックで呼ぶための共通部。
+        分類不能な子猫は黙って捨てず未分類率として保持する (再正規化しない)。
+        """
+
         aggregate: ProbabilityMap = defaultdict(float)
         matched_probability = 0.0
         unmatched_probability = 0.0
@@ -458,28 +618,12 @@ class CoatColorCalculator:
                         matched_probability += weight
                         aggregate[(kitten.sex, phenotype)] += weight
 
-        results = self._to_results(aggregate, unmatched_probability)
-        opened_loci, closed_loci, assumptions = self._build_mode_metadata(
-            mode, sire_carriers, dam_carriers
-        )
-        # 入力した親色が子に出ないときの注釈 (劣性形質の理解補助)。normal モードのみ。
-        offspring_colors = {phenotype for (_sex, phenotype) in aggregate}
-        parent_color_notes = (
-            self._build_parent_color_notes(sire_color, dam_color, breed, offspring_colors)
-            if mode == "normal"
-            else None
-        )
-        return CalculationReport(
-            results=results,
-            matched_probability=round(matched_probability, 6),
-            unmatched_probability=round(unmatched_probability, 6),
-            unmatched_genotype_count=len(unmatched_keys),
-            unmatched_samples=unmatched_samples,
-            mode=mode,
-            opened_loci=opened_loci,
-            closed_loci=closed_loci,
-            assumptions=assumptions,
-            parent_color_notes=parent_color_notes or None,
+        return (
+            aggregate,
+            matched_probability,
+            unmatched_probability,
+            unmatched_keys,
+            unmatched_samples,
         )
 
     @staticmethod
@@ -491,11 +635,11 @@ class CoatColorCalculator:
         """mode に応じた opened_loci / closed_loci / assumptions を構築する。"""
 
         assumptions = [
-            "A (タビー): A/A 相当に固定 (A/a 非展開)",
+            "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+            "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
             "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
             "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-            "Wb (ワイドバンド): 非展開",
-            "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+            "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
             "S (白斑): 入力レベルで確定 (非展開)",
         ]
         opened = list(NORMAL_OPENED_LOCI)
@@ -675,6 +819,11 @@ class CoatColorCalculator:
             if display in offspring_colors:
                 continue  # 親色が子に出るなら注釈不要
             blocked = self._blocking_recessive_factors(color, sex, other_color, other_sex, breed)
+            if not blocked:
+                # 遺伝的ブロッカーを特定できない不一致は、ティッピング度合い (Chinchilla vs Shaded) や
+                # 命名差による表示上の相違である可能性が高い (遺伝子型としては子に出ている)。理由を
+                # 示せない「この色は出現しません」注釈は誤解を招くため出さない。
+                continue
             notes.append(
                 ParentColorNote(parent=parent, color=display, blocked_factors=blocked)
             )
@@ -943,6 +1092,7 @@ class CoatColorCalculator:
         "B": ("B", "B"),
         "C": ("C", "C"),
         "D": ("D", "D"),
+        "I": ("i", "i"),
     }
 
     def _build_carrier_scenarios(
@@ -1016,6 +1166,272 @@ class CoatColorCalculator:
             new_colors=new_colors,
         )
 
+    # --- 「もしこの色が出たら」(P2 / normal 専用) ---
+    #
+    # 既存 results (カテゴリA 展開込み) の意味は変えず、以下の 2 つを追加フィールドとして返す。
+    #   confirmed_results: 隠れキャリアを仮定しない確定色 (カテゴリA 非展開の親候補で交配)。
+    #   conditional_color_groups: 確定色には出ないが隠れキャリアがあれば出る色を色系統でまとめ、
+    #     逆推論ラベル (この色が出たら両親が◯◯保因と確定) を付けたもの。
+    # carrier_exploration モードの経路 (_build_carrier_scenarios / _compute_carrier_scenario) には
+    # 一切手を入れず、本経路として分離する。
+
+    def _build_confirmed_results(
+        self, sire_color: str, dam_color: str, breed: str | None
+    ) -> tuple[list[KittenResult], set[str]]:
+        """確定色 (カテゴリA 非展開) の結果行と、その色集合を返す。
+
+        カテゴリA座位 (A/D/I/Mc/Ta) を X/- 展開しないため、隠れヘテロ由来の色 (ソリッド・
+        ブルー・シルバー等) は出ず、親の表現型から必ず出る色のみが残る。
+        """
+
+        sire_genotypes = self._resolve_parent_genotypes(
+            sire_color, "male", breed, "normal", None, expand_category_a=False
+        )
+        dam_genotypes = self._resolve_parent_genotypes(
+            dam_color, "female", breed, "normal", None, expand_category_a=False
+        )
+        if not sire_genotypes or not dam_genotypes:
+            return [], set()
+        aggregate, _matched, unmatched, _keys, _samples = self._aggregate_cross(
+            sire_genotypes, dam_genotypes, sire_color, dam_color, breed
+        )
+        results = self._to_results(aggregate, unmatched)
+        colors = {color for (_sex, color) in aggregate}
+        return results, colors
+
+    def _build_conditional_color_groups(
+        self,
+        sire_color: str,
+        dam_color: str,
+        breed: str | None,
+        confirmed_colors: set[str],
+    ) -> list[ConditionalColorGroup]:
+        """「もしこの色が出たら」の色系統グループを構築する (normal 専用)。
+
+        シナリオは 2 系統:
+          1. 片親が劣性発現 → 相手にキャリアを開ける (_carrier_options_for。B/C/D/A)。
+          2. 両親とも優性発現 → 両親にヘテロを仮定する (_dominant_het_options_for。A/D/I)。
+        各シナリオの結果から confirmed_colors に無い色 (= 条件付きで出る色) を抽出し、色系統で
+        まとめる。ポイント (C/cs 由来) も含める (相手がポイントなら子にポイントが出る = C 座位を
+        逆推論できるため)。シナモン/チョコは猫種非認定なら落とす。
+        """
+
+        sire_base = self._resolved_base_loci(sire_color, "male", breed)
+        dam_base = self._resolved_base_loci(dam_color, "female", breed)
+        if sire_base is None or dam_base is None:
+            return []
+
+        # (scenario_id, assumed_carriers, sire_carriers, dam_carriers)
+        scenarios: list[tuple[str, dict[str, dict[str, str]], dict[str, str] | None, dict[str, str] | None]] = []
+
+        # 1. 片親劣性発現 → 相手にキャリアを開ける。
+        # I を含む: 片親 i/i (非シルバー/ゴールデン前提) × 相手シルバー I/- のとき、相手が I/i なら
+        # 子に非シルバー(ゴールデン)が条件付きで出る (D の希釈と同型の関係)。
+        for locus in ("A", "B", "C", "D", "I"):
+            default = self._CARRIER_LOCUS_DEFAULTS[locus]
+            sire_alleles = sire_base.get(locus, default)
+            dam_alleles = dam_base.get(locus, default)
+            # 父が劣性発現 → 母 (相手) を開ける
+            for carrier, _label in _carrier_options_for(locus, sire_alleles, dam_alleles):
+                geno = f"{carrier[0]}/{carrier[1]}"
+                scenarios.append(
+                    (f"{locus}_{carrier[1]}_on_dam", {"dam": {locus: geno}}, None, {locus: geno})
+                )
+            # 母が劣性発現 → 父 (相手) を開ける
+            for carrier, _label in _carrier_options_for(locus, dam_alleles, sire_alleles):
+                geno = f"{carrier[0]}/{carrier[1]}"
+                scenarios.append(
+                    (f"{locus}_{carrier[1]}_on_sire", {"sire": {locus: geno}}, {locus: geno}, None)
+                )
+
+        # 2. 両親とも優性発現 → 両親にヘテロを仮定する (A/D/I)。
+        for locus in _DOMINANT_HET_ALLELES:
+            default = self._CARRIER_LOCUS_DEFAULTS.get(locus, (locus, locus))
+            option = _dominant_het_options_for(
+                locus, sire_base.get(locus, default), dam_base.get(locus, default)
+            )
+            if option is None:
+                continue
+            carrier, geno = option
+            scenarios.append(
+                (
+                    f"{locus}_{carrier[1]}_on_both",
+                    {"sire": {locus: geno}, "dam": {locus: geno}},
+                    {locus: geno},
+                    {locus: geno},
+                )
+            )
+
+        groups: list[ConditionalColorGroup] = []
+        seen: set[tuple[str, str]] = set()
+        for scenario_id, assumed, sire_carriers, dam_carriers in scenarios:
+            results = self._conditional_scenario_results(
+                sire_color, dam_color, breed, sire_carriers, dam_carriers
+            )
+            if not results:
+                continue
+            # confirmed に無い色 (= 条件付きで出る色) を色ごとに合算する。性別も記録する
+            # (バッジ枠線で♂♀どちらに出るか示すため)。
+            new_by_color: dict[str, float] = {}
+            color_sexes: dict[str, set[str]] = {}
+            for result in results:
+                if result.color in confirmed_colors:
+                    continue
+                new_by_color[result.color] = (
+                    new_by_color.get(result.color, 0.0) + result.probability_pct
+                )
+                color_sexes.setdefault(result.color, set()).add(result.sex)
+            if not new_by_color:
+                continue
+            # 色系統でまとめる。
+            family_colors: dict[str, list[str]] = {}
+            for color in new_by_color:
+                family_colors.setdefault(color_family(color), []).append(color)
+
+            for family, colors in family_colors.items():
+                # ポイント (C/cs) も表示する: 相手がポイントのとき「子にポイントが出たら相手が
+                # C/cs 保因」と C 座位を推定できるため、出得るポイント色を羅列する意味がある。
+                selected = sorted(set(colors))
+                # シナモン/チョコは、猫種が当該系統色を認定していなければ落とす。
+                if breed and family in _CINNAMON_CHOCO_FAMILIES:
+                    selected = [
+                        color for color in selected
+                        if self._color_recognized_for_breed(color, breed)
+                    ]
+                    if not selected:
+                        continue
+                key = (scenario_id, family)
+                if key in seen:
+                    continue
+                seen.add(key)
+                probability = round(sum(new_by_color[color] for color in selected), 4)
+                groups.append(
+                    ConditionalColorGroup(
+                        family_label=family,
+                        reverse_inference_label=self._reverse_inference_label(assumed),
+                        conditional_probability_pct=probability,
+                        colors=selected,
+                        color_sexes={c: sorted(color_sexes[c]) for c in selected},
+                        assumed_carriers=assumed,
+                        scenario=scenario_id,
+                    )
+                )
+        return groups
+
+    def _conditional_scenario_results(
+        self,
+        sire_color: str,
+        dam_color: str,
+        breed: str | None,
+        sire_carriers: dict[str, str] | None,
+        dam_carriers: dict[str, str] | None,
+    ) -> list[KittenResult] | None:
+        """指定キャリア仮定の条件付き結果を返す。矛盾 (猫種制約違反等) なら None。
+
+        確定色と同じ「カテゴリA 非展開」の親候補を土台にし、仮定する座位だけを carrier
+        遺伝子型で上書きする。こうすることで、新たに出る色をその座位の仮定にのみ帰属でき、
+        他座位 (D 希釈等) の X/- 展開に由来する色が別シナリオへ混入するのを防ぐ。
+        """
+
+        try:
+            sire_genotypes = self._resolve_parent_genotypes(
+                sire_color, "male", breed, "normal", None, expand_category_a=False
+            )
+            dam_genotypes = self._resolve_parent_genotypes(
+                dam_color, "female", breed, "normal", None, expand_category_a=False
+            )
+        except BreedingCalculationError:
+            return None
+        sire_genotypes = self._override_carrier_locus(sire_genotypes, sire_carriers, breed)
+        dam_genotypes = self._override_carrier_locus(dam_genotypes, dam_carriers, breed)
+        if not sire_genotypes or not dam_genotypes:
+            return None
+        aggregate, _matched, unmatched, _keys, _samples = self._aggregate_cross(
+            sire_genotypes, dam_genotypes, sire_color, dam_color, breed
+        )
+        results = self._to_results(aggregate, unmatched)
+        return results or None
+
+    def _override_carrier_locus(
+        self,
+        genotypes: list[ParentGenotype],
+        carriers: dict[str, str] | None,
+        breed: str | None,
+    ) -> list[ParentGenotype]:
+        """親候補の指定座位を carrier 遺伝子型へ上書きする (猫種制約に反する候補は落とす)。
+
+        猫種で固定された座位を carrier に上書きするとその猫種では起こり得ない仮定になるため、
+        上書き後に猫種制約を満たさない候補を除外する (例: Abyssinian A/A → A/a は不成立)。
+        """
+
+        if not carriers:
+            return genotypes
+        overrides: dict[str, tuple[str, str]] = {}
+        for locus, value in carriers.items():
+            parts = value.split("/")
+            if len(parts) == 2:
+                overrides[locus] = (parts[0], parts[1])
+        if not overrides:
+            return genotypes
+
+        breed_key = self._normalize_breed_key(breed) if breed else None
+        constraints = BREED_FILTERS.get(breed_key, {}) if breed_key else {}
+        out: list[ParentGenotype] = []
+        seen: set[tuple] = set()
+        for genotype in genotypes:
+            loci = dict(genotype.loci)
+            loci.update(overrides)
+            if constraints and not all(
+                self._matches_exact(loci[locus], required)
+                for locus, required in constraints.items()
+                if locus in loci
+            ):
+                continue  # 上書きで猫種制約に反した候補は不成立として捨てる
+            signature = tuple(
+                sorted((locus, tuple(sorted(alleles))) for locus, alleles in loci.items())
+            )
+            if signature in seen:
+                continue
+            seen.add(signature)
+            out.append(ParentGenotype(phenotype=genotype.phenotype, sex=genotype.sex, loci=loci))
+        return out
+
+    @staticmethod
+    def _reverse_inference_label(assumed_carriers: dict[str, dict[str, str]]) -> str:
+        """assumed_carriers から逆推論ラベル文言を生成する。
+
+        両親とも同一遺伝子型を仮定するケースは「両親が X/x」、片親のみは「父/母が X/x」。
+        """
+
+        parent_ja = {"sire": "父", "dam": "母"}
+        genotypes = {
+            genotype
+            for loci in assumed_carriers.values()
+            for genotype in loci.values()
+        }
+        if set(assumed_carriers.keys()) == {"sire", "dam"} and len(genotypes) == 1:
+            return f"この色が出たら両親が {next(iter(genotypes))} 保因と確定します"
+        fragments: list[str] = []
+        for parent in ("sire", "dam"):
+            for genotype in assumed_carriers.get(parent, {}).values():
+                fragments.append(f"{parent_ja[parent]}が {genotype}")
+        return "この色が出たら" + "・".join(fragments) + " 保因と確定します"
+
+    def _color_recognized_for_breed(self, color: str, breed: str | None) -> bool:
+        """color がその猫種の認定カラー (遺伝制約を満たす色) に含まれるか。
+
+        制約の無い猫種は常に True。canonical 表示名で突合する。
+        """
+
+        if not breed:
+            return True
+        breed_key = self._normalize_breed_key(breed)
+        keys = recognized_color_keys_for_breed(breed_key)
+        if keys is None:
+            return True
+        target = COLOR_MASTER.canonical_name(color)
+        return any(COLOR_MASTER.canonical_name(key) == target for key in keys)
+
     def _resolve_parent_genotypes(
         self,
         phenotype: str,
@@ -1023,14 +1439,21 @@ class CoatColorCalculator:
         breed: str | None,
         mode: str = "normal",
         carriers: dict[str, str] | None = None,
+        expand_category_a: bool = True,
     ) -> list[ParentGenotype]:
-        """親遺伝子型候補の解決をメモ化して返す (返り値は読み取り専用扱い)。"""
+        """親遺伝子型候補の解決をメモ化して返す (返り値は読み取り専用扱い)。
 
-        key = (phenotype, sex, breed, mode, _freeze_carriers(carriers))
+        expand_category_a=False は確定色 (confirmed_results) 計算用にカテゴリA座位の
+        X/- 展開を抑止する。キャッシュキーに含めて normal と混同しないようにする。
+        """
+
+        key = (phenotype, sex, breed, mode, _freeze_carriers(carriers), expand_category_a)
         cached = _lru_get(self._genotype_cache, key)
         if cached is not None:
             return cached
-        result = self._resolve_parent_genotypes_impl(phenotype, sex, breed, mode, carriers)
+        result = self._resolve_parent_genotypes_impl(
+            phenotype, sex, breed, mode, carriers, expand_category_a
+        )
         _lru_put(self._genotype_cache, key, result, _GENOTYPE_CACHE_MAX)
         return result
 
@@ -1041,6 +1464,7 @@ class CoatColorCalculator:
         breed: str | None,
         mode: str = "normal",
         carriers: dict[str, str] | None = None,
+        expand_category_a: bool = True,
     ) -> list[ParentGenotype]:
         if breed:
             breed_lower = breed.lower()
@@ -1051,9 +1475,18 @@ class CoatColorCalculator:
                 elif phenotype_lower == "cinnamon":
                     phenotype = "Cinnamon Ticked Tabby"
                 elif phenotype_lower == "fawn":
+                    # Abyssinian/Somali の「Fawn」= 希釈シナモン (bl/bl d/d) のティックドタビー。
                     phenotype = "Fawn Ticked Tabby"
                 elif phenotype_lower == "red":
-                    phenotype = "Red Ticked Tabby"
+                    # Abyssinian/Somali の「Red」= Sorrel = シナモン (bl/bl) のティックドタビー。
+                    # 一般の「Red」(伴性オレンジ O) とは別物なので、猫種文脈でのみシナモン系へ寄せる。
+                    # 一般オレンジの Red Ticked Tabby は遺伝子型を持たないため、ここへ解決させない。
+                    phenotype = "Cinnamon Ticked Tabby"
+            # European Burmese を先に判定する ("burmese" は "european burmese" の部分文字列のため)。
+            elif "european burmese" in breed_lower:
+                phenotype = _EUROPEAN_BURMESE_INPUT_ALIAS.get(phenotype.lower(), phenotype)
+            elif "burmese" in breed_lower:
+                phenotype = _BURMESE_INPUT_ALIAS.get(phenotype.lower(), phenotype)
 
         # cat_color_master.csv による入力名の解決 (alias 受理 + 通常モードでの制限)。
         phenotype = self._resolve_input_color_name(phenotype, breed)
@@ -1065,7 +1498,7 @@ class CoatColorCalculator:
             )
 
         # mode に応じた親遺伝子型候補を生成する (normal: キャリア閉鎖 / explicit_carrier: 指定座位を開放)。
-        genotypes = build_parent_genotypes(phenotype_key, sex, mode, carriers)
+        genotypes = build_parent_genotypes(phenotype_key, sex, mode, carriers, expand_category_a)
         if not genotypes:
             if sex == "male":
                 raise BreedingCalculationError(

@@ -25,7 +25,7 @@ _ALLELE_PAIRS: dict[str, tuple[str, str]] = {
     "ww": ("w", "w"), "WW": ("W", "W"),
     "ss": ("s", "s"), "Ss": ("S", "s"), "SS": ("S", "S"),
     "ii": ("i", "i"), "Ii": ("I", "i"),
-    "wbwb": ("wb", "wb"), "Wbwb": ("Wb", "wb"),
+    "wbwb": ("wb", "wb"), "Wbwb": ("Wb", "wb"), "WbWb": ("Wb", "Wb"),
     "OY": ("O", "Y"), "oY": ("o", "Y"), "Oo": ("O", "o"), "OO": ("O", "O"), "oo": ("o", "o"),
 }
 
@@ -125,6 +125,59 @@ def test_matching_color_does_not_leak_ruddy_without_breed_context() -> None:
     assert namer.find_matching_color(kitten, "Blue Silver", "Silver", "Somali") == "Ruddy"
 
 
+def test_ticked_breed_dilute_prefers_ticked_tabby_variant() -> None:
+    """ティックド猫種の希釈個体は逆引きで "Blue Ticked Tabby"(猫種呼称) を選ぶ。
+
+    回帰: expressed_genotype_key が Ta/Mc/Sp を落とすため、希釈アグーチの逆引き候補には
+    汎用 "Blue Tabby" と猫種呼称 "Blue Ticked Tabby" が同順で並ぶ。以前は親名スコアが
+    引き分けると先頭の汎用 "Blue Tabby" が選ばれ、下流の表示名解決 (Blue Ticked Tabby→
+    Abyssinian→Blue) に載らず生の "Blue Tabby" が残っていた。ティックド猫種文脈では
+    Ticked 変種を優先する。
+    """
+
+    namer = PhenotypeNamer()
+    # 希釈 (d/d)・ティックド (Ta/Ta)・アグーチの子猫。親カラーは "Ruddy" (ticked 語を含まない)。
+    loci = {
+        "B": ("B", "B"),
+        "D": ("d", "d"),
+        "A": ("A", "A"),
+        "C": ("C", "C"),
+        "W": ("w", "w"),
+        "S": ("s", "s"),
+        "Mc": ("Mc", "Mc"),
+        "Ta": ("Ta", "Ta"),
+        "Sp": ("sp", "sp"),
+        "I": ("i", "i"),
+        "Wb": ("wb", "wb"),
+        "O": ("o", "Y"),
+    }
+    kitten = KittenGenotype(sex="Male", loci=loci)
+
+    # ティックド猫種では Ticked 変種を選ぶ (品種呼称の直接名 "Blue" は CSV に存在しないため)。
+    assert namer.find_matching_color(kitten, "Ruddy", "Ruddy", "Abyssinian") == "Blue Ticked Tabby"
+    assert namer.find_matching_color(kitten, "Ruddy", "Ruddy", "Somali") == "Blue Ticked Tabby"
+    # 非ティックド文脈では従来どおり汎用タビー名 (後方互換)。
+    assert namer.find_matching_color(kitten, "Ruddy", "Ruddy", None) == "Blue Tabby"
+
+
+@pytest.mark.parametrize("breed", ["Abyssinian", "Somali"])
+def test_ticked_breed_dilute_kitten_displays_as_breed_name(breed: str) -> None:
+    """回帰(統合): ティックド猫種の Ruddy×Ruddy で希釈個体が品種表示名 "Blue" で出る。
+
+    生の "Blue Tabby" / "Blue Ticked Tabby" が結果に残らないこと。
+    """
+
+    from cat_breeding_simulator.engine import CoatColorCalculator
+
+    calculator = CoatColorCalculator()
+    report = calculator.calculate_report("Ruddy", "Ruddy", breed=breed, mode="normal")
+    colors = {result.color for result in report.results}
+    assert "Blue" in colors
+    assert "Ruddy" in colors
+    assert "Blue Tabby" not in colors
+    assert "Blue Ticked Tabby" not in colors
+
+
 def test_construct_fallback_dominant_white_is_white() -> None:
     """優性白 (W/-) は遺伝背景に依らず "White"。"""
 
@@ -169,21 +222,35 @@ def test_construct_fallback_solid_and_tortie_names(kitten: KittenGenotype, expec
 @pytest.mark.parametrize(
     ("kitten", "expected"),
     [
-        # 非オレンジ・アグーチ・ワイドバンド = tipping (Golden / Silver)
-        (_kitten("Female", "oo", a="AA", wb="Wbwb"), "Golden"),
-        (_kitten("Female", "oo", a="AA", d="dd", wb="Wbwb"), "Blue Golden"),
-        (_kitten("Female", "oo", a="AA", i="Ii", wb="Wbwb"), "Silver"),
-        (_kitten("Female", "oo", a="AA", wb="Wbwb", s="Ss"), "Golden-White"),
-        (_kitten("Female", "oo", a="AA", c="cscs", wb="Wbwb"), "Seal Lynx Point"),
+        # 非オレンジ・アグーチ・ワイドバンド = tipping。度合い既定は Shaded (親名で指定が無い場合)。
+        (_kitten("Female", "oo", a="AA", wb="WbWb"), "Shaded Golden"),
+        (_kitten("Female", "oo", a="AA", d="dd", wb="WbWb"), "Blue Shaded Golden"),
+        (_kitten("Female", "oo", a="AA", i="Ii", wb="WbWb"), "Shaded Silver"),
+        (_kitten("Female", "oo", a="AA", wb="WbWb", s="Ss"), "Shaded Golden-White"),
+        (_kitten("Female", "oo", a="AA", c="cscs", wb="WbWb"), "Seal Lynx Point"),
         # B/D 座位を残す接頭辞 (_wideband_base_prefix)
-        (_kitten("Female", "oo", a="AA", b="bb", wb="Wbwb"), "Chocolate Golden"),
-        (_kitten("Female", "oo", a="AA", b="bb", d="dd", wb="Wbwb"), "Lilac Golden"),
-        (_kitten("Female", "oo", a="AA", b="blbl", wb="Wbwb"), "Cinnamon Golden"),
-        (_kitten("Female", "oo", a="AA", b="blbl", d="dd", wb="Wbwb"), "Fawn Golden"),
+        (_kitten("Female", "oo", a="AA", b="bb", wb="WbWb"), "Chocolate Shaded Golden"),
+        (_kitten("Female", "oo", a="AA", b="bb", d="dd", wb="WbWb"), "Lilac Shaded Golden"),
+        (_kitten("Female", "oo", a="AA", b="blbl", wb="WbWb"), "Cinnamon Shaded Golden"),
+        (_kitten("Female", "oo", a="AA", b="blbl", d="dd", wb="WbWb"), "Fawn Shaded Golden"),
+        # 赤 (O): シルバーは Cameo (Shell/Shaded)、ゴールデン赤は独立色にならず赤へ潰す。
+        (_kitten("Male", "OY", a="AA", i="Ii", wb="WbWb"), "Shaded Cameo"),
+        (_kitten("Male", "OY", a="AA", wb="WbWb"), "Red Tabby"),  # ゴールデン赤 = 赤へ潰す
+        # トーティ (O/o): シルバー=Shaded Tortoiseshell、ゴールデン=末尾に (Golden)。
+        (_kitten("Female", "Oo", a="AA", i="Ii", wb="WbWb"), "Shaded Tortoiseshell"),
+        (_kitten("Female", "Oo", a="AA", wb="WbWb"), "Shaded Tortoiseshell (Golden)"),
+        (_kitten("Female", "Oo", a="AA", d="dd", wb="WbWb"), "Shaded Blue Cream (Golden)"),
+        # a/a (非アグーチ) はワイドバンドでも tipping にならない (ゴールデン・スモークは無い)。
+        (_kitten("Female", "oo", a="aa", wb="WbWb"), "Black"),
+        (_kitten("Female", "oo", a="aa", i="Ii", wb="WbWb"), "Black Smoke"),
+        # ワイドバンドは劣性 (Phase B): ヘテロ Wb/wb はキャリアで非発現 → 通常のタビー名になる。
+        (_kitten("Female", "oo", a="AA", wb="Wbwb"), "Brown Tabby"),
+        (_kitten("Female", "oo", a="AA", i="Ii", wb="Wbwb"), "Silver Tabby"),
     ],
 )
 def test_construct_fallback_wideband_tipping(kitten: KittenGenotype, expected: str) -> None:
-    """ワイドバンド tipping は非オレンジ・アグーチでのみ Golden/Silver として命名する。"""
+    """ワイドバンド tipping を背景 (非オレンジ/赤/トーティ) × シルバー × 度合いで命名する。
+    アグーチ必須。ゴールデン赤は赤へ潰し、ゴールデン a/a はソリッド (ゴールデン・スモーク無し)。"""
 
     namer = PhenotypeNamer()
     assert namer.construct_fallback_name(kitten) == expected
@@ -196,7 +263,7 @@ def test_construct_fallback_wideband_tipping(kitten: KittenGenotype, expected: s
         (_kitten("Female", "oo", a="AA", c="cscs", d="dd", i="Ii"), "Blue Lynx Point"),
         (_kitten("Female", "Oo", a="AA", c="cscs", i="Ii"), "Seal Tortie Lynx Point"),
         (_kitten("Female", "Oo", a="AA", c="cscs", d="dd", i="Ii"), "Blue Cream Lynx Point"),
-        (_kitten("Female", "oo", a="AA", c="cscs", wb="Wbwb"), "Seal Lynx Point"),
+        (_kitten("Female", "oo", a="AA", c="cscs", wb="WbWb"), "Seal Lynx Point"),
     ],
 )
 def test_construct_fallback_point_display_ignores_silver_and_tipping(
@@ -236,11 +303,13 @@ def test_construct_fallback_tipping_degree_from_parents() -> None:
     """tipping の濃淡 (Shell/Shaded/Chinchilla) は親カラー名から推論する。"""
 
     namer = PhenotypeNamer()
-    base = _kitten("Female", "oo", a="AA", wb="Wbwb")
+    base = _kitten("Female", "oo", a="AA", wb="WbWb")
     assert namer.construct_fallback_name(base, "Shaded Golden", "Black") == "Shaded Golden"
     assert namer.construct_fallback_name(base, "Chinchilla Golden", "x") == "Chinchilla Golden"
-    # "Tortoiseshell" の部分文字列 "shell" を誤検出しない (単語境界判定)。
-    assert namer.construct_fallback_name(base, "Tortoiseshell", "Black") == "Golden"
+    # Shell は Chinchilla と同一度合い (1/8)。非オレンジでは表示語は Chinchilla に寄せる。
+    assert namer.construct_fallback_name(base, "Shell Cameo", "x") == "Chinchilla Golden"
+    # 度合い指定が無ければ既定 Shaded。"Tortoiseshell" の部分文字列 "shell" は誤検出しない。
+    assert namer.construct_fallback_name(base, "Tortoiseshell", "Black") == "Shaded Golden"
 
 
 @pytest.mark.parametrize(

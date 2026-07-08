@@ -65,10 +65,18 @@ def test_b_locus_explicit_chocolate_series_50(calc) -> None:
 
 # --- A-locus (タビー/ソリッド) ---
 
-def test_a_locus_normal_no_solid(calc) -> None:
-    """Tabby × Tabby は normal では Solid を出さない (A/a 非展開, 全出力タビー系)。"""
+def test_a_locus_normal_produces_solid(calc) -> None:
+    """Tabby × Tabby は normal でも Solid を出す (A をカテゴリA として X/- 展開)。
+
+    タビー猫は A/A か A/a か表現型で区別できないため、両親が A/a のとき (各50% → 両方25%)
+    子の 1/4 が a/a となり、全体で約 6.25% がソリッドになる。
+    逆方向 (a/a × a/a → タビー) は配偶子に A が無いため発生しない (不可逆ルール維持)。
+    """
     results = calc.calculate("Brown Tabby", "Brown Tabby", mode="normal")
-    assert all("Tabby" in r.color for r in results)
+    solid = round(sum(r.probability_pct for r in results if "Tabby" not in r.color), 3)
+    assert abs(solid - 6.25) < 0.5
+    solid_cross = calc.calculate("Black", "Black", mode="normal")
+    assert all("Tabby" not in r.color for r in solid_cross)
 
 
 def test_a_locus_explicit_solid_25(calc) -> None:
@@ -98,7 +106,8 @@ def test_i_locus_explicit_silver_50(calc) -> None:
         "Silver Tabby", "Brown Tabby",
         mode="explicit_carrier", sire_carriers={"I": "I/i"},
     )
-    assert abs(_pct(results, "Silver") - 50.0) < 0.5
+    # シルバー表現型 = 銀タビー (Silver) + ソリッド銀 (Smoke)。合わせて 50%。
+    assert abs(_pct(results, "Silver") + _pct(results, "Smoke") - 50.0) < 0.5
 
 
 # --- S-locus (白斑) ---
@@ -234,10 +243,12 @@ def test_c_locus_point_pair_never_returns_full_color(
 
 # --- 130×204 normal (全出力タビー/パッチドタビー系) ---
 
-def test_130x204_normal_all_tabby(calc) -> None:
+def test_130x204_normal_includes_solid(calc) -> None:
+    """A をカテゴリA として展開するため、タビー親同士でも normal で a/a 前提カラー
+    (Solid / Smoke / Tortie 等) が出る。未分類ゼロ・合計100% の不変条件は維持する。"""
     report = calc.calculate_report("Silver Tabby", "Blue Pt Tabby-White", breed=None, mode="normal")
     non_tabby = sorted({r.color for r in report.results if "Tabby" not in r.color})
-    assert not non_tabby, f"130×204 normal に非タビー系が出力された: {non_tabby}"
+    assert non_tabby, "A 展開後は a/a 前提カラー (非タビー系) が出るはず"
     assert report.unmatched_probability == 0
     assert abs(round(sum(r.probability_pct for r in report.results), 4) - 100.0) < 0.01
 
@@ -247,7 +258,7 @@ def test_130x204_normal_all_tabby(calc) -> None:
 def test_normal_mode_metadata(calc) -> None:
     report = calc.calculate_report("Silver Tabby", "Blue Pt Tabby-White", breed=None, mode="normal")
     assert report.mode == "normal"
-    assert "A" in (report.closed_loci or [])
+    assert "A" in (report.opened_loci or [])  # A はカテゴリA として展開座位に移動
     assert "C" in (report.closed_loci or [])
     assert "D" in (report.opened_loci or [])
     assert report.assumptions
@@ -283,13 +294,19 @@ def test_carrier_exploration_reveals_point_from_one_point_parent(calc) -> None:
     assert abs(round(sum(r.probability_pct for r in point_scenario.results), 4) - 100.0) < 0.01
 
 
-def test_carrier_exploration_reveals_solid_from_one_solid_parent(calc) -> None:
-    """片親 Solid (a/a) × 相手 Tabby の場合、相手 A/a キャリア仮説で Solid が出現する。"""
+def test_normal_reveals_solid_from_tabby_parent_without_carrier_mode(calc) -> None:
+    """A をカテゴリA として normal で展開するため、Brown Tabby × Black では
+    carrier_exploration を使わずとも normal 時点でソリッドが出る。
+
+    A/a の可能性は normal がカバーするため、carrier_exploration の A/a シナリオは
+    normal に対する新規色を追加しない (new_colors が空)。B/C 系の潜在キャリア探索とは異なる。
+    """
+    normal = calc.calculate_report("Brown Tabby", "Black", breed=None, mode="normal")
+    assert any("Tabby" not in r.color for r in normal.results)  # normal で既にソリッドが出る
     report = calc.calculate_report("Brown Tabby", "Black", breed=None, mode="carrier_exploration")
-    scenarios = report.carrier_exploration_results or []
-    a_scenarios = [s for s in scenarios if s.scenario.startswith("A_")]
-    assert a_scenarios
-    assert a_scenarios[0].new_colors  # ソリッドが新規に現れる
+    a_scenarios = [s for s in (report.carrier_exploration_results or []) if s.scenario.startswith("A_")]
+    for scenario in a_scenarios:
+        assert not scenario.new_colors  # normal が既にカバー = 新規色なし
 
 
 def test_carrier_exploration_no_scenario_when_both_dominant(calc) -> None:
@@ -313,3 +330,107 @@ def test_carrier_exploration_results_separated_from_normal(calc) -> None:
 def test_unknown_mode_rejected(calc) -> None:
     with pytest.raises(BreedingCalculationError):
         calc.calculate("Black", "Black", mode="bogus_mode")
+
+
+# --- P2「もしこの色が出たら」(confirmed_results / conditional_color_groups) ---
+
+
+def test_color_family_grouping_labels() -> None:
+    """色系統グルーピング: BaseSeries×Dilution・ポイント・セピア・シルバーのラベル合成。"""
+
+    from cat_breeding_simulator.color_master import color_family
+
+    assert color_family("Blue") == "ブルー系"          # black + dilute
+    assert color_family("Cinnamon") == "シナモン系"     # cinnamon + dense
+    assert color_family("Fawn") == "フォーン系"         # cinnamon + dilute
+    assert color_family("Sable") == "セピア系"          # C/cb セピアは「もし出たら」に入れる
+    assert color_family("Seal Point") == "ポイント系"   # C/cs ポイントは除外対象
+    assert color_family("Silver Tabby") == "シルバー系"  # I/- はシルバー系 (bare "Silver" は廃止)
+
+
+def test_confirmed_results_excludes_category_a_colors(calc) -> None:
+    """確定色 (confirmed_results) は隠れキャリア由来のカテゴリA色 (希釈ブルー) を含まない。
+
+    Ruddy×Ruddy(Abyssinian) は既存 results には D/- 展開で Blue が出るが、confirmed_results は
+    Ruddy のみ (確定的な希釈は無い)。B2: 既存 results 側は不変で Blue を残す。
+    """
+
+    report = calc.calculate_report("Ruddy", "Ruddy", breed="Abyssinian", mode="normal")
+    confirmed = {r.color for r in (report.confirmed_results or [])}
+    assert confirmed == {"Ruddy"}
+    # B2: 既存 results は不変 (カテゴリA 展開で Blue が出るまま)。
+    assert any(r.color == "Blue" for r in report.results)
+
+
+def test_conditional_blue_group_with_reverse_inference(calc) -> None:
+    """Ruddy×Ruddy(Abyssinian): 「ブルー系」が両親 D/d で約25%、ポイント系は出ない。"""
+
+    report = calc.calculate_report("Ruddy", "Ruddy", breed="Abyssinian", mode="normal")
+    groups = report.conditional_color_groups or []
+    blue = [g for g in groups if g.family_label == "ブルー系"]
+    assert blue, "ブルー系グループが無い"
+    assert "Blue" in blue[0].colors
+    assert abs(blue[0].conditional_probability_pct - 25.0) < 0.5
+    assert blue[0].reverse_inference_label == "この色が出たら両親が D/d 保因と確定します"
+    assert blue[0].assumed_carriers == {"sire": {"D": "D/d"}, "dam": {"D": "D/d"}}
+    # ポイント (C/cs 由来) は色系統に入れない。
+    assert not any(g.family_label == "ポイント系" for g in groups)
+
+
+def test_conditional_includes_point_when_point_parent(calc) -> None:
+    """片親 Point (cs/cs) × Full のとき、conditional にポイント系を出す。
+
+    相手が C/cs 保因なら子にポイントが出る = C 座位を逆推論できるため、出得るポイント色を
+    「もしこの色が出たら」に羅列する (相手が Point な組み合わせでの C 推定を助ける)。
+    """
+
+    report = calc.calculate_report("Seal Point", "Black", breed=None, mode="normal")
+    groups = report.conditional_color_groups or []
+    assert groups, "条件付きグループが生成されていない"
+    point_groups = [g for g in groups if g.family_label == "ポイント系"]
+    assert point_groups, "相手が Point なのに条件付きにポイント系が出ていない"
+    # ポイント色は C 座位 (C/cs) の逆推論として出る。
+    assert any("Point" in color for g in point_groups for color in g.colors)
+    assert all("C" in g.assumed_carriers.get("dam", {}) for g in point_groups)
+
+
+def test_conditional_recessive_parent_reverse_inference_single_parent(calc) -> None:
+    """片親が劣性発現 (Chocolate=b/b) のとき、相手 (Black) の B/b 保因を単親逆推論で提示する。"""
+
+    report = calc.calculate_report("Chocolate", "Black", breed=None, mode="normal")
+    groups = report.conditional_color_groups or []
+    choco = [g for g in groups if g.family_label == "チョコレート系"]
+    assert choco, "チョコレート系グループが無い"
+    assert choco[0].reverse_inference_label == "この色が出たら母が B/b 保因と確定します"
+    assert choco[0].assumed_carriers == {"dam": {"B": "B/b"}}
+
+
+def test_conditional_sepia_group_shown_point_excluded(calc) -> None:
+    """セピアが絡む交配ではセピア系を「もしこの色が出たら」に出し、ポイントは出さない。
+
+    Champagne × Sable (Burmese): 両親セピア (cb/cb)。片親 Champagne が b/b を発現するため
+    相手 Sable の B/b 保因を仮定するとチョコ系セピア (Champagne) が条件付きで出る。セピアは
+    含め、ポイント (cs 由来) は色系統に入れない。
+    """
+
+    report = calc.calculate_report("Champagne", "Sable", breed="Burmese", mode="normal")
+    groups = report.conditional_color_groups or []
+    sepia = [g for g in groups if g.family_label == "セピア系"]
+    assert sepia, "セピア系グループが無い"
+    assert sepia[0].colors  # 具体的なセピア色が含まれる
+    assert "C/cb" in sepia[0].reverse_inference_label or "B/b" in sepia[0].reverse_inference_label
+    assert not any(g.family_label == "ポイント系" for g in groups)
+
+
+def test_conditional_only_normal_mode(calc) -> None:
+    """confirmed_results / conditional_color_groups は normal モードのみ設定される。"""
+
+    explicit = calc.calculate_report(
+        "Seal Point", "Black", breed=None,
+        mode="explicit_carrier", dam_carriers={"C": "C/cs"},
+    )
+    assert explicit.confirmed_results is None
+    assert explicit.conditional_color_groups is None
+    exploration = calc.calculate_report("Seal Point", "Black", breed=None, mode="carrier_exploration")
+    assert exploration.confirmed_results is None
+    assert exploration.conditional_color_groups is None

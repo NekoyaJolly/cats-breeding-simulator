@@ -90,10 +90,16 @@ class DisplayAliasMap:
                 self._breed_values.append(row.breed)
 
     def _matching_breed_keys(self, breed: str) -> list[str]:
-        """入力 breed に部分一致する CSV Breed 値のキー一覧 (例: 'Oriental Shorthair' -> 'oriental')。"""
+        """入力 breed に部分一致する CSV Breed 値のキー一覧 (例: 'Oriental Shorthair' -> 'oriental')。
+
+        長いキーを先に返す (CSV 行順や _breed_values 順に依存せず、より具体的な猫種を優先する)。
+        例: 'European Burmese' は 'european burmese' と 'burmese' の両方に一致するが、長い
+        'european burmese' を先に評価するので Burmese 呼称に先取られない。
+        """
 
         breed_key = _key(breed)
-        return [_key(value) for value in self._breed_values if _key(value) in breed_key]
+        matches = [_key(value) for value in self._breed_values if _key(value) in breed_key]
+        return sorted(matches, key=len, reverse=True)
 
     def _resolve_breed_specific(self, name: str, breed: str) -> str | None:
         """猫種別表示名を完全名で解決する。未登録なら None。"""

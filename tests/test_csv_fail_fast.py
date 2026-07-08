@@ -93,3 +93,55 @@ def test_cat_color_master_matches_schema_and_v9_contract() -> None:
     errors = validate(rows, set(load_source_colors().keys()))
 
     assert errors == []
+
+
+def test_no_ambiguous_solid_canonical_colors() -> None:
+    """ソリッド(非タビー・非ポイント)の表示 canonical 色は expressed_key が一意であること。
+
+    reverse-lookup は同一 expressed_key の候補を親名スコアで選ぶため、ソリッド色に重複命名が
+    あると『Brown(≡Black)』『Silver(≡Black Smoke)』のような不完全/別名が親名次第で出力される
+    (実機で繰り返し見つかった粗)。タビー/度合いの正当な衝突は agouti=tabby・pattern 差なので
+    対象外。既知の同義・特殊 (AOC / キャリコ同義 / Cameo 通称 / Van 略記) は許可リストで明示する。
+    """
+    from collections import defaultdict
+
+    from cat_breeding_simulator.color_master import COLOR_MASTER
+    from cat_breeding_simulator.master_data import (
+        COLOR_BASE_LOCI,
+        expressed_genotype_key,
+    )
+
+    groups: dict[tuple, list[str]] = defaultdict(list)
+    for name, entries in COLOR_BASE_LOCI.items():
+        resolved = COLOR_MASTER.resolve(name)
+        if resolved is None or resolved.status != "canonical":
+            continue
+        entry = entries[0]
+        loci = dict(entry.autosomal)
+        loci["O"] = entry.o
+        sex = "male" if "Y" in entry.o else "female"
+        key = expressed_genotype_key(loci, sex)
+        # agouti=solid かつ c_state=full (ポイント/セピア除く) のみ対象。
+        if key[3] != "solid" or key[4] != "full":
+            continue
+        groups[key].append(name)
+
+    # 既知の同義・特殊 (レビュー済で許容)。新たな重複はここに無ければ落ちる。
+    allowed = {
+        frozenset({"Black", "Black(A.O.C)", "Black(AOC)"}),  # AOC 特殊表示
+        frozenset({"Cameo", "Cameo Smoke"}),  # 赤シルバー通称
+        frozenset({"Cameo-White", "Cameo Red Smoke-White"}),
+        frozenset({"Cameo-White Van", "Cameo Red Smoke-White Van"}),
+        frozenset({"Van Calico", "Tortoiseshell-White Van"}),  # キャリコ同義
+        frozenset({"Dilute Calico Van", "Blue Cream-White Van"}),
+        frozenset({"Blue Cream Smoke-White Van", "Blue Silver Pt T-W Van"}),  # 既知エッジ(Van略記)
+    }
+    offenders = [
+        names
+        for names in groups.values()
+        if len(names) > 1 and frozenset(names) not in allowed
+    ]
+    assert not offenders, (
+        "ソリッド色に重複命名 (bare名バグの疑い)。canonical を1つに畳むか許可リストへ: "
+        + "; ".join(str(v) for v in offenders)
+    )

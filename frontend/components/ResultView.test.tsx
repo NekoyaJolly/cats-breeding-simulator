@@ -24,6 +24,10 @@ function buildResponse(
       dam_carriers: null,
     },
     results,
+    // メイン表示は confirmed_results ?? results にフォールバックする。
+    // AOC テストは results 側の内訳を検証するので confirmed_results は null にする。
+    confirmed_results: null,
+    conditional_color_groups: [],
     diagnostics: {
       opened_loci: ["W", "D", "I", "Mc", "Ta"],
       closed_loci: ["A", "B", "C", "Wb"],
@@ -80,6 +84,86 @@ describe("ResultView AOC", () => {
 
     expect(
       screen.queryByRole("button", { name: "AOC の説明を開く" }),
+    ).toBeNull();
+  });
+});
+
+// P2「もしこの色が出たら」: 隠れキャリア仮定時のみ出る条件付きカラー群の表示。
+// normal モードかつ conditional_color_groups があるときだけ畳みで表示し、
+// 開くと family_label / reverse_inference_label / % / colors が読める。
+describe("ResultView conditional colors", () => {
+  const BASE_RESULTS: ResultEntry[] = [
+    { sex: "Male", color: "Black", probability_pct: 50 },
+    { sex: "Female", color: "Black", probability_pct: 50 },
+  ];
+
+  function withConditional(response: CalculationResponse): CalculationResponse {
+    return {
+      ...response,
+      confirmed_results: BASE_RESULTS,
+      conditional_color_groups: [
+        {
+          family_label: "ブルー系",
+          reverse_inference_label:
+            "この色が出たら両親が D/d 保因と確定します",
+          conditional_probability_pct: 25,
+          colors: ["Blue"],
+          color_sexes: { Blue: ["Female", "Male"] },
+          assumed_carriers: { sire: { D: "D/d" }, dam: { D: "D/d" } },
+          scenario: "dilute",
+        },
+      ],
+    };
+  }
+
+  it("normal モードで条件付きカラーがあるとき、デフォルト展開で中身が一覧でき、畳める", async () => {
+    render(
+      <ResultView
+        data={withConditional(buildResponse("Black", "Black", BASE_RESULTS))}
+        language="ja"
+      />,
+    );
+
+    const toggle = screen.getByRole("button", { name: /If This Color/ });
+    // デフォルトは展開状態 (確定色と一緒に一覧で見える)。
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    // グルーピングは色系統でなく遺伝子座 (原因キャリア) 単位。原因は逆推論の説明文に出る。
+    expect(
+      screen.getByText(/この色が出たら両親が D\/d 保因と確定します/),
+    ).toBeInTheDocument();
+    // 出る色は色見本バッジで並ぶ。
+    expect(screen.getByText("Blue")).toBeInTheDocument();
+    expect(screen.getByText(/最大/)).toBeInTheDocument();
+
+    // 任意で畳める。
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(
+      screen.queryByText(/この色が出たら両親が D\/d 保因と確定します/),
+    ).toBeNull();
+  });
+
+  it("conditional_color_groups が空ならセクションを描画しない", () => {
+    render(
+      <ResultView
+        data={buildResponse("Black", "Black", BASE_RESULTS)}
+        language="ja"
+      />,
+    );
+    expect(
+      screen.queryByRole("button", { name: /If This Color/ }),
+    ).toBeNull();
+  });
+
+  it("normal 以外のモードでは条件付きカラーがあっても描画しない", () => {
+    const base = withConditional(buildResponse("Black", "Black", BASE_RESULTS));
+    const explicit: CalculationResponse = {
+      ...base,
+      mode: "explicit_carrier",
+    };
+    render(<ResultView data={explicit} language="ja" />);
+    expect(
+      screen.queryByRole("button", { name: /If This Color/ }),
     ).toBeNull();
   });
 });

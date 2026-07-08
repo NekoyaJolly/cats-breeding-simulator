@@ -12,22 +12,19 @@
 11,Champagne,o/o,D/D,a/a,cb/cb,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 12,Platinum,o/o,d/d,a/a,cb/cb,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 13,Blue Gray,o/o,d/d,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-14,Silver,o/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
-15,Bronze,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+15,Bronze,o/o,D/D,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 16,Lilac,o/o,d/d,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 17,Chocolate,o/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-18,Brown,o/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 19,Lavender,o/o,d/d,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-20,Blue Silver,o/o,d/d,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
-21,Sepia Agouti,o/o,D/D,A/A,cb/cb,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+21,Sepia Agouti,o/o,D/D,A/A,cb/cb,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
 22,Ebony,o/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 23,Chestnut,o/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-24,Shell Cameo,O/O,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
+24,Shell Cameo,O/O,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
 30,Tortoiseshell,O/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 31,Blue Cream,O/o,d/d,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 32,Calico,O/o,D/D,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 33,Dilute Calico,O/o,d/d,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-34,Mike Tri Color,o/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+34,Mike Tri Color,O/o,D/D,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 35,Blue-White,o/o,d/d,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 36,Black-White,o/o,D/D,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 37,Red-White,O/O,D/D,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
@@ -48,13 +45,13 @@
 52,Tortie Smoke-White,O/o,D/D,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
 53,Blue Cream Smoke-White,O/o,d/d,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
 54,Cameo Red Smoke-White,O/O,D/D,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
-60,Chinchilla Silver,o/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
+60,Chinchilla Silver,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
 61,Chinchilla Golden,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,Wb/Wb
-62,Shaded Silver,o/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
+62,Shaded Silver,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
 63,Shaded Golden,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,Wb/Wb
-64,Blue Chinchilla Silver,o/o,d/d,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
-65,Blue Shaded Silver,o/o,d/d,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
-66,Shaded Cameo,O/O,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
+64,Blue Chinchilla Silver,o/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
+65,Blue Shaded Silver,o/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
+66,Shaded Cameo,O/O,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
 70,Black Smoke,o/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
 71,Blue Smoke,o/o,d/d,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
 72,Tortie Smoke,O/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
@@ -75,7 +72,6 @@
 91,Flame Point,O/O,D/D,a/a,cs/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 100,Seal Lynx Point,o/o,D/D,A/A,cs/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 101,Blue Lynx Point,o/o,d/d,A/A,cs/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-102,Brown Lynx Point,o/o,D/D,A/A,cs/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 103,Lilac Lynx Point,o/o,d/d,A/A,cs/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 104,Red Lynx Point,O/O,D/D,A/A,cs/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 105,Chocolate Lynx Point,o/o,D/D,A/A,cs/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
@@ -86,83 +82,83 @@
 110,Lilac Cream Lynx Point,O/o,d/d,A/A,cs/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 120,Seal Point Mitted,o/o,D/D,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 121,Blue Point Mitted,o/o,d/d,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-130,Silver Tabby,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
+130,Silver Tabby,o/o,D/D,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,I/I,wb/wb
 131,Silver Mackerel Tabby,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
-132,Brown Tabby,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+132,Brown Tabby,o/o,D/D,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 133,Brown Mackerel Tabby,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-134,Blue Tabby,o/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+134,Blue Tabby,o/o,d/d,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 135,Blue Mackerel Tabby,o/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-136,Red Tabby,O/O,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+136,Red Tabby,O/O,D/D,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 137,Red Mackerel Tabby,O/O,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-138,Cream Tabby,O/O,d/d,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+138,Cream Tabby,O/O,d/d,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 139,Cream Mackerel Tabby,O/O,d/d,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-140,Cameo Tabby,O/O,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
+140,Cameo Tabby,O/O,D/D,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,I/I,wb/wb
 141,Cameo Mackerel Tabby,O/O,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
-142,Peke-Face Red Tabby,O/O,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+142,Peke-Face Red Tabby,O/O,D/D,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 143,Peke-Face Red Mc Tabby,O/O,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-144,Golden Tabby,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,Wb/Wb
+144,Golden Tabby,o/o,D/D,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,Wb/Wb
 145,Golden Mc Tabby,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,Wb/Wb
-146,Chestnut Tabby,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-147,Lavender Tabby,o/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-148,Ebony Tabby,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-149,Fawn Tabby,o/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-150,Cinnamon Tabby,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-151,Blue Silver Tabby,o/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
-152,Chestnut Silver Tabby,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
+146,Chestnut Tabby,o/o,D/D,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
+147,Lavender Tabby,o/o,d/d,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
+148,Ebony Tabby,o/o,D/D,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
+149,Fawn Tabby,o/o,d/d,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
+150,Cinnamon Tabby,o/o,D/D,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
+151,Blue Silver Tabby,o/o,d/d,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,I/I,wb/wb
+152,Chestnut Silver Tabby,o/o,D/D,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,I/I,wb/wb
 153,Silver Ticked Tabby,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,I/I,wb/wb
 154,Brown Ticked Tabby,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
 155,Blue Ticked Tabby,o/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
-160,Silver Patched Tabby,O/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,I/I,wb/wb
+160,Silver Patched Tabby,O/o,D/D,A/A,C/C,w/w,s/s,mc/mc,Ta/Ta,sp/sp,I/I,wb/wb
 161,Silver Patched Mc Tabby,O/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,I/I,wb/wb
-162,Brown Patched Tabby,O/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
+162,Brown Patched Tabby,O/o,D/D,A/A,C/C,w/w,s/s,mc/mc,Ta/Ta,sp/sp,i/i,wb/wb
 163,Brown Patched Mc Tabby,O/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
-165,Blue Patched Tabby,O/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
+165,Blue Patched Tabby,O/o,d/d,A/A,C/C,w/w,s/s,mc/mc,Ta/Ta,sp/sp,i/i,wb/wb
 166,Blue Patched Mc Tabby,O/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
-167,Cinnamon Patched Tabby,O/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
-168,Ebony Patched Tabby,O/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
-169,Chestnut Patched Tabby,O/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
-170,Lavender Patched Tabby,O/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
-171,Fawn Patched Tabby,O/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
-180,Silver Tabby-White,o/o,D/D,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
+167,Cinnamon Patched Tabby,O/o,D/D,A/A,C/C,w/w,s/s,mc/mc,Ta/Ta,sp/sp,i/i,wb/wb
+168,Ebony Patched Tabby,O/o,D/D,A/A,C/C,w/w,s/s,mc/mc,Ta/Ta,sp/sp,i/i,wb/wb
+169,Chestnut Patched Tabby,O/o,D/D,A/A,C/C,w/w,s/s,mc/mc,Ta/Ta,sp/sp,i/i,wb/wb
+170,Lavender Patched Tabby,O/o,d/d,A/A,C/C,w/w,s/s,mc/mc,Ta/Ta,sp/sp,i/i,wb/wb
+171,Fawn Patched Tabby,O/o,d/d,A/A,C/C,w/w,s/s,mc/mc,Ta/Ta,sp/sp,i/i,wb/wb
+180,Silver Tabby-White,o/o,D/D,A/A,C/C,w/w,S/s,mc/mc,ta/ta,sp/sp,I/I,wb/wb
 181,Silver Mc Tabby-White,o/o,D/D,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
-182,Brown Tabby-White,o/o,D/D,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+182,Brown Tabby-White,o/o,D/D,A/A,C/C,w/w,S/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 183,Brown Mc Tabby-White,o/o,D/D,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-184,Blue Tabby-White,o/o,d/d,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+184,Blue Tabby-White,o/o,d/d,A/A,C/C,w/w,S/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 185,Blue Mc Tabby-White,o/o,d/d,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-186,Red Tabby-White,O/O,D/D,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+186,Red Tabby-White,O/O,D/D,A/A,C/C,w/w,S/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 187,Red Mc Tabby-White,O/O,D/D,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-188,P-F Red Tabby-White,O/O,D/D,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+188,P-F Red Tabby-White,O/O,D/D,A/A,C/C,w/w,S/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 189,P-F Red Mc Tabby-White,O/O,D/D,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-190,Cream Tabby-White,O/O,d/d,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+190,Cream Tabby-White,O/O,d/d,A/A,C/C,w/w,S/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 191,Cream Mc Tabby-White,O/O,d/d,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-192,Cameo Tabby-White,O/O,D/D,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
+192,Cameo Tabby-White,O/O,D/D,A/A,C/C,w/w,S/s,mc/mc,ta/ta,sp/sp,I/I,wb/wb
 193,Cameo Mc Tabby-White,O/O,D/D,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
 194,Silver Tc Tabby-White,o/o,D/D,A/A,C/C,w/w,S/s,Mc/Mc,Ta/Ta,sp/sp,I/I,wb/wb
 195,Brown Tc Tabby-White,o/o,D/D,A/A,C/C,w/w,S/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
 196,Blue Tc Tabby-White,o/o,d/d,A/A,C/C,w/w,S/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
-200,Silver Pt Tabby-White,O/o,D/D,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
+200,Silver Pt Tabby-White,O/o,D/D,A/A,C/C,w/w,S/s,mc/mc,ta/ta,sp/sp,I/I,wb/wb
 201,Silver Pt Mc Tabby-White,O/o,D/D,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
-202,Brown Pt Tabby-White,O/o,D/D,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+202,Brown Pt Tabby-White,O/o,D/D,A/A,C/C,w/w,S/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 203,Brown Pt Mc Tabby-White,O/o,D/D,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-204,Blue Pt Tabby-White,O/o,d/d,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+204,Blue Pt Tabby-White,O/o,d/d,A/A,C/C,w/w,S/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 205,Blue Pt Mc Tabby-White,O/o,d/d,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-206,Silver Tabby-White Van,o/o,D/D,A/A,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
+206,Silver Tabby-White Van,o/o,D/D,A/A,C/C,w/w,S/S,mc/mc,ta/ta,sp/sp,I/I,wb/wb
 207,Silver Mc Tabby-W Van,o/o,D/D,A/A,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
-208,Brown Tabby-White Van,o/o,D/D,A/A,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+208,Brown Tabby-White Van,o/o,D/D,A/A,C/C,w/w,S/S,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 209,Brown Mc Tabby-White Van,o/o,D/D,A/A,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-210,Blue Tabby-White Van,o/o,d/d,A/A,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+210,Blue Tabby-White Van,o/o,d/d,A/A,C/C,w/w,S/S,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 211,Blue Mc Tabby-White Van,o/o,d/d,A/A,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-212,Red Tabby-White Van,O/O,D/D,A/A,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+212,Red Tabby-White Van,O/O,D/D,A/A,C/C,w/w,S/S,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 213,Red Mc Tabby-White Van,O/O,D/D,A/A,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-214,Cream Tabby-White Van,O/O,d/d,A/A,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+214,Cream Tabby-White Van,O/O,d/d,A/A,C/C,w/w,S/S,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 215,Cream Mc Tabby-White Van,O/O,d/d,A/A,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-216,Cameo Tabby-White Van,O/O,D/D,A/A,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
+216,Cameo Tabby-White Van,O/O,D/D,A/A,C/C,w/w,S/S,mc/mc,ta/ta,sp/sp,I/I,wb/wb
 217,Cameo Mc Tabby-White Van,O/O,D/D,A/A,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
-220,Silver Pt Tabby-W Van,O/o,D/D,A/A,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
+220,Silver Pt Tabby-W Van,O/o,D/D,A/A,C/C,w/w,S/S,mc/mc,ta/ta,sp/sp,I/I,wb/wb
 221,Silver Pt Mc Tabby-W Van,O/o,D/D,A/A,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
-222,Brown Pt Tabby-White Van,O/o,D/D,A/A,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+222,Brown Pt Tabby-White Van,O/o,D/D,A/A,C/C,w/w,S/S,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 223,Brown Pt Mc Tabby-W Van,O/o,D/D,A/A,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-224,Blue Pt Tabby-White Van,O/o,d/d,A/A,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+224,Blue Pt Tabby-White Van,O/o,d/d,A/A,C/C,w/w,S/S,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 225,Blue Pt Mc Tabby-W Van,O/o,d/d,A/A,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 230,Silver Spotted Tabby,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,Sp/Sp,I/I,wb/wb
 231,Brown Spotted Tabby,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,Sp/Sp,i/i,wb/wb
@@ -179,7 +175,7 @@
 242,Red Sp Tabby-White,O/O,D/D,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,Sp/Sp,i/i,wb/wb
 243,Blue Sp Tabby-White,o/o,d/d,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,Sp/Sp,i/i,wb/wb
 244,Cream Sp Tabby-White,O/O,d/d,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,Sp/Sp,i/i,wb/wb
-250,Leopard,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+250,Leopard,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,Sp/Sp,i/i,wb/wb
 260,Any Other Color,o/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 261,AOV,o/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 270,Silver Pt Sp Tabby,O/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,Sp/Sp,I/I,wb/wb
@@ -198,10 +194,9 @@
 283,Brown Ticked Tabby-White,o/o,D/D,A/A,C/C,w/w,S/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
 284,Chocolate Point Mitted,o/o,D/D,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 285,Snow,o/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-286,Blue Silver Tabby-White,o/o,d/d,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
+286,Blue Silver Tabby-White,o/o,d/d,A/A,C/C,w/w,S/s,mc/mc,ta/ta,sp/sp,I/I,wb/wb
 287,Sorrel (Red),O/O,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 288,Sorrel Spotted Tabby,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,Sp/Sp,i/i,wb/wb
-289,Brown-White,o/o,D/D,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 290,Cinnamon,o/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 291,Seal Tortie Point,O/o,D/D,a/a,cs/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 292,Seal Point Bi-Color,o/o,D/D,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
@@ -212,22 +207,22 @@
 297,Seal Point(A.O.C),o/o,D/D,a/a,cs/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 298,Blue Marble,o/o,d/d,a/a,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 299,Flame Point Bi-Color,O/O,D/D,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-300,Shell Tortoiseshell,O/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+300,Shell Tortoiseshell,O/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
 301,Blue Tortie-White,O/o,d/d,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-302,Blue Silver Pt Tabby-White,O/o,d/d,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
+302,Blue Silver Pt Tabby-White,O/o,d/d,A/A,C/C,w/w,S/s,mc/mc,ta/ta,sp/sp,I/I,wb/wb
 303,Blue Silver Pt T-W Van,O/o,d/d,a/a,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
-304,Shaded Tortie,O/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
+304,Shaded Tortie,O/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
 305,Blue Tortie,O/o,d/d,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 306,Seal Lynx Point Bi-Color,o/o,D/D,A/A,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 307,Brown Classic Tobie,O/o,D/D,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 308,Tortie Point Bi-Color,O/o,D/D,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 309,Chocolate Tortie Point Bi-Color,O/o,D/D,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 310,Blue Silver Mc Tabby,o/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
-311,Shaded Cameo-White,O/O,D/D,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
+311,Shaded Cameo-White,O/O,D/D,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
 312,Calico,O/o,D/D,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 352,Blue Point (A.O.C),o/o,d/d,a/a,cs/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 353,Cream Point Mitted,O/O,d/d,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-354,Shaded Silver-White,o/o,D/D,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
+354,Shaded Silver-White,o/o,D/D,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
 355,Tortoiseshell-White Van,O/o,D/D,a/a,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 356,Champagne Mink,o/o,D/D,a/a,cb/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 357,Champagne Solid,o/o,D/D,a/a,cb/cb,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
@@ -238,7 +233,7 @@
 361,Platinum Point,o/o,d/d,a/a,cs/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 362,Champagne Point,o/o,D/D,a/a,cs/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 363,Blue Cream Point Mitted,O/o,d/d,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-364,Blue Silver Patched Tabby,O/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,I/I,wb/wb
+364,Blue Silver Patched Tabby,O/o,d/d,A/A,C/C,w/w,s/s,mc/mc,Ta/Ta,sp/sp,I/I,wb/wb
 365,Seal Lynx Point Van Bi-C,o/o,D/D,A/A,cs/cs,w/w,S/S,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 366,Blue Lynx Point Van Bi-C,o/o,d/d,A/A,cs/cs,w/w,S/S,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 367,Flame Point Bi-Color,O/O,D/D,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
@@ -252,15 +247,15 @@
 375,Chocolate Point Mitted,o/o,D/D,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 376,Blue Cream-White Van,O/o,d/d,a/a,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 377,Choco Silver Lynx Point-W,o/o,D/D,A/A,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
-378,Chocolate Patched Tabby,O/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
+378,Chocolate Patched Tabby,O/o,D/D,A/A,C/C,w/w,s/s,mc/mc,Ta/Ta,sp/sp,i/i,wb/wb
 379,Seal Point-White,o/o,D/D,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 380,Snow Spotted Tabby,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,Sp/Sp,i/i,wb/wb
 381,Seal Tortie Point-White,O/o,D/D,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 382,Chocolate-White,o/o,D/D,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 383,Blue Point-White,o/o,d/d,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-384,Shell Tortoiseshell-White,O/o,D/D,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+384,Shell Tortoiseshell-White,O/o,D/D,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
 385,Natural Solid,o/o,D/D,a/a,cb/cb,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-386,Cameo(Red Silver) Tabby,O/O,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
+386,Cameo(Red Silver) Tabby,O/O,D/D,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,I/I,wb/wb
 387,Seal Tortie Lynx Point-W,O/o,D/D,A/A,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 388,Blue Chinchilla Golden,o/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,Wb/Wb
 389,Blue Silver Pt Mc Tabby-W,O/o,d/d,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
@@ -270,23 +265,22 @@
 431,Choco Cream Lynx Point-W,O/o,d/d,A/A,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 432,Ebony-White,o/o,D/D,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 433,Ebony Silver Ticked T-W,o/o,D/D,A/A,C/C,w/w,S/s,Mc/Mc,Ta/Ta,sp/sp,I/I,wb/wb
-434,Ebony Silver Tabby-White,o/o,D/D,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
+434,Ebony Silver Tabby-White,o/o,D/D,A/A,C/C,w/w,S/s,mc/mc,ta/ta,sp/sp,I/I,wb/wb
 435,Seal Mink Spotted Tabby,o/o,D/D,A/A,cb/cs,w/w,s/s,Mc/Mc,ta/ta,Sp/Sp,i/i,wb/wb
-436,Cinnamon Tabby(AOC),o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+436,Cinnamon Tabby(AOC),o/o,D/D,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 437,Cream Classic Tabby-White,O/O,d/d,A/A,C/C,w/w,S/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 438,Blue Classic Tabby-White,o/o,d/d,A/A,C/C,w/w,S/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 439,Smoke Tortoiseshell,O/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
 440,Lilac Point-White,o/o,d/d,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-441,Lilac Tabby,o/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+441,Lilac Tabby,o/o,d/d,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 442,Cinnamon Mackerel Tabby,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 443,Chocolate Tortie Lynx Point-White,O/o,D/D,A/A,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 444,Blue Spotted,o/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,Sp/Sp,i/i,wb/wb
 445,Blue Cream Point-White,O/o,d/d,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 446,Brown Pt Ticked Tabby-W,O/o,D/D,A/A,C/C,w/w,S/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
 447,Black(A.O.C),o/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-448,Blue Shaded,o/o,d/d,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
-449,Cream Cameo Tabby-White Van,O/O,d/d,A/A,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
-450,Blue Silver-White,o/o,d/d,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
+448,Blue Shaded,o/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,Wb/Wb
+449,Cream Cameo Tabby-White Van,O/O,d/d,A/A,C/C,w/w,S/S,mc/mc,ta/ta,sp/sp,I/I,wb/wb
 451,Silver Lynx Point,o/o,D/D,A/A,cs/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
 452,Blue Lynx Point Bi-Color,o/o,d/d,A/A,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 453,Lilac Point Bi-Color,o/o,d/d,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
@@ -296,7 +290,7 @@
 457,Blue Cream Lynx Point-White,O/o,d/d,A/A,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 458,Smoke Calico,O/o,D/D,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
 459,Brown Pt Ticked Tabby,O/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
-460,Blue Silver Pt Tabby-White Van,O/o,d/d,A/A,C/C,w/w,S/S,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
+460,Blue Silver Pt Tabby-White Van,O/o,d/d,A/A,C/C,w/w,S/S,mc/mc,ta/ta,sp/sp,I/I,wb/wb
 461,Black Silver Spotted Tabby,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,Sp/Sp,I/I,wb/wb
 462,Silver Pt Tc Tabby-White,O/o,D/D,A/A,C/C,w/w,S/s,Mc/Mc,Ta/Ta,sp/sp,I/I,wb/wb
 463,Lilac Tortie Point Mitted,O/o,d/d,a/a,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
@@ -304,7 +298,7 @@
 465,Seal Tortie Lynx Point-White,O/o,D/D,A/A,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 466,Brown Classic Tabby-White,o/o,D/D,A/A,C/C,w/w,S/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 467,Brown Ticked Pt Tabby,O/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
-468,Lilac Silver Tabby-White,o/o,d/d,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
+468,Lilac Silver Tabby-White,o/o,d/d,A/A,C/C,w/w,S/s,mc/mc,ta/ta,sp/sp,I/I,wb/wb
 469,Cream Lynx Point Bi-Color,O/O,d/d,A/A,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 470,Black(AOC),o/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 471,Cinnamon Ticked Tabby,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
@@ -316,12 +310,10 @@
 477,Brown Patched Sp Tabby,O/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,Sp/Sp,i/i,wb/wb
 478,Blue Tortie Point,O/o,d/d,a/a,cs/cs,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 479,Black Silver Marbled Tabby,o/o,D/D,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,I/I,wb/wb
-480,Lilac Tabby-White,o/o,d/d,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-481,Shell Tortoiseshell,O/o,D/D,a/a,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+480,Lilac Tabby-White,o/o,d/d,A/A,C/C,w/w,S/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 482,Silver Classic Tabby,o/o,D/D,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,I/I,wb/wb
 483,Seal Tortie Lynx Point Bi-Color,O/o,D/D,A/A,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
 484,Seal Tortie Lynx Point Mitted,O/o,D/D,A/A,cs/cs,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-485,Silver-White,o/o,D/D,a/a,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
 486,Shaded Golden-White,o/o,D/D,A/A,C/C,w/w,S/s,Mc/Mc,ta/ta,sp/sp,i/i,Wb/Wb
 487,Cream Ticked Tabby-White,O/O,d/d,A/A,C/C,w/w,S/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
 488,Blue Shaded Golden,o/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,Wb/Wb
@@ -344,7 +336,18 @@
 505,Lilac Classic Tabby,o/o,d/d,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 506,Lilac Classic Tabby-White,o/o,d/d,A/A,C/C,w/w,S/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
 507,Lilac Patched Classic Tabby,O/o,d/d,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
-398,Chocolate Tabby,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
-509,Chocolate Silver Tabby,o/o,D/D,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,sp/sp,I/I,wb/wb
-510,Lilac Patched Tabby,O/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
+398,Chocolate Tabby,o/o,D/D,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
+509,Chocolate Silver Tabby,o/o,D/D,A/A,C/C,w/w,s/s,mc/mc,ta/ta,sp/sp,I/I,wb/wb
+510,Lilac Patched Tabby,O/o,d/d,A/A,C/C,w/w,s/s,mc/mc,Ta/Ta,sp/sp,i/i,wb/wb
 511,Lilac Spotted Tabby,o/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,ta/ta,Sp/Sp,i/i,wb/wb
+512,Fawn Ticked Tabby,o/o,d/d,A/A,C/C,w/w,s/s,Mc/Mc,Ta/Ta,sp/sp,i/i,wb/wb
+520,Red Sepia,O/O,D/D,a/a,cb/cb,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+521,Cream Sepia,O/O,d/d,a/a,cb/cb,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+522,Brown Tortie Sepia,O/o,D/D,a/a,cb/cb,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+523,Blue Tortie Sepia,O/o,d/d,a/a,cb/cb,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+524,Chocolate Tortie Sepia,O/o,D/D,a/a,cb/cb,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+525,Lilac Tortie Sepia,O/o,d/d,a/a,cb/cb,w/w,s/s,Mc/Mc,ta/ta,sp/sp,i/i,wb/wb
+530,Seal Sepia Tabby,o/o,D/D,A/A,cb/cb,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
+531,Blue Sepia Tabby,o/o,d/d,A/A,cb/cb,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
+532,Chocolate Sepia Tabby,o/o,D/D,A/A,cb/cb,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb
+533,Lilac Sepia Tabby,o/o,d/d,A/A,cb/cb,w/w,s/s,mc/mc,ta/ta,sp/sp,i/i,wb/wb

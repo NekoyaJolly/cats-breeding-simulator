@@ -12,7 +12,11 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from cat_breeding_simulator.engine import BreedingCalculationError, CoatColorCalculator
+from cat_breeding_simulator.engine import (
+    BreedingCalculationError,
+    CalculationReport,
+    CoatColorCalculator,
+)
 from main import app
 
 client = TestClient(app)
@@ -137,3 +141,73 @@ def test_breed_color_policy_documents_tonkinese_classes() -> None:
     assert "Natural Solid" in tonkinese["AllowedColorPolicy"]
     assert "Sepia class" in tonkinese["DisplayNamePolicy"]
     assert "Point class" in tonkinese["ImplementationNotes"]
+
+
+# --- Abyssinian / Somali の「Red」(Sorrel) / 「Fawn」入力の回帰 ---
+#
+# Abyssinian/Somali 固有の「Red」= Sorrel = シナモン (bl/bl) ティックド、
+# 「Fawn」= 希釈シナモン (bl/bl d/d) ティックド。一般の「Red」= 伴性オレンジ (O) とは別物。
+# 以前は Aby「Red」が遺伝子型を持たない一般オレンジの Red Ticked Tabby へ解決し、
+# 「Fawn」も未収載の Fawn Ticked Tabby へ解決してエラーになっていた。
+
+_ABY_SOMALI = ("Abyssinian", "Somali")
+
+
+def _colors(report: CalculationReport) -> set[str]:
+    return {result.color for result in report.results}
+
+
+@pytest.mark.parametrize("breed", _ABY_SOMALI)
+def test_aby_somali_red_input_resolves_to_cinnamon_ticked(breed: str) -> None:
+    """Aby/Somali の「Red」入力がエラーなく計算でき、Red×Red はシナモン系 (Red/Fawn) を出す。"""
+
+    calc = CoatColorCalculator()
+    # Red × Ruddy: エラーなく計算できる (以前は Red Ticked Tabby でエラー)。
+    report = calc.calculate_report("Red", "Ruddy", breed=breed, mode="normal")
+    assert report.results, "Red × Ruddy が空結果"
+    assert report.unmatched_probability == 0.0
+
+    # Red × Red: bl/bl × bl/bl → 子はシナモン系。猫種呼称で Red / Fawn として表示する。
+    red_red = calc.calculate_report("Red", "Red", breed=breed, mode="normal")
+    colors = _colors(red_red)
+    assert "Red" in colors, f"Red × Red にシナモン系 (Red) が出ない: {colors}"
+    assert "Fawn" in colors, f"Red × Red に希釈シナモン系 (Fawn) が出ない: {colors}"
+    # オレンジ系 (Tortoiseshell / Cream 等) は Aby の Red からは出ない。
+    assert not (colors & {"Tortoiseshell", "Cream", "Blue Cream"}), colors
+
+
+@pytest.mark.parametrize("breed", _ABY_SOMALI)
+def test_aby_somali_fawn_input_computes(breed: str) -> None:
+    """Aby/Somali の「Fawn」入力 (希釈シナモンティックド) がエラーなく計算できる。"""
+
+    calc = CoatColorCalculator()
+    report = calc.calculate_report("Fawn", "Ruddy", breed=breed, mode="normal")
+    assert report.results, "Fawn × Ruddy が空結果"
+    assert report.unmatched_probability == 0.0
+    # 希釈親 × 濃色親なので希釈 (Blue) が子に必ず出る。
+    assert "Blue" in _colors(report)
+
+
+@pytest.mark.parametrize("breed", _ABY_SOMALI)
+def test_aby_somali_cinnamon_input_still_accepted(breed: str) -> None:
+    """既存の「Cinnamon」入力も引き続き受理され、Red 相当のシナモン系を出す。"""
+
+    calc = CoatColorCalculator()
+    report = calc.calculate_report("Cinnamon", "Cinnamon", breed=breed, mode="normal")
+    colors = _colors(report)
+    assert "Red" in colors and "Fawn" in colors, colors
+
+
+def test_general_red_is_orange_and_unchanged() -> None:
+    """一般 (猫種未指定) の「Red」= 伴性オレンジのまま。回帰で不変を保証する。"""
+
+    calc = CoatColorCalculator()
+    report = calc.calculate_report("Red", "Black", breed=None, mode="normal")
+    colors = _colors(report)
+    # オレンジ由来: メスはトーティ、オスは黒 (母 Black の X)。シナモン系は出ない。
+    assert "Tortoiseshell" in colors, colors
+    assert not (colors & {"Red", "Fawn", "Cinnamon"}), colors
+
+    # Red / Red Tabby / Red Ticked Tabby の入力解決先が変わっていないこと。
+    assert calc._resolve_input_color_name("Red", None) == "Red"
+    assert calc._resolve_input_color_name("Red Tabby", None) == "Red Tabby"

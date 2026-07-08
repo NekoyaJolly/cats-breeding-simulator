@@ -2,23 +2,113 @@
  "Black Smoke|Cream|-|normal": {
   "body": {
    "carrier_exploration_results": null,
+   "conditional_color_groups": [
+    {
+     "assumed_carriers": {
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Blue Cream Smoke": [
+       "Female"
+      ]
+     },
+     "colors": [
+      "Blue Cream Smoke"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "ブルー系",
+     "reverse_inference_label": "この色が出たら父が D/d 保因と確定します",
+     "scenario": "D_d_on_sire"
+    },
+    {
+     "assumed_carriers": {
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Cream Smoke": [
+       "Male"
+      ]
+     },
+     "colors": [
+      "Cream Smoke"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "クリーム系",
+     "reverse_inference_label": "この色が出たら父が D/d 保因と確定します",
+     "scenario": "D_d_on_sire"
+    },
+    {
+     "assumed_carriers": {
+      "sire": {
+       "I": "I/i"
+      }
+     },
+     "color_sexes": {
+      "Tortoiseshell": [
+       "Female"
+      ]
+     },
+     "colors": [
+      "Tortoiseshell"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "ブラック系",
+     "reverse_inference_label": "この色が出たら父が I/i 保因と確定します",
+     "scenario": "I_i_on_sire"
+    },
+    {
+     "assumed_carriers": {
+      "sire": {
+       "I": "I/i"
+      }
+     },
+     "color_sexes": {
+      "Red": [
+       "Male"
+      ]
+     },
+     "colors": [
+      "Red"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "レッド系",
+     "reverse_inference_label": "この色が出たら父が I/i 保因と確定します",
+     "scenario": "I_i_on_sire"
+    }
+   ],
+   "confirmed_results": [
+    {
+     "color": "Tortie Smoke",
+     "probability_pct": 50.0,
+     "sex": "Female"
+    },
+    {
+     "color": "Cameo",
+     "probability_pct": 50.0,
+     "sex": "Male"
+    }
+   ],
    "diagnostics": {
     "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
      "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
      "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
      "S (白斑): 入力レベルで確定 (非展開)"
     ],
     "closed_loci": [
-     "A",
      "B",
      "C",
      "Wb"
     ],
     "matched_probability": 1.0,
     "opened_loci": [
+     "A",
      "D",
      "I",
      "Mc",
@@ -94,23 +184,60 @@
  "Black|Black|-|normal": {
   "body": {
    "carrier_exploration_results": null,
+   "conditional_color_groups": [
+    {
+     "assumed_carriers": {
+      "dam": {
+       "D": "D/d"
+      },
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Blue": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Blue"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "ブルー系",
+     "reverse_inference_label": "この色が出たら両親が D/d 保因と確定します",
+     "scenario": "D_d_on_both"
+    }
+   ],
+   "confirmed_results": [
+    {
+     "color": "Black",
+     "probability_pct": 50.0,
+     "sex": "Female"
+    },
+    {
+     "color": "Black",
+     "probability_pct": 50.0,
+     "sex": "Male"
+    }
+   ],
    "diagnostics": {
     "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
      "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
      "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
      "S (白斑): 入力レベルで確定 (非展開)"
     ],
     "closed_loci": [
-     "A",
      "B",
      "C",
      "Wb"
     ],
     "matched_probability": 1.0,
     "opened_loci": [
+     "A",
      "D",
      "I",
      "Mc",
@@ -164,23 +291,191 @@
  "Blue Tabby-White|Shell Cameo|-|normal": {
   "body": {
    "carrier_exploration_results": null,
+   "conditional_color_groups": [
+    {
+     "assumed_carriers": {
+      "dam": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Blue Silver Patched Tabby": [
+       "Female"
+      ],
+      "Blue Silver Patched Tabby-White": [
+       "Female"
+      ]
+     },
+     "colors": [
+      "Blue Silver Patched Tabby",
+      "Blue Silver Patched Tabby-White"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "シルバー系",
+     "reverse_inference_label": "この色が出たら母が D/d 保因と確定します",
+     "scenario": "D_d_on_dam"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Cream Cameo Tabby": [
+       "Male"
+      ],
+      "Cream Cameo Tabby-White": [
+       "Male"
+      ]
+     },
+     "colors": [
+      "Cream Cameo Tabby",
+      "Cream Cameo Tabby-White"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "クリーム系",
+     "reverse_inference_label": "この色が出たら母が D/d 保因と確定します",
+     "scenario": "D_d_on_dam"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "I": "I/i"
+      }
+     },
+     "color_sexes": {
+      "Brown Patched Tabby": [
+       "Female"
+      ],
+      "Brown Patched Tabby-White": [
+       "Female"
+      ]
+     },
+     "colors": [
+      "Brown Patched Tabby",
+      "Brown Patched Tabby-White"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "ブラック系",
+     "reverse_inference_label": "この色が出たら母が I/i 保因と確定します",
+     "scenario": "I_i_on_dam"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "I": "I/i"
+      }
+     },
+     "color_sexes": {
+      "Red Tabby": [
+       "Male"
+      ],
+      "Red Tabby-White": [
+       "Male"
+      ]
+     },
+     "colors": [
+      "Red Tabby",
+      "Red Tabby-White"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "レッド系",
+     "reverse_inference_label": "この色が出たら母が I/i 保因と確定します",
+     "scenario": "I_i_on_dam"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "A": "A/a"
+      },
+      "sire": {
+       "A": "A/a"
+      }
+     },
+     "color_sexes": {
+      "Tortie Smoke": [
+       "Female"
+      ],
+      "Tortie Smoke-White": [
+       "Female"
+      ]
+     },
+     "colors": [
+      "Tortie Smoke",
+      "Tortie Smoke-White"
+     ],
+     "conditional_probability_pct": 12.5,
+     "family_label": "ブラック系",
+     "reverse_inference_label": "この色が出たら両親が A/a 保因と確定します",
+     "scenario": "A_a_on_both"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "A": "A/a"
+      },
+      "sire": {
+       "A": "A/a"
+      }
+     },
+     "color_sexes": {
+      "Cameo": [
+       "Male"
+      ],
+      "Cameo-White": [
+       "Male"
+      ]
+     },
+     "colors": [
+      "Cameo",
+      "Cameo-White"
+     ],
+     "conditional_probability_pct": 12.5,
+     "family_label": "レッド系",
+     "reverse_inference_label": "この色が出たら両親が A/a 保因と確定します",
+     "scenario": "A_a_on_both"
+    }
+   ],
+   "confirmed_results": [
+    {
+     "color": "Silver Patched Tabby",
+     "probability_pct": 25.0,
+     "sex": "Female"
+    },
+    {
+     "color": "Silver Patched Tabby-White",
+     "probability_pct": 25.0,
+     "sex": "Female"
+    },
+    {
+     "color": "Cameo Tabby",
+     "probability_pct": 25.0,
+     "sex": "Male"
+    },
+    {
+     "color": "Cameo Tabby-White",
+     "probability_pct": 25.0,
+     "sex": "Male"
+    }
+   ],
    "diagnostics": {
     "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
      "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
      "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
      "S (白斑): 入力レベルで確定 (非展開)"
     ],
     "closed_loci": [
-     "A",
      "B",
      "C",
      "Wb"
     ],
     "matched_probability": 1.0,
     "opened_loci": [
+     "A",
      "D",
      "I",
      "Mc",
@@ -205,94 +500,167 @@
      ],
      "color": "Blue Tabby-White",
      "parent": "sire"
-    },
-    {
-     "blocked_factors": [
-      "非アグーチ（ソリッド） a"
-     ],
-     "color": "Shell Cameo",
-     "parent": "dam"
     }
    ],
    "results": [
     {
      "color": "Silver Patched Tabby",
-     "probability_pct": 14.0625,
+     "probability_pct": 13.1836,
      "sex": "Female"
     },
     {
      "color": "Silver Patched Tabby-White",
-     "probability_pct": 14.0625,
+     "probability_pct": 13.1836,
      "sex": "Female"
     },
     {
      "color": "Cameo Tabby",
-     "probability_pct": 14.0625,
+     "probability_pct": 13.1836,
      "sex": "Male"
     },
     {
      "color": "Cameo Tabby-White",
-     "probability_pct": 14.0625,
+     "probability_pct": 13.1836,
      "sex": "Male"
     },
     {
      "color": "Blue Silver Patched Tabby",
-     "probability_pct": 4.6875,
+     "probability_pct": 4.3945,
      "sex": "Female"
     },
     {
      "color": "Blue Silver Patched Tabby-White",
-     "probability_pct": 4.6875,
+     "probability_pct": 4.3945,
      "sex": "Female"
     },
     {
      "color": "Brown Patched Tabby",
-     "probability_pct": 4.6875,
+     "probability_pct": 4.3945,
      "sex": "Female"
     },
     {
      "color": "Brown Patched Tabby-White",
-     "probability_pct": 4.6875,
+     "probability_pct": 4.3945,
      "sex": "Female"
     },
     {
      "color": "Cream Cameo Tabby",
-     "probability_pct": 4.6875,
+     "probability_pct": 4.3945,
      "sex": "Male"
     },
     {
      "color": "Cream Cameo Tabby-White",
-     "probability_pct": 4.6875,
+     "probability_pct": 4.3945,
      "sex": "Male"
     },
     {
      "color": "Red Tabby",
-     "probability_pct": 4.6875,
+     "probability_pct": 4.3945,
      "sex": "Male"
     },
     {
      "color": "Red Tabby-White",
-     "probability_pct": 4.6875,
+     "probability_pct": 4.3945,
      "sex": "Male"
     },
     {
      "color": "Blue Patched Tabby",
-     "probability_pct": 1.5625,
+     "probability_pct": 1.4648,
      "sex": "Female"
     },
     {
      "color": "Blue Patched Tabby-White",
-     "probability_pct": 1.5625,
+     "probability_pct": 1.4648,
      "sex": "Female"
     },
     {
      "color": "Cream Tabby",
-     "probability_pct": 1.5625,
+     "probability_pct": 1.4648,
      "sex": "Male"
     },
     {
      "color": "Cream Tabby-White",
-     "probability_pct": 1.5625,
+     "probability_pct": 1.4648,
+     "sex": "Male"
+    },
+    {
+     "color": "Tortie Smoke",
+     "probability_pct": 0.8789,
+     "sex": "Female"
+    },
+    {
+     "color": "Tortie Smoke-White",
+     "probability_pct": 0.8789,
+     "sex": "Female"
+    },
+    {
+     "color": "Cameo",
+     "probability_pct": 0.8789,
+     "sex": "Male"
+    },
+    {
+     "color": "Cameo-White",
+     "probability_pct": 0.8789,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Cream Smoke",
+     "probability_pct": 0.293,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Cream Smoke-White",
+     "probability_pct": 0.293,
+     "sex": "Female"
+    },
+    {
+     "color": "Calico",
+     "probability_pct": 0.293,
+     "sex": "Female"
+    },
+    {
+     "color": "Tortoiseshell",
+     "probability_pct": 0.293,
+     "sex": "Female"
+    },
+    {
+     "color": "Cream Smoke",
+     "probability_pct": 0.293,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream Smoke-White",
+     "probability_pct": 0.293,
+     "sex": "Male"
+    },
+    {
+     "color": "Red",
+     "probability_pct": 0.293,
+     "sex": "Male"
+    },
+    {
+     "color": "Red-White",
+     "probability_pct": 0.293,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Cream",
+     "probability_pct": 0.0977,
+     "sex": "Female"
+    },
+    {
+     "color": "Dilute Calico",
+     "probability_pct": 0.0977,
+     "sex": "Female"
+    },
+    {
+     "color": "Cream",
+     "probability_pct": 0.0977,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream-White",
+     "probability_pct": 0.0977,
      "sex": "Male"
     }
    ],
@@ -303,23 +671,75 @@
  "Blue|Cream Tabby|-|normal": {
   "body": {
    "carrier_exploration_results": null,
+   "conditional_color_groups": [
+    {
+     "assumed_carriers": {
+      "dam": {
+       "A": "A/a"
+      }
+     },
+     "color_sexes": {
+      "Blue Cream": [
+       "Female"
+      ]
+     },
+     "colors": [
+      "Blue Cream"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "ブルー系",
+     "reverse_inference_label": "この色が出たら母が A/a 保因と確定します",
+     "scenario": "A_a_on_dam"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "A": "A/a"
+      }
+     },
+     "color_sexes": {
+      "Cream": [
+       "Male"
+      ]
+     },
+     "colors": [
+      "Cream"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "クリーム系",
+     "reverse_inference_label": "この色が出たら母が A/a 保因と確定します",
+     "scenario": "A_a_on_dam"
+    }
+   ],
+   "confirmed_results": [
+    {
+     "color": "Blue Patched Tabby",
+     "probability_pct": 50.0,
+     "sex": "Female"
+    },
+    {
+     "color": "Cream Tabby",
+     "probability_pct": 50.0,
+     "sex": "Male"
+    }
+   ],
    "diagnostics": {
     "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
      "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
      "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
      "S (白斑): 入力レベルで確定 (非展開)"
     ],
     "closed_loci": [
-     "A",
      "B",
      "C",
      "Wb"
     ],
     "matched_probability": 1.0,
     "opened_loci": [
+     "A",
      "D",
      "I",
      "Mc",
@@ -340,7 +760,6 @@
    "parent_color_notes": [
     {
      "blocked_factors": [
-      "非アグーチ（ソリッド） a",
       "非オレンジ（赤以外） o"
      ],
      "color": "Blue",
@@ -350,12 +769,22 @@
    "results": [
     {
      "color": "Blue Patched Tabby",
-     "probability_pct": 50.0,
+     "probability_pct": 37.5,
      "sex": "Female"
     },
     {
      "color": "Cream Tabby",
-     "probability_pct": 50.0,
+     "probability_pct": 37.5,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Cream",
+     "probability_pct": 12.5,
+     "sex": "Female"
+    },
+    {
+     "color": "Cream",
+     "probability_pct": 12.5,
      "sex": "Male"
     }
    ],
@@ -366,23 +795,83 @@
  "Brown Tabby|Brown Tabby|-|normal": {
   "body": {
    "carrier_exploration_results": null,
+   "conditional_color_groups": [
+    {
+     "assumed_carriers": {
+      "dam": {
+       "A": "A/a"
+      },
+      "sire": {
+       "A": "A/a"
+      }
+     },
+     "color_sexes": {
+      "Black": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Black"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "ブラック系",
+     "reverse_inference_label": "この色が出たら両親が A/a 保因と確定します",
+     "scenario": "A_a_on_both"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "D": "D/d"
+      },
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Blue Tabby": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Blue Tabby"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "ブルー系",
+     "reverse_inference_label": "この色が出たら両親が D/d 保因と確定します",
+     "scenario": "D_d_on_both"
+    }
+   ],
+   "confirmed_results": [
+    {
+     "color": "Brown Tabby",
+     "probability_pct": 50.0,
+     "sex": "Female"
+    },
+    {
+     "color": "Brown Tabby",
+     "probability_pct": 50.0,
+     "sex": "Male"
+    }
+   ],
    "diagnostics": {
     "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
      "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
      "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
      "S (白斑): 入力レベルで確定 (非展開)"
     ],
     "closed_loci": [
-     "A",
      "B",
      "C",
      "Wb"
     ],
     "matched_probability": 1.0,
     "opened_loci": [
+     "A",
      "D",
      "I",
      "Mc",
@@ -404,22 +893,42 @@
    "results": [
     {
      "color": "Brown Tabby",
-     "probability_pct": 46.875,
+     "probability_pct": 43.9453,
      "sex": "Female"
     },
     {
      "color": "Brown Tabby",
-     "probability_pct": 46.875,
+     "probability_pct": 43.9453,
      "sex": "Male"
     },
     {
-     "color": "Blue Tabby",
-     "probability_pct": 3.125,
+     "color": "Black",
+     "probability_pct": 2.9297,
      "sex": "Female"
     },
     {
      "color": "Blue Tabby",
-     "probability_pct": 3.125,
+     "probability_pct": 2.9297,
+     "sex": "Female"
+    },
+    {
+     "color": "Black",
+     "probability_pct": 2.9297,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Tabby",
+     "probability_pct": 2.9297,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue",
+     "probability_pct": 0.1953,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue",
+     "probability_pct": 0.1953,
      "sex": "Male"
     }
    ],
@@ -430,23 +939,241 @@
  "Cameo Tabby|Blue Patched Tabby-White|-|normal": {
   "body": {
    "carrier_exploration_results": null,
+   "conditional_color_groups": [
+    {
+     "assumed_carriers": {
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Blue Silver Patched Tabby": [
+       "Female"
+      ],
+      "Blue Silver Patched Tabby-White": [
+       "Female"
+      ],
+      "Blue Silver Tabby": [
+       "Male"
+      ],
+      "Blue Silver Tabby-White": [
+       "Male"
+      ]
+     },
+     "colors": [
+      "Blue Silver Patched Tabby",
+      "Blue Silver Patched Tabby-White",
+      "Blue Silver Tabby",
+      "Blue Silver Tabby-White"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "シルバー系",
+     "reverse_inference_label": "この色が出たら父が D/d 保因と確定します",
+     "scenario": "D_d_on_sire"
+    },
+    {
+     "assumed_carriers": {
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Cream Cameo Tabby": [
+       "Female",
+       "Male"
+      ],
+      "Cream Cameo Tabby-White": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Cream Cameo Tabby",
+      "Cream Cameo Tabby-White"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "クリーム系",
+     "reverse_inference_label": "この色が出たら父が D/d 保因と確定します",
+     "scenario": "D_d_on_sire"
+    },
+    {
+     "assumed_carriers": {
+      "sire": {
+       "I": "I/i"
+      }
+     },
+     "color_sexes": {
+      "Brown Patched Tabby": [
+       "Female"
+      ],
+      "Brown Patched Tabby-White": [
+       "Female"
+      ],
+      "Brown Tabby": [
+       "Male"
+      ],
+      "Brown Tabby-White": [
+       "Male"
+      ]
+     },
+     "colors": [
+      "Brown Patched Tabby",
+      "Brown Patched Tabby-White",
+      "Brown Tabby",
+      "Brown Tabby-White"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "ブラック系",
+     "reverse_inference_label": "この色が出たら父が I/i 保因と確定します",
+     "scenario": "I_i_on_sire"
+    },
+    {
+     "assumed_carriers": {
+      "sire": {
+       "I": "I/i"
+      }
+     },
+     "color_sexes": {
+      "Red Tabby": [
+       "Female",
+       "Male"
+      ],
+      "Red Tabby-White": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Red Tabby",
+      "Red Tabby-White"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "レッド系",
+     "reverse_inference_label": "この色が出たら父が I/i 保因と確定します",
+     "scenario": "I_i_on_sire"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "A": "A/a"
+      },
+      "sire": {
+       "A": "A/a"
+      }
+     },
+     "color_sexes": {
+      "Cameo": [
+       "Female",
+       "Male"
+      ],
+      "Cameo-White": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Cameo",
+      "Cameo-White"
+     ],
+     "conditional_probability_pct": 12.5,
+     "family_label": "レッド系",
+     "reverse_inference_label": "この色が出たら両親が A/a 保因と確定します",
+     "scenario": "A_a_on_both"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "A": "A/a"
+      },
+      "sire": {
+       "A": "A/a"
+      }
+     },
+     "color_sexes": {
+      "Black Smoke": [
+       "Male"
+      ],
+      "Black Smoke-White": [
+       "Male"
+      ],
+      "Tortie Smoke": [
+       "Female"
+      ],
+      "Tortie Smoke-White": [
+       "Female"
+      ]
+     },
+     "colors": [
+      "Black Smoke",
+      "Black Smoke-White",
+      "Tortie Smoke",
+      "Tortie Smoke-White"
+     ],
+     "conditional_probability_pct": 12.5,
+     "family_label": "ブラック系",
+     "reverse_inference_label": "この色が出たら両親が A/a 保因と確定します",
+     "scenario": "A_a_on_both"
+    }
+   ],
+   "confirmed_results": [
+    {
+     "color": "Cameo Tabby",
+     "probability_pct": 12.5,
+     "sex": "Female"
+    },
+    {
+     "color": "Cameo Tabby-White",
+     "probability_pct": 12.5,
+     "sex": "Female"
+    },
+    {
+     "color": "Silver Patched Tabby",
+     "probability_pct": 12.5,
+     "sex": "Female"
+    },
+    {
+     "color": "Silver Patched Tabby-White",
+     "probability_pct": 12.5,
+     "sex": "Female"
+    },
+    {
+     "color": "Cameo Tabby",
+     "probability_pct": 12.5,
+     "sex": "Male"
+    },
+    {
+     "color": "Cameo Tabby-White",
+     "probability_pct": 12.5,
+     "sex": "Male"
+    },
+    {
+     "color": "Silver Tabby",
+     "probability_pct": 12.5,
+     "sex": "Male"
+    },
+    {
+     "color": "Silver Tabby-White",
+     "probability_pct": 12.5,
+     "sex": "Male"
+    }
+   ],
    "diagnostics": {
     "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
      "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
      "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
      "S (白斑): 入力レベルで確定 (非展開)"
     ],
     "closed_loci": [
-     "A",
      "B",
      "C",
      "Wb"
     ],
     "matched_probability": 1.0,
     "opened_loci": [
+     "A",
      "D",
      "I",
      "Mc",
@@ -468,162 +1195,322 @@
    "results": [
     {
      "color": "Cameo Tabby",
-     "probability_pct": 7.0312,
+     "probability_pct": 6.591,
      "sex": "Female"
     },
     {
      "color": "Cameo Tabby-White",
-     "probability_pct": 7.0312,
+     "probability_pct": 6.5918,
      "sex": "Female"
     },
     {
      "color": "Silver Patched Tabby",
-     "probability_pct": 7.0312,
+     "probability_pct": 6.5918,
      "sex": "Female"
     },
     {
      "color": "Silver Patched Tabby-White",
-     "probability_pct": 7.0312,
+     "probability_pct": 6.5918,
      "sex": "Female"
     },
     {
      "color": "Cameo Tabby",
-     "probability_pct": 7.0312,
+     "probability_pct": 6.5918,
      "sex": "Male"
     },
     {
      "color": "Cameo Tabby-White",
-     "probability_pct": 7.0312,
+     "probability_pct": 6.5918,
      "sex": "Male"
     },
     {
      "color": "Silver Tabby",
-     "probability_pct": 7.0312,
+     "probability_pct": 6.5918,
      "sex": "Male"
     },
     {
      "color": "Silver Tabby-White",
-     "probability_pct": 7.0312,
+     "probability_pct": 6.5918,
      "sex": "Male"
     },
     {
      "color": "Blue Silver Patched Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Female"
     },
     {
      "color": "Blue Silver Patched Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Female"
     },
     {
      "color": "Brown Patched Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Female"
     },
     {
      "color": "Brown Patched Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Female"
     },
     {
      "color": "Cream Cameo Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Female"
     },
     {
      "color": "Cream Cameo Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Female"
     },
     {
      "color": "Red Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Female"
     },
     {
      "color": "Red Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Female"
     },
     {
      "color": "Blue Silver Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Male"
     },
     {
      "color": "Blue Silver Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Male"
     },
     {
      "color": "Brown Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Male"
     },
     {
      "color": "Brown Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Male"
     },
     {
      "color": "Cream Cameo Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Male"
     },
     {
      "color": "Cream Cameo Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Male"
     },
     {
      "color": "Red Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Male"
     },
     {
      "color": "Red Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Male"
     },
     {
      "color": "Blue Patched Tabby",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.7324,
      "sex": "Female"
     },
     {
      "color": "Blue Patched Tabby-White",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.7324,
      "sex": "Female"
     },
     {
      "color": "Cream Tabby",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.7324,
      "sex": "Female"
     },
     {
      "color": "Cream Tabby-White",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.7324,
      "sex": "Female"
     },
     {
      "color": "Blue Tabby",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.7324,
      "sex": "Male"
     },
     {
      "color": "Blue Tabby-White",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.7324,
      "sex": "Male"
     },
     {
      "color": "Cream Tabby",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.7324,
      "sex": "Male"
     },
     {
      "color": "Cream Tabby-White",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.7324,
+     "sex": "Male"
+    },
+    {
+     "color": "Cameo",
+     "probability_pct": 0.4395,
+     "sex": "Female"
+    },
+    {
+     "color": "Cameo-White",
+     "probability_pct": 0.4395,
+     "sex": "Female"
+    },
+    {
+     "color": "Tortie Smoke",
+     "probability_pct": 0.4395,
+     "sex": "Female"
+    },
+    {
+     "color": "Tortie Smoke-White",
+     "probability_pct": 0.4395,
+     "sex": "Female"
+    },
+    {
+     "color": "Black Smoke",
+     "probability_pct": 0.4395,
+     "sex": "Male"
+    },
+    {
+     "color": "Black Smoke-White",
+     "probability_pct": 0.4395,
+     "sex": "Male"
+    },
+    {
+     "color": "Cameo",
+     "probability_pct": 0.4395,
+     "sex": "Male"
+    },
+    {
+     "color": "Cameo-White",
+     "probability_pct": 0.4395,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Cream Smoke",
+     "probability_pct": 0.1465,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Cream Smoke-White",
+     "probability_pct": 0.1465,
+     "sex": "Female"
+    },
+    {
+     "color": "Calico",
+     "probability_pct": 0.1465,
+     "sex": "Female"
+    },
+    {
+     "color": "Cream Smoke",
+     "probability_pct": 0.1465,
+     "sex": "Female"
+    },
+    {
+     "color": "Cream Smoke-White",
+     "probability_pct": 0.1465,
+     "sex": "Female"
+    },
+    {
+     "color": "Red",
+     "probability_pct": 0.1465,
+     "sex": "Female"
+    },
+    {
+     "color": "Red-White",
+     "probability_pct": 0.1465,
+     "sex": "Female"
+    },
+    {
+     "color": "Tortoiseshell",
+     "probability_pct": 0.1465,
+     "sex": "Female"
+    },
+    {
+     "color": "Black",
+     "probability_pct": 0.1465,
+     "sex": "Male"
+    },
+    {
+     "color": "Black-White",
+     "probability_pct": 0.1465,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Smoke",
+     "probability_pct": 0.1465,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Smoke-White",
+     "probability_pct": 0.1465,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream Smoke",
+     "probability_pct": 0.1465,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream Smoke-White",
+     "probability_pct": 0.1465,
+     "sex": "Male"
+    },
+    {
+     "color": "Red",
+     "probability_pct": 0.1465,
+     "sex": "Male"
+    },
+    {
+     "color": "Red-White",
+     "probability_pct": 0.1465,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Cream",
+     "probability_pct": 0.0488,
+     "sex": "Female"
+    },
+    {
+     "color": "Cream",
+     "probability_pct": 0.0488,
+     "sex": "Female"
+    },
+    {
+     "color": "Cream-White",
+     "probability_pct": 0.0488,
+     "sex": "Female"
+    },
+    {
+     "color": "Dilute Calico",
+     "probability_pct": 0.0488,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue",
+     "probability_pct": 0.0488,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue-White",
+     "probability_pct": 0.0488,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream",
+     "probability_pct": 0.0488,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream-White",
+     "probability_pct": 0.0488,
      "sex": "Male"
     }
    ],
@@ -634,23 +1521,80 @@
  "Chinchilla Golden|Black|-|normal": {
   "body": {
    "carrier_exploration_results": null,
+   "conditional_color_groups": [
+    {
+     "assumed_carriers": {
+      "sire": {
+       "A": "A/a"
+      }
+     },
+     "color_sexes": {
+      "Black": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Black"
+     ],
+     "conditional_probability_pct": 50.0,
+     "family_label": "ブラック系",
+     "reverse_inference_label": "この色が出たら父が A/a 保因と確定します",
+     "scenario": "A_a_on_sire"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "D": "D/d"
+      },
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Blue Tabby": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Blue Tabby"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "ブルー系",
+     "reverse_inference_label": "この色が出たら両親が D/d 保因と確定します",
+     "scenario": "D_d_on_both"
+    }
+   ],
+   "confirmed_results": [
+    {
+     "color": "Brown Tabby",
+     "probability_pct": 50.0,
+     "sex": "Female"
+    },
+    {
+     "color": "Brown Tabby",
+     "probability_pct": 50.0,
+     "sex": "Male"
+    }
+   ],
    "diagnostics": {
     "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
      "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
      "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
      "S (白斑): 入力レベルで確定 (非展開)"
     ],
     "closed_loci": [
-     "A",
      "B",
      "C",
      "Wb"
     ],
     "matched_probability": 1.0,
     "opened_loci": [
+     "A",
      "D",
      "I",
      "Mc",
@@ -668,34 +1612,46 @@
     "sire_carriers": null,
     "sire_color": "Chinchilla Golden"
    },
-   "parent_color_notes": [
-    {
-     "blocked_factors": [
-      "非アグーチ（ソリッド） a"
-     ],
-     "color": "Black",
-     "parent": "dam"
-    }
-   ],
+   "parent_color_notes": [],
    "results": [
     {
-     "color": "Chinchilla Golden",
-     "probability_pct": 46.875,
+     "color": "Brown Tabby",
+     "probability_pct": 35.1562,
      "sex": "Female"
     },
     {
-     "color": "Chinchilla Golden",
-     "probability_pct": 46.875,
+     "color": "Brown Tabby",
+     "probability_pct": 35.1562,
      "sex": "Male"
     },
     {
-     "color": "Blue Chinchilla Golden",
-     "probability_pct": 3.125,
+     "color": "Black",
+     "probability_pct": 11.7188,
      "sex": "Female"
     },
     {
-     "color": "Blue Chinchilla Golden",
-     "probability_pct": 3.125,
+     "color": "Black",
+     "probability_pct": 11.7188,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Tabby",
+     "probability_pct": 2.3438,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Tabby",
+     "probability_pct": 2.3438,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue",
+     "probability_pct": 0.7812,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue",
+     "probability_pct": 0.7812,
      "sex": "Male"
     }
    ],
@@ -706,23 +1662,145 @@
  "Chinchilla Golden|Cream Tabby-White|-|normal": {
   "body": {
    "carrier_exploration_results": null,
+   "conditional_color_groups": [
+    {
+     "assumed_carriers": {
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Blue Patched Tabby": [
+       "Female"
+      ],
+      "Blue Patched Tabby-White": [
+       "Female"
+      ]
+     },
+     "colors": [
+      "Blue Patched Tabby",
+      "Blue Patched Tabby-White"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "ブルー系",
+     "reverse_inference_label": "この色が出たら父が D/d 保因と確定します",
+     "scenario": "D_d_on_sire"
+    },
+    {
+     "assumed_carriers": {
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Cream Tabby": [
+       "Male"
+      ],
+      "Cream Tabby-White": [
+       "Male"
+      ]
+     },
+     "colors": [
+      "Cream Tabby",
+      "Cream Tabby-White"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "クリーム系",
+     "reverse_inference_label": "この色が出たら父が D/d 保因と確定します",
+     "scenario": "D_d_on_sire"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "A": "A/a"
+      },
+      "sire": {
+       "A": "A/a"
+      }
+     },
+     "color_sexes": {
+      "Calico": [
+       "Female"
+      ],
+      "Tortoiseshell": [
+       "Female"
+      ]
+     },
+     "colors": [
+      "Calico",
+      "Tortoiseshell"
+     ],
+     "conditional_probability_pct": 12.5,
+     "family_label": "ブラック系",
+     "reverse_inference_label": "この色が出たら両親が A/a 保因と確定します",
+     "scenario": "A_a_on_both"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "A": "A/a"
+      },
+      "sire": {
+       "A": "A/a"
+      }
+     },
+     "color_sexes": {
+      "Red": [
+       "Male"
+      ],
+      "Red-White": [
+       "Male"
+      ]
+     },
+     "colors": [
+      "Red",
+      "Red-White"
+     ],
+     "conditional_probability_pct": 12.5,
+     "family_label": "レッド系",
+     "reverse_inference_label": "この色が出たら両親が A/a 保因と確定します",
+     "scenario": "A_a_on_both"
+    }
+   ],
+   "confirmed_results": [
+    {
+     "color": "Brown Patched Tabby",
+     "probability_pct": 25.0,
+     "sex": "Female"
+    },
+    {
+     "color": "Brown Patched Tabby-White",
+     "probability_pct": 25.0,
+     "sex": "Female"
+    },
+    {
+     "color": "Red Tabby",
+     "probability_pct": 25.0,
+     "sex": "Male"
+    },
+    {
+     "color": "Red Tabby-White",
+     "probability_pct": 25.0,
+     "sex": "Male"
+    }
+   ],
    "diagnostics": {
     "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
      "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
      "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
      "S (白斑): 入力レベルで確定 (非展開)"
     ],
     "closed_loci": [
-     "A",
      "B",
      "C",
      "Wb"
     ],
     "matched_probability": 1.0,
     "opened_loci": [
+     "A",
      "D",
      "I",
      "Mc",
@@ -752,42 +1830,82 @@
    "results": [
     {
      "color": "Brown Patched Tabby",
-     "probability_pct": 18.75,
+     "probability_pct": 17.5781,
      "sex": "Female"
     },
     {
      "color": "Brown Patched Tabby-White",
-     "probability_pct": 18.75,
+     "probability_pct": 17.5781,
      "sex": "Female"
     },
     {
      "color": "Red Tabby",
-     "probability_pct": 18.75,
+     "probability_pct": 17.5781,
      "sex": "Male"
     },
     {
      "color": "Red Tabby-White",
-     "probability_pct": 18.75,
+     "probability_pct": 17.5781,
      "sex": "Male"
     },
     {
      "color": "Blue Patched Tabby",
-     "probability_pct": 6.25,
+     "probability_pct": 5.8594,
      "sex": "Female"
     },
     {
      "color": "Blue Patched Tabby-White",
-     "probability_pct": 6.25,
+     "probability_pct": 5.8594,
      "sex": "Female"
     },
     {
      "color": "Cream Tabby",
-     "probability_pct": 6.25,
+     "probability_pct": 5.8594,
      "sex": "Male"
     },
     {
      "color": "Cream Tabby-White",
-     "probability_pct": 6.25,
+     "probability_pct": 5.8594,
+     "sex": "Male"
+    },
+    {
+     "color": "Calico",
+     "probability_pct": 1.1719,
+     "sex": "Female"
+    },
+    {
+     "color": "Tortoiseshell",
+     "probability_pct": 1.1719,
+     "sex": "Female"
+    },
+    {
+     "color": "Red",
+     "probability_pct": 1.1719,
+     "sex": "Male"
+    },
+    {
+     "color": "Red-White",
+     "probability_pct": 1.1719,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Cream",
+     "probability_pct": 0.3906,
+     "sex": "Female"
+    },
+    {
+     "color": "Dilute Calico",
+     "probability_pct": 0.3906,
+     "sex": "Female"
+    },
+    {
+     "color": "Cream",
+     "probability_pct": 0.3906,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream-White",
+     "probability_pct": 0.3906,
      "sex": "Male"
     }
    ],
@@ -798,23 +1916,106 @@
  "Chinchilla Silver|Shaded Silver|-|normal": {
   "body": {
    "carrier_exploration_results": null,
+   "conditional_color_groups": [
+    {
+     "assumed_carriers": {
+      "dam": {
+       "A": "A/a"
+      },
+      "sire": {
+       "A": "A/a"
+      }
+     },
+     "color_sexes": {
+      "Black Smoke": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Black Smoke"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "ブラック系",
+     "reverse_inference_label": "この色が出たら両親が A/a 保因と確定します",
+     "scenario": "A_a_on_both"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "D": "D/d"
+      },
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Blue Shaded Silver": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Blue Shaded Silver"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "シルバー系",
+     "reverse_inference_label": "この色が出たら両親が D/d 保因と確定します",
+     "scenario": "D_d_on_both"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "I": "I/i"
+      },
+      "sire": {
+       "I": "I/i"
+      }
+     },
+     "color_sexes": {
+      "Shaded Golden": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Shaded Golden"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "ブラック系",
+     "reverse_inference_label": "この色が出たら両親が I/i 保因と確定します",
+     "scenario": "I_i_on_both"
+    }
+   ],
+   "confirmed_results": [
+    {
+     "color": "Shaded Silver",
+     "probability_pct": 50.0,
+     "sex": "Female"
+    },
+    {
+     "color": "Shaded Silver",
+     "probability_pct": 50.0,
+     "sex": "Male"
+    }
+   ],
    "diagnostics": {
     "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
      "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
      "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
      "S (白斑): 入力レベルで確定 (非展開)"
     ],
     "closed_loci": [
-     "A",
      "B",
      "C",
      "Wb"
     ],
     "matched_probability": 1.0,
     "opened_loci": [
+     "A",
      "D",
      "I",
      "Mc",
@@ -832,52 +2033,86 @@
     "sire_carriers": null,
     "sire_color": "Chinchilla Silver"
    },
-   "parent_color_notes": [
-    {
-     "blocked_factors": [],
-     "color": "Shaded Silver",
-     "parent": "dam"
-    }
-   ],
+   "parent_color_notes": [],
    "results": [
     {
-     "color": "Chinchilla Silver",
-     "probability_pct": 43.9453,
+     "color": "Shaded Silver",
+     "probability_pct": 41.1987,
      "sex": "Female"
     },
     {
-     "color": "Chinchilla Silver",
-     "probability_pct": 43.9453,
+     "color": "Shaded Silver",
+     "probability_pct": 41.1987,
+     "sex": "Male"
+    },
+    {
+     "color": "Black Smoke",
+     "probability_pct": 2.7466,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Shaded Silver",
+     "probability_pct": 2.7466,
+     "sex": "Female"
+    },
+    {
+     "color": "Shaded Golden",
+     "probability_pct": 2.7466,
+     "sex": "Female"
+    },
+    {
+     "color": "Black Smoke",
+     "probability_pct": 2.7466,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Shaded Silver",
+     "probability_pct": 2.7466,
+     "sex": "Male"
+    },
+    {
+     "color": "Shaded Golden",
+     "probability_pct": 2.7466,
      "sex": "Male"
     },
     {
      "color": "Black",
-     "probability_pct": 2.9297,
+     "probability_pct": 0.1831,
      "sex": "Female"
     },
     {
-     "color": "Blue Chinchilla Silver",
-     "probability_pct": 2.9297,
+     "color": "Blue Shaded Golden",
+     "probability_pct": 0.1831,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Smoke",
+     "probability_pct": 0.1831,
      "sex": "Female"
     },
     {
      "color": "Black",
-     "probability_pct": 2.9297,
+     "probability_pct": 0.1831,
      "sex": "Male"
     },
     {
-     "color": "Blue Chinchilla Silver",
-     "probability_pct": 2.9297,
+     "color": "Blue Shaded Golden",
+     "probability_pct": 0.1831,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Smoke",
+     "probability_pct": 0.1831,
      "sex": "Male"
     },
     {
      "color": "Blue",
-     "probability_pct": 0.1953,
+     "probability_pct": 0.0122,
      "sex": "Female"
     },
     {
      "color": "Blue",
-     "probability_pct": 0.1953,
+     "probability_pct": 0.0122,
      "sex": "Male"
     }
    ],
@@ -888,23 +2123,80 @@
  "Chocolate|Black|-|normal": {
   "body": {
    "carrier_exploration_results": null,
+   "conditional_color_groups": [
+    {
+     "assumed_carriers": {
+      "dam": {
+       "B": "B/b"
+      }
+     },
+     "color_sexes": {
+      "Chocolate": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Chocolate"
+     ],
+     "conditional_probability_pct": 50.0,
+     "family_label": "チョコレート系",
+     "reverse_inference_label": "この色が出たら母が B/b 保因と確定します",
+     "scenario": "B_b_on_dam"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "D": "D/d"
+      },
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Blue": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Blue"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "ブルー系",
+     "reverse_inference_label": "この色が出たら両親が D/d 保因と確定します",
+     "scenario": "D_d_on_both"
+    }
+   ],
+   "confirmed_results": [
+    {
+     "color": "Black",
+     "probability_pct": 50.0,
+     "sex": "Female"
+    },
+    {
+     "color": "Black",
+     "probability_pct": 50.0,
+     "sex": "Male"
+    }
+   ],
    "diagnostics": {
     "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
      "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
      "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
      "S (白斑): 入力レベルで確定 (非展開)"
     ],
     "closed_loci": [
-     "A",
      "B",
      "C",
      "Wb"
     ],
     "matched_probability": 1.0,
     "opened_loci": [
+     "A",
      "D",
      "I",
      "Mc",
@@ -960,23 +2252,80 @@
  "Cinnamon|Black|-|normal": {
   "body": {
    "carrier_exploration_results": null,
+   "conditional_color_groups": [
+    {
+     "assumed_carriers": {
+      "dam": {
+       "B": "B/bl"
+      }
+     },
+     "color_sexes": {
+      "Cinnamon": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Cinnamon"
+     ],
+     "conditional_probability_pct": 50.0,
+     "family_label": "シナモン系",
+     "reverse_inference_label": "この色が出たら母が B/bl 保因と確定します",
+     "scenario": "B_bl_on_dam"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "D": "D/d"
+      },
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Blue": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Blue"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "ブルー系",
+     "reverse_inference_label": "この色が出たら両親が D/d 保因と確定します",
+     "scenario": "D_d_on_both"
+    }
+   ],
+   "confirmed_results": [
+    {
+     "color": "Black",
+     "probability_pct": 50.0,
+     "sex": "Female"
+    },
+    {
+     "color": "Black",
+     "probability_pct": 50.0,
+     "sex": "Male"
+    }
+   ],
    "diagnostics": {
     "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
      "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
      "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
      "S (白斑): 入力レベルで確定 (非展開)"
     ],
     "closed_loci": [
-     "A",
      "B",
      "C",
      "Wb"
     ],
     "matched_probability": 1.0,
     "opened_loci": [
+     "A",
      "D",
      "I",
      "Mc",
@@ -1032,50 +2381,65 @@
  "Cream Tabby-White|Dilute Calico|-|normal": {
   "body": {
    "carrier_exploration_results": null,
-   "diagnostics": {
-    "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
-     "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
-     "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
-     "S (白斑): 入力レベルで確定 (非展開)"
-    ],
-    "closed_loci": [
-     "A",
-     "B",
-     "C",
-     "Wb"
-    ],
-    "matched_probability": 1.0,
-    "opened_loci": [
-     "D",
-     "I",
-     "Mc",
-     "Ta"
-    ],
-    "unmatched_genotype_count": 0,
-    "unmatched_probability": 0.0
-   },
-   "mode": "normal",
-   "parameters": {
-    "breed": null,
-    "dam_carriers": null,
-    "dam_color": "Dilute Calico",
-    "mode": "normal",
-    "sire_carriers": null,
-    "sire_color": "Cream Tabby-White"
-   },
-   "parent_color_notes": [
+   "conditional_color_groups": [
     {
-     "blocked_factors": [
-      "非アグーチ（ソリッド） a"
+     "assumed_carriers": {
+      "sire": {
+       "A": "A/a"
+      }
+     },
+     "color_sexes": {
+      "Cream": [
+       "Female",
+       "Male"
+      ],
+      "Cream-White": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Cream",
+      "Cream-White"
      ],
-     "color": "Dilute Calico",
-     "parent": "dam"
+     "conditional_probability_pct": 25.0,
+     "family_label": "クリーム系",
+     "reverse_inference_label": "この色が出たら父が A/a 保因と確定します",
+     "scenario": "A_a_on_sire"
+    },
+    {
+     "assumed_carriers": {
+      "sire": {
+       "A": "A/a"
+      }
+     },
+     "color_sexes": {
+      "Blue": [
+       "Male"
+      ],
+      "Blue Cream": [
+       "Female"
+      ],
+      "Blue-White": [
+       "Male"
+      ],
+      "Dilute Calico": [
+       "Female"
+      ]
+     },
+     "colors": [
+      "Blue",
+      "Blue Cream",
+      "Blue-White",
+      "Dilute Calico"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "ブルー系",
+     "reverse_inference_label": "この色が出たら父が A/a 保因と確定します",
+     "scenario": "A_a_on_sire"
     }
    ],
-   "results": [
+   "confirmed_results": [
     {
      "color": "Blue Patched Tabby-White",
      "probability_pct": 18.75,
@@ -1117,6 +2481,123 @@
      "sex": "Male"
     }
    ],
+   "diagnostics": {
+    "assumptions": [
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
+     "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
+     "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
+     "S (白斑): 入力レベルで確定 (非展開)"
+    ],
+    "closed_loci": [
+     "B",
+     "C",
+     "Wb"
+    ],
+    "matched_probability": 1.0,
+    "opened_loci": [
+     "A",
+     "D",
+     "I",
+     "Mc",
+     "Ta"
+    ],
+    "unmatched_genotype_count": 0,
+    "unmatched_probability": 0.0
+   },
+   "mode": "normal",
+   "parameters": {
+    "breed": null,
+    "dam_carriers": null,
+    "dam_color": "Dilute Calico",
+    "mode": "normal",
+    "sire_carriers": null,
+    "sire_color": "Cream Tabby-White"
+   },
+   "parent_color_notes": [],
+   "results": [
+    {
+     "color": "Blue Patched Tabby-White",
+     "probability_pct": 14.0625,
+     "sex": "Female"
+    },
+    {
+     "color": "Cream Tabby-White",
+     "probability_pct": 14.0625,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Tabby-White",
+     "probability_pct": 14.0625,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream Tabby-White",
+     "probability_pct": 14.0625,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Patched Tabby",
+     "probability_pct": 4.6875,
+     "sex": "Female"
+    },
+    {
+     "color": "Cream Tabby",
+     "probability_pct": 4.6875,
+     "sex": "Female"
+    },
+    {
+     "color": "Cream-White",
+     "probability_pct": 4.6875,
+     "sex": "Female"
+    },
+    {
+     "color": "Dilute Calico",
+     "probability_pct": 4.6875,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Tabby",
+     "probability_pct": 4.6875,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue-White",
+     "probability_pct": 4.6875,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream Tabby",
+     "probability_pct": 4.6875,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream-White",
+     "probability_pct": 4.6875,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Cream",
+     "probability_pct": 1.5625,
+     "sex": "Female"
+    },
+    {
+     "color": "Cream",
+     "probability_pct": 1.5625,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue",
+     "probability_pct": 1.5625,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream",
+     "probability_pct": 1.5625,
+     "sex": "Male"
+    }
+   ],
    "status": "success"
   },
   "status": 200
@@ -1131,14 +2612,7 @@
       }
      },
      "label": "Blue Patched Tabby-White が A/a (ソリッドキャリア) と仮定 (Lilac は A 劣性を発現)",
-     "new_colors": [
-      "Blue",
-      "Blue Cream",
-      "Blue-White",
-      "Cream",
-      "Cream-White",
-      "Dilute Calico"
-     ],
+     "new_colors": [],
      "prior_probability_applied": false,
      "probability_basis": "conditional_on_other_parent_carrier",
      "results": [
@@ -1233,106 +2707,182 @@
      },
      "label": "Blue Patched Tabby-White が B/b (チョコレートキャリア) と仮定 (Lilac は B 劣性を発現)",
      "new_colors": [
+      "Lilac",
+      "Lilac Cream",
+      "Lilac Cream-White",
       "Lilac Patched Tabby",
       "Lilac Patched Tabby-White",
       "Lilac Tabby",
-      "Lilac Tabby-White"
+      "Lilac Tabby-White",
+      "Lilac-White"
      ],
      "prior_probability_applied": false,
      "probability_basis": "conditional_on_other_parent_carrier",
      "results": [
       {
        "color": "Cream Tabby",
-       "probability_pct": 12.5,
+       "probability_pct": 9.375,
        "sex": "Male"
       },
       {
        "color": "Cream Tabby-White",
-       "probability_pct": 12.5,
+       "probability_pct": 9.375,
        "sex": "Male"
       },
       {
        "color": "Blue Patched Tabby",
-       "probability_pct": 6.25,
+       "probability_pct": 4.6875,
        "sex": "Female"
       },
       {
        "color": "Blue Patched Tabby-White",
-       "probability_pct": 6.25,
+       "probability_pct": 4.6875,
        "sex": "Female"
       },
       {
        "color": "Blue Tabby",
-       "probability_pct": 6.25,
+       "probability_pct": 4.6875,
        "sex": "Female"
       },
       {
        "color": "Blue Tabby-White",
-       "probability_pct": 6.25,
+       "probability_pct": 4.6875,
        "sex": "Female"
       },
       {
        "color": "Lilac Patched Tabby",
-       "probability_pct": 6.25,
+       "probability_pct": 4.6875,
        "sex": "Female"
       },
       {
        "color": "Lilac Patched Tabby-White",
-       "probability_pct": 6.25,
+       "probability_pct": 4.6875,
        "sex": "Female"
       },
       {
        "color": "Lilac Tabby",
-       "probability_pct": 6.25,
+       "probability_pct": 4.6875,
        "sex": "Female"
       },
       {
        "color": "Lilac Tabby-White",
-       "probability_pct": 6.25,
+       "probability_pct": 4.6875,
        "sex": "Female"
       },
       {
        "color": "Blue Tabby",
-       "probability_pct": 6.25,
+       "probability_pct": 4.6875,
        "sex": "Male"
       },
       {
        "color": "Blue Tabby-White",
-       "probability_pct": 6.25,
+       "probability_pct": 4.6875,
        "sex": "Male"
       },
       {
        "color": "Lilac Tabby",
-       "probability_pct": 6.25,
+       "probability_pct": 4.6875,
        "sex": "Male"
       },
       {
        "color": "Lilac Tabby-White",
-       "probability_pct": 6.25,
+       "probability_pct": 4.6875,
+       "sex": "Male"
+      },
+      {
+       "color": "Cream",
+       "probability_pct": 3.125,
+       "sex": "Male"
+      },
+      {
+       "color": "Cream-White",
+       "probability_pct": 3.125,
+       "sex": "Male"
+      },
+      {
+       "color": "Blue",
+       "probability_pct": 1.5625,
+       "sex": "Female"
+      },
+      {
+       "color": "Blue Cream",
+       "probability_pct": 1.5625,
+       "sex": "Female"
+      },
+      {
+       "color": "Blue-White",
+       "probability_pct": 1.5625,
+       "sex": "Female"
+      },
+      {
+       "color": "Dilute Calico",
+       "probability_pct": 1.5625,
+       "sex": "Female"
+      },
+      {
+       "color": "Lilac",
+       "probability_pct": 1.5625,
+       "sex": "Female"
+      },
+      {
+       "color": "Lilac Cream",
+       "probability_pct": 1.5625,
+       "sex": "Female"
+      },
+      {
+       "color": "Lilac Cream-White",
+       "probability_pct": 1.5625,
+       "sex": "Female"
+      },
+      {
+       "color": "Lilac-White",
+       "probability_pct": 1.5625,
+       "sex": "Female"
+      },
+      {
+       "color": "Blue",
+       "probability_pct": 1.5625,
+       "sex": "Male"
+      },
+      {
+       "color": "Blue-White",
+       "probability_pct": 1.5625,
+       "sex": "Male"
+      },
+      {
+       "color": "Lilac",
+       "probability_pct": 1.5625,
+       "sex": "Male"
+      },
+      {
+       "color": "Lilac-White",
+       "probability_pct": 1.5625,
        "sex": "Male"
       }
      ],
      "scenario": "B_b_on_dam"
     }
    ],
+   "conditional_color_groups": [],
+   "confirmed_results": null,
    "diagnostics": {
     "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
      "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
      "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
      "S (白斑): 入力レベルで確定 (非展開)",
      "carrier_exploration: 各シナリオは『片親の劣性発現に対し相手がキャリア』の条件付き結果。事前確率 (キャリア頻度) は掛けない。normal results とは分離して提示する。"
     ],
     "closed_loci": [
-     "A",
      "B",
      "C",
      "Wb"
     ],
     "matched_probability": 1.0,
     "opened_loci": [
+     "A",
      "D",
      "I",
      "Mc",
@@ -1354,42 +2904,82 @@
    "results": [
     {
      "color": "Blue Patched Tabby",
-     "probability_pct": 12.5,
+     "probability_pct": 9.375,
      "sex": "Female"
     },
     {
      "color": "Blue Patched Tabby-White",
-     "probability_pct": 12.5,
+     "probability_pct": 9.375,
      "sex": "Female"
     },
     {
      "color": "Blue Tabby",
-     "probability_pct": 12.5,
+     "probability_pct": 9.375,
      "sex": "Female"
     },
     {
      "color": "Blue Tabby-White",
-     "probability_pct": 12.5,
+     "probability_pct": 9.375,
      "sex": "Female"
     },
     {
      "color": "Blue Tabby",
-     "probability_pct": 12.5,
+     "probability_pct": 9.375,
      "sex": "Male"
     },
     {
      "color": "Blue Tabby-White",
-     "probability_pct": 12.5,
+     "probability_pct": 9.375,
      "sex": "Male"
     },
     {
      "color": "Cream Tabby",
-     "probability_pct": 12.5,
+     "probability_pct": 9.375,
      "sex": "Male"
     },
     {
      "color": "Cream Tabby-White",
-     "probability_pct": 12.5,
+     "probability_pct": 9.375,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue",
+     "probability_pct": 3.125,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Cream",
+     "probability_pct": 3.125,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue-White",
+     "probability_pct": 3.125,
+     "sex": "Female"
+    },
+    {
+     "color": "Dilute Calico",
+     "probability_pct": 3.125,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue",
+     "probability_pct": 3.125,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue-White",
+     "probability_pct": 3.125,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream",
+     "probability_pct": 3.125,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream-White",
+     "probability_pct": 3.125,
      "sex": "Male"
     }
    ],
@@ -1400,51 +2990,98 @@
  "Lilac|Blue Patched Tabby-White|-|normal": {
   "body": {
    "carrier_exploration_results": null,
-   "diagnostics": {
-    "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
-     "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
-     "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
-     "S (白斑): 入力レベルで確定 (非展開)"
-    ],
-    "closed_loci": [
-     "A",
-     "B",
-     "C",
-     "Wb"
-    ],
-    "matched_probability": 1.0,
-    "opened_loci": [
-     "D",
-     "I",
-     "Mc",
-     "Ta"
-    ],
-    "unmatched_genotype_count": 0,
-    "unmatched_probability": 0.0
-   },
-   "mode": "normal",
-   "parameters": {
-    "breed": null,
-    "dam_carriers": null,
-    "dam_color": "Blue Patched Tabby-White",
-    "mode": "normal",
-    "sire_carriers": null,
-    "sire_color": "Lilac"
-   },
-   "parent_color_notes": [
+   "conditional_color_groups": [
     {
-     "blocked_factors": [
-      "非アグーチ（ソリッド） a",
-      "チョコレート b"
+     "assumed_carriers": {
+      "dam": {
+       "A": "A/a"
+      }
+     },
+     "color_sexes": {
+      "Blue": [
+       "Female",
+       "Male"
+      ],
+      "Blue Cream": [
+       "Female"
+      ],
+      "Blue-White": [
+       "Female",
+       "Male"
+      ],
+      "Dilute Calico": [
+       "Female"
+      ]
+     },
+     "colors": [
+      "Blue",
+      "Blue Cream",
+      "Blue-White",
+      "Dilute Calico"
      ],
-     "color": "Lilac",
-     "parent": "sire"
+     "conditional_probability_pct": 37.5,
+     "family_label": "ブルー系",
+     "reverse_inference_label": "この色が出たら母が A/a 保因と確定します",
+     "scenario": "A_a_on_dam"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "A": "A/a"
+      }
+     },
+     "color_sexes": {
+      "Cream": [
+       "Male"
+      ],
+      "Cream-White": [
+       "Male"
+      ]
+     },
+     "colors": [
+      "Cream",
+      "Cream-White"
+     ],
+     "conditional_probability_pct": 12.5,
+     "family_label": "クリーム系",
+     "reverse_inference_label": "この色が出たら母が A/a 保因と確定します",
+     "scenario": "A_a_on_dam"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "B": "B/b"
+      }
+     },
+     "color_sexes": {
+      "Lilac Patched Tabby": [
+       "Female"
+      ],
+      "Lilac Patched Tabby-White": [
+       "Female"
+      ],
+      "Lilac Tabby": [
+       "Female",
+       "Male"
+      ],
+      "Lilac Tabby-White": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Lilac Patched Tabby",
+      "Lilac Patched Tabby-White",
+      "Lilac Tabby",
+      "Lilac Tabby-White"
+     ],
+     "conditional_probability_pct": 37.5,
+     "family_label": "ライラック系",
+     "reverse_inference_label": "この色が出たら母が B/b 保因と確定します",
+     "scenario": "B_b_on_dam"
     }
    ],
-   "results": [
+   "confirmed_results": [
     {
      "color": "Blue Patched Tabby",
      "probability_pct": 12.5,
@@ -1486,6 +3123,131 @@
      "sex": "Male"
     }
    ],
+   "diagnostics": {
+    "assumptions": [
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
+     "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
+     "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
+     "S (白斑): 入力レベルで確定 (非展開)"
+    ],
+    "closed_loci": [
+     "B",
+     "C",
+     "Wb"
+    ],
+    "matched_probability": 1.0,
+    "opened_loci": [
+     "A",
+     "D",
+     "I",
+     "Mc",
+     "Ta"
+    ],
+    "unmatched_genotype_count": 0,
+    "unmatched_probability": 0.0
+   },
+   "mode": "normal",
+   "parameters": {
+    "breed": null,
+    "dam_carriers": null,
+    "dam_color": "Blue Patched Tabby-White",
+    "mode": "normal",
+    "sire_carriers": null,
+    "sire_color": "Lilac"
+   },
+   "parent_color_notes": [
+    {
+     "blocked_factors": [
+      "チョコレート b"
+     ],
+     "color": "Lilac",
+     "parent": "sire"
+    }
+   ],
+   "results": [
+    {
+     "color": "Blue Patched Tabby",
+     "probability_pct": 9.375,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Patched Tabby-White",
+     "probability_pct": 9.375,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Tabby",
+     "probability_pct": 9.375,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Tabby-White",
+     "probability_pct": 9.375,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Tabby",
+     "probability_pct": 9.375,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Tabby-White",
+     "probability_pct": 9.375,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream Tabby",
+     "probability_pct": 9.375,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream Tabby-White",
+     "probability_pct": 9.375,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue",
+     "probability_pct": 3.125,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Cream",
+     "probability_pct": 3.125,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue-White",
+     "probability_pct": 3.125,
+     "sex": "Female"
+    },
+    {
+     "color": "Dilute Calico",
+     "probability_pct": 3.125,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue",
+     "probability_pct": 3.125,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue-White",
+     "probability_pct": 3.125,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream",
+     "probability_pct": 3.125,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream-White",
+     "probability_pct": 3.125,
+     "sex": "Male"
+    }
+   ],
    "status": "success"
   },
   "status": 200
@@ -1493,23 +3255,126 @@
  "Natural Mink|Natural Mink|Tonkinese|normal": {
   "body": {
    "carrier_exploration_results": null,
+   "conditional_color_groups": [
+    {
+     "assumed_carriers": {
+      "dam": {
+       "D": "D/d"
+      },
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Blue Mink": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Blue Mink"
+     ],
+     "conditional_probability_pct": 12.5,
+     "family_label": "ブルー系",
+     "reverse_inference_label": "この色が出たら両親が D/d 保因と確定します",
+     "scenario": "D_d_on_both"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "D": "D/d"
+      },
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Blue Point": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Blue Point"
+     ],
+     "conditional_probability_pct": 6.25,
+     "family_label": "ポイント系",
+     "reverse_inference_label": "この色が出たら両親が D/d 保因と確定します",
+     "scenario": "D_d_on_both"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "D": "D/d"
+      },
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Blue Solid": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Blue Solid"
+     ],
+     "conditional_probability_pct": 6.25,
+     "family_label": "セピア系",
+     "reverse_inference_label": "この色が出たら両親が D/d 保因と確定します",
+     "scenario": "D_d_on_both"
+    }
+   ],
+   "confirmed_results": [
+    {
+     "color": "Natural Mink",
+     "probability_pct": 25.0,
+     "sex": "Female"
+    },
+    {
+     "color": "Natural Mink",
+     "probability_pct": 25.0,
+     "sex": "Male"
+    },
+    {
+     "color": "Natural Point",
+     "probability_pct": 12.5,
+     "sex": "Female"
+    },
+    {
+     "color": "Natural Solid",
+     "probability_pct": 12.5,
+     "sex": "Female"
+    },
+    {
+     "color": "Natural Point",
+     "probability_pct": 12.5,
+     "sex": "Male"
+    },
+    {
+     "color": "Natural Solid",
+     "probability_pct": 12.5,
+     "sex": "Male"
+    }
+   ],
    "diagnostics": {
     "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
      "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
      "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
      "S (白斑): 入力レベルで確定 (非展開)"
     ],
     "closed_loci": [
-     "A",
      "B",
      "C",
      "Wb"
     ],
     "matched_probability": 1.0,
     "opened_loci": [
+     "A",
      "D",
      "I",
      "Mc",
@@ -1594,26 +3459,254 @@
   },
   "status": 200
  },
- "Red|Tortoiseshell|-|normal": {
+ "Red Tabby|Blue Chinchilla Golden|-|normal": {
   "body": {
    "carrier_exploration_results": null,
+   "conditional_color_groups": [
+    {
+     "assumed_carriers": {
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Blue Patched Tabby": [
+       "Female"
+      ],
+      "Blue Tabby": [
+       "Male"
+      ]
+     },
+     "colors": [
+      "Blue Patched Tabby",
+      "Blue Tabby"
+     ],
+     "conditional_probability_pct": 50.0,
+     "family_label": "ブルー系",
+     "reverse_inference_label": "この色が出たら父が D/d 保因と確定します",
+     "scenario": "D_d_on_sire"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "A": "A/a"
+      },
+      "sire": {
+       "A": "A/a"
+      }
+     },
+     "color_sexes": {
+      "Black": [
+       "Male"
+      ],
+      "Tortoiseshell": [
+       "Female"
+      ]
+     },
+     "colors": [
+      "Black",
+      "Tortoiseshell"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "ブラック系",
+     "reverse_inference_label": "この色が出たら両親が A/a 保因と確定します",
+     "scenario": "A_a_on_both"
+    }
+   ],
+   "confirmed_results": [
+    {
+     "color": "Brown Patched Tabby",
+     "probability_pct": 50.0,
+     "sex": "Female"
+    },
+    {
+     "color": "Brown Tabby",
+     "probability_pct": 50.0,
+     "sex": "Male"
+    }
+   ],
    "diagnostics": {
     "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
      "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
      "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
      "S (白斑): 入力レベルで確定 (非展開)"
     ],
     "closed_loci": [
-     "A",
      "B",
      "C",
      "Wb"
     ],
     "matched_probability": 1.0,
     "opened_loci": [
+     "A",
+     "D",
+     "I",
+     "Mc",
+     "Ta"
+    ],
+    "unmatched_genotype_count": 0,
+    "unmatched_probability": 0.0
+   },
+   "mode": "normal",
+   "parameters": {
+    "breed": null,
+    "dam_carriers": null,
+    "dam_color": "Blue Chinchilla Golden",
+    "mode": "normal",
+    "sire_carriers": null,
+    "sire_color": "Red Tabby"
+   },
+   "parent_color_notes": [
+    {
+     "blocked_factors": [
+      "オレンジ（赤/クリーム） O"
+     ],
+     "color": "Red Tabby",
+     "parent": "sire"
+    }
+   ],
+   "results": [
+    {
+     "color": "Brown Patched Tabby",
+     "probability_pct": 35.1562,
+     "sex": "Female"
+    },
+    {
+     "color": "Brown Tabby",
+     "probability_pct": 35.1562,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Patched Tabby",
+     "probability_pct": 11.7188,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Tabby",
+     "probability_pct": 11.7188,
+     "sex": "Male"
+    },
+    {
+     "color": "Tortoiseshell",
+     "probability_pct": 2.3438,
+     "sex": "Female"
+    },
+    {
+     "color": "Black",
+     "probability_pct": 2.3438,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Cream",
+     "probability_pct": 0.7812,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue",
+     "probability_pct": 0.7812,
+     "sex": "Male"
+    }
+   ],
+   "status": "success"
+  },
+  "status": 200
+ },
+ "Red|Tortoiseshell|-|normal": {
+  "body": {
+   "carrier_exploration_results": null,
+   "conditional_color_groups": [
+    {
+     "assumed_carriers": {
+      "dam": {
+       "D": "D/d"
+      },
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Blue": [
+       "Male"
+      ],
+      "Blue Cream": [
+       "Female"
+      ]
+     },
+     "colors": [
+      "Blue",
+      "Blue Cream"
+     ],
+     "conditional_probability_pct": 12.5,
+     "family_label": "ブルー系",
+     "reverse_inference_label": "この色が出たら両親が D/d 保因と確定します",
+     "scenario": "D_d_on_both"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "D": "D/d"
+      },
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Cream": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Cream"
+     ],
+     "conditional_probability_pct": 12.5,
+     "family_label": "クリーム系",
+     "reverse_inference_label": "この色が出たら両親が D/d 保因と確定します",
+     "scenario": "D_d_on_both"
+    }
+   ],
+   "confirmed_results": [
+    {
+     "color": "Red",
+     "probability_pct": 25.0,
+     "sex": "Female"
+    },
+    {
+     "color": "Tortoiseshell",
+     "probability_pct": 25.0,
+     "sex": "Female"
+    },
+    {
+     "color": "Black",
+     "probability_pct": 25.0,
+     "sex": "Male"
+    },
+    {
+     "color": "Red",
+     "probability_pct": 25.0,
+     "sex": "Male"
+    }
+   ],
+   "diagnostics": {
+    "assumptions": [
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
+     "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
+     "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
+     "S (白斑): 入力レベルで確定 (非展開)"
+    ],
+    "closed_loci": [
+     "B",
+     "C",
+     "Wb"
+    ],
+    "matched_probability": 1.0,
+    "opened_loci": [
+     "A",
      "D",
      "I",
      "Mc",
@@ -1681,23 +3774,60 @@
  "Sable|Sable|Burmese|normal": {
   "body": {
    "carrier_exploration_results": null,
+   "conditional_color_groups": [
+    {
+     "assumed_carriers": {
+      "dam": {
+       "D": "D/d"
+      },
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Blue": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Blue"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "ブルー系",
+     "reverse_inference_label": "この色が出たら両親が D/d 保因と確定します",
+     "scenario": "D_d_on_both"
+    }
+   ],
+   "confirmed_results": [
+    {
+     "color": "Sable Brown",
+     "probability_pct": 50.0,
+     "sex": "Female"
+    },
+    {
+     "color": "Sable Brown",
+     "probability_pct": 50.0,
+     "sex": "Male"
+    }
+   ],
    "diagnostics": {
     "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
      "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
      "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
      "S (白斑): 入力レベルで確定 (非展開)"
     ],
     "closed_loci": [
-     "A",
      "B",
      "C",
      "Wb"
     ],
     "matched_probability": 1.0,
     "opened_loci": [
+     "A",
      "D",
      "I",
      "Mc",
@@ -1718,12 +3848,12 @@
    "parent_color_notes": [],
    "results": [
     {
-     "color": "Sable",
+     "color": "Sable Brown",
      "probability_pct": 46.875,
      "sex": "Female"
     },
     {
-     "color": "Sable",
+     "color": "Sable Brown",
      "probability_pct": 46.875,
      "sex": "Male"
     },
@@ -1745,23 +3875,80 @@
  "Seal Point|Black|-|normal": {
   "body": {
    "carrier_exploration_results": null,
+   "conditional_color_groups": [
+    {
+     "assumed_carriers": {
+      "dam": {
+       "C": "C/cs"
+      }
+     },
+     "color_sexes": {
+      "Seal Point": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Seal Point"
+     ],
+     "conditional_probability_pct": 50.0,
+     "family_label": "ポイント系",
+     "reverse_inference_label": "この色が出たら母が C/cs 保因と確定します",
+     "scenario": "C_cs_on_dam"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "D": "D/d"
+      },
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Blue": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Blue"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "ブルー系",
+     "reverse_inference_label": "この色が出たら両親が D/d 保因と確定します",
+     "scenario": "D_d_on_both"
+    }
+   ],
+   "confirmed_results": [
+    {
+     "color": "Black",
+     "probability_pct": 50.0,
+     "sex": "Female"
+    },
+    {
+     "color": "Black",
+     "probability_pct": 50.0,
+     "sex": "Male"
+    }
+   ],
    "diagnostics": {
     "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
      "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
      "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
      "S (白斑): 入力レベルで確定 (非展開)"
     ],
     "closed_loci": [
-     "A",
      "B",
      "C",
      "Wb"
     ],
     "matched_probability": 1.0,
     "opened_loci": [
+     "A",
      "D",
      "I",
      "Mc",
@@ -1817,23 +4004,60 @@
  "Seal Point|Seal Point|Siamese|normal": {
   "body": {
    "carrier_exploration_results": null,
+   "conditional_color_groups": [
+    {
+     "assumed_carriers": {
+      "dam": {
+       "D": "D/d"
+      },
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Blue Point": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Blue Point"
+     ],
+     "conditional_probability_pct": 25.0,
+     "family_label": "ポイント系",
+     "reverse_inference_label": "この色が出たら両親が D/d 保因と確定します",
+     "scenario": "D_d_on_both"
+    }
+   ],
+   "confirmed_results": [
+    {
+     "color": "Seal Point",
+     "probability_pct": 50.0,
+     "sex": "Female"
+    },
+    {
+     "color": "Seal Point",
+     "probability_pct": 50.0,
+     "sex": "Male"
+    }
+   ],
    "diagnostics": {
     "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
      "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
      "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
      "S (白斑): 入力レベルで確定 (非展開)"
     ],
     "closed_loci": [
-     "A",
      "B",
      "C",
      "Wb"
     ],
     "matched_probability": 1.0,
     "opened_loci": [
+     "A",
      "D",
      "I",
      "Mc",
@@ -1881,23 +4105,25 @@
  "Silver Tabby|Black|-|explicit_carrier": {
   "body": {
    "carrier_exploration_results": null,
+   "conditional_color_groups": [],
+   "confirmed_results": null,
    "diagnostics": {
     "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
      "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
      "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
      "S (白斑): 入力レベルで確定 (非展開)"
     ],
     "closed_loci": [
-     "A",
      "B",
      "C",
      "Wb"
     ],
     "matched_probability": 1.0,
     "opened_loci": [
+     "A",
      "D",
      "I",
      "Mc",
@@ -1919,42 +4145,82 @@
    "results": [
     {
      "color": "Silver Tabby",
-     "probability_pct": 35.1562,
+     "probability_pct": 26.3672,
      "sex": "Female"
     },
     {
      "color": "Silver Tabby",
-     "probability_pct": 35.1562,
+     "probability_pct": 26.3672,
      "sex": "Male"
     },
     {
-     "color": "Brown Tabby",
-     "probability_pct": 11.7188,
+     "color": "Black Smoke",
+     "probability_pct": 8.7891,
      "sex": "Female"
     },
     {
      "color": "Brown Tabby",
-     "probability_pct": 11.7188,
+     "probability_pct": 8.7891,
+     "sex": "Female"
+    },
+    {
+     "color": "Black Smoke",
+     "probability_pct": 8.7891,
+     "sex": "Male"
+    },
+    {
+     "color": "Brown Tabby",
+     "probability_pct": 8.7891,
+     "sex": "Male"
+    },
+    {
+     "color": "Black",
+     "probability_pct": 2.9297,
+     "sex": "Female"
+    },
+    {
+     "color": "Black",
+     "probability_pct": 2.9297,
      "sex": "Male"
     },
     {
      "color": "Blue Silver Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 1.7578,
      "sex": "Female"
     },
     {
      "color": "Blue Silver Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 1.7578,
      "sex": "Male"
     },
     {
-     "color": "Blue Tabby",
-     "probability_pct": 0.7812,
+     "color": "Blue Smoke",
+     "probability_pct": 0.5859,
      "sex": "Female"
     },
     {
      "color": "Blue Tabby",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.5859,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Smoke",
+     "probability_pct": 0.5859,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Tabby",
+     "probability_pct": 0.5859,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue",
+     "probability_pct": 0.1953,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue",
+     "probability_pct": 0.1953,
      "sex": "Male"
     }
    ],
@@ -1965,23 +4231,241 @@
  "Silver Tabby|Blue Patched Tabby-White|-|normal": {
   "body": {
    "carrier_exploration_results": null,
+   "conditional_color_groups": [
+    {
+     "assumed_carriers": {
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Blue Silver Patched Tabby": [
+       "Female"
+      ],
+      "Blue Silver Patched Tabby-White": [
+       "Female"
+      ],
+      "Blue Silver Tabby": [
+       "Female",
+       "Male"
+      ],
+      "Blue Silver Tabby-White": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Blue Silver Patched Tabby",
+      "Blue Silver Patched Tabby-White",
+      "Blue Silver Tabby",
+      "Blue Silver Tabby-White"
+     ],
+     "conditional_probability_pct": 37.5,
+     "family_label": "シルバー系",
+     "reverse_inference_label": "この色が出たら父が D/d 保因と確定します",
+     "scenario": "D_d_on_sire"
+    },
+    {
+     "assumed_carriers": {
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Cream Cameo Tabby": [
+       "Male"
+      ],
+      "Cream Cameo Tabby-White": [
+       "Male"
+      ]
+     },
+     "colors": [
+      "Cream Cameo Tabby",
+      "Cream Cameo Tabby-White"
+     ],
+     "conditional_probability_pct": 12.5,
+     "family_label": "クリーム系",
+     "reverse_inference_label": "この色が出たら父が D/d 保因と確定します",
+     "scenario": "D_d_on_sire"
+    },
+    {
+     "assumed_carriers": {
+      "sire": {
+       "I": "I/i"
+      }
+     },
+     "color_sexes": {
+      "Brown Patched Tabby": [
+       "Female"
+      ],
+      "Brown Patched Tabby-White": [
+       "Female"
+      ],
+      "Brown Tabby": [
+       "Female",
+       "Male"
+      ],
+      "Brown Tabby-White": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Brown Patched Tabby",
+      "Brown Patched Tabby-White",
+      "Brown Tabby",
+      "Brown Tabby-White"
+     ],
+     "conditional_probability_pct": 37.5,
+     "family_label": "ブラック系",
+     "reverse_inference_label": "この色が出たら父が I/i 保因と確定します",
+     "scenario": "I_i_on_sire"
+    },
+    {
+     "assumed_carriers": {
+      "sire": {
+       "I": "I/i"
+      }
+     },
+     "color_sexes": {
+      "Red Tabby": [
+       "Male"
+      ],
+      "Red Tabby-White": [
+       "Male"
+      ]
+     },
+     "colors": [
+      "Red Tabby",
+      "Red Tabby-White"
+     ],
+     "conditional_probability_pct": 12.5,
+     "family_label": "レッド系",
+     "reverse_inference_label": "この色が出たら父が I/i 保因と確定します",
+     "scenario": "I_i_on_sire"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "A": "A/a"
+      },
+      "sire": {
+       "A": "A/a"
+      }
+     },
+     "color_sexes": {
+      "Black Smoke": [
+       "Female",
+       "Male"
+      ],
+      "Black Smoke-White": [
+       "Female",
+       "Male"
+      ],
+      "Tortie Smoke": [
+       "Female"
+      ],
+      "Tortie Smoke-White": [
+       "Female"
+      ]
+     },
+     "colors": [
+      "Black Smoke",
+      "Black Smoke-White",
+      "Tortie Smoke",
+      "Tortie Smoke-White"
+     ],
+     "conditional_probability_pct": 18.75,
+     "family_label": "ブラック系",
+     "reverse_inference_label": "この色が出たら両親が A/a 保因と確定します",
+     "scenario": "A_a_on_both"
+    },
+    {
+     "assumed_carriers": {
+      "dam": {
+       "A": "A/a"
+      },
+      "sire": {
+       "A": "A/a"
+      }
+     },
+     "color_sexes": {
+      "Cameo": [
+       "Male"
+      ],
+      "Cameo-White": [
+       "Male"
+      ]
+     },
+     "colors": [
+      "Cameo",
+      "Cameo-White"
+     ],
+     "conditional_probability_pct": 6.25,
+     "family_label": "レッド系",
+     "reverse_inference_label": "この色が出たら両親が A/a 保因と確定します",
+     "scenario": "A_a_on_both"
+    }
+   ],
+   "confirmed_results": [
+    {
+     "color": "Silver Patched Tabby",
+     "probability_pct": 12.5,
+     "sex": "Female"
+    },
+    {
+     "color": "Silver Patched Tabby-White",
+     "probability_pct": 12.5,
+     "sex": "Female"
+    },
+    {
+     "color": "Silver Tabby",
+     "probability_pct": 12.5,
+     "sex": "Female"
+    },
+    {
+     "color": "Silver Tabby-White",
+     "probability_pct": 12.5,
+     "sex": "Female"
+    },
+    {
+     "color": "Cameo Tabby",
+     "probability_pct": 12.5,
+     "sex": "Male"
+    },
+    {
+     "color": "Cameo Tabby-White",
+     "probability_pct": 12.5,
+     "sex": "Male"
+    },
+    {
+     "color": "Silver Tabby",
+     "probability_pct": 12.5,
+     "sex": "Male"
+    },
+    {
+     "color": "Silver Tabby-White",
+     "probability_pct": 12.5,
+     "sex": "Male"
+    }
+   ],
    "diagnostics": {
     "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
      "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
      "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
      "S (白斑): 入力レベルで確定 (非展開)"
     ],
     "closed_loci": [
-     "A",
      "B",
      "C",
      "Wb"
     ],
     "matched_probability": 1.0,
     "opened_loci": [
+     "A",
      "D",
      "I",
      "Mc",
@@ -2003,162 +4487,322 @@
    "results": [
     {
      "color": "Silver Patched Tabby",
-     "probability_pct": 7.0312,
+     "probability_pct": 6.591,
      "sex": "Female"
     },
     {
      "color": "Silver Patched Tabby-White",
-     "probability_pct": 7.0312,
+     "probability_pct": 6.5918,
      "sex": "Female"
     },
     {
      "color": "Silver Tabby",
-     "probability_pct": 7.0312,
+     "probability_pct": 6.5918,
      "sex": "Female"
     },
     {
      "color": "Silver Tabby-White",
-     "probability_pct": 7.0312,
+     "probability_pct": 6.5918,
      "sex": "Female"
     },
     {
      "color": "Cameo Tabby",
-     "probability_pct": 7.0312,
+     "probability_pct": 6.5918,
      "sex": "Male"
     },
     {
      "color": "Cameo Tabby-White",
-     "probability_pct": 7.0312,
+     "probability_pct": 6.5918,
      "sex": "Male"
     },
     {
      "color": "Silver Tabby",
-     "probability_pct": 7.0312,
+     "probability_pct": 6.5918,
      "sex": "Male"
     },
     {
      "color": "Silver Tabby-White",
-     "probability_pct": 7.0312,
+     "probability_pct": 6.5918,
      "sex": "Male"
     },
     {
      "color": "Blue Silver Patched Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Female"
     },
     {
      "color": "Blue Silver Patched Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Female"
     },
     {
      "color": "Blue Silver Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Female"
     },
     {
      "color": "Blue Silver Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Female"
     },
     {
      "color": "Brown Patched Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Female"
     },
     {
      "color": "Brown Patched Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Female"
     },
     {
      "color": "Brown Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Female"
     },
     {
      "color": "Brown Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Female"
     },
     {
      "color": "Blue Silver Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Male"
     },
     {
      "color": "Blue Silver Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Male"
     },
     {
      "color": "Brown Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Male"
     },
     {
      "color": "Brown Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Male"
     },
     {
      "color": "Cream Cameo Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Male"
     },
     {
      "color": "Cream Cameo Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Male"
     },
     {
      "color": "Red Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Male"
     },
     {
      "color": "Red Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 2.1973,
      "sex": "Male"
     },
     {
      "color": "Blue Patched Tabby",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.7324,
      "sex": "Female"
     },
     {
      "color": "Blue Patched Tabby-White",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.7324,
      "sex": "Female"
     },
     {
      "color": "Blue Tabby",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.7324,
      "sex": "Female"
     },
     {
      "color": "Blue Tabby-White",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.7324,
      "sex": "Female"
     },
     {
      "color": "Blue Tabby",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.7324,
      "sex": "Male"
     },
     {
      "color": "Blue Tabby-White",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.7324,
      "sex": "Male"
     },
     {
      "color": "Cream Tabby",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.7324,
      "sex": "Male"
     },
     {
      "color": "Cream Tabby-White",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.7324,
+     "sex": "Male"
+    },
+    {
+     "color": "Black Smoke",
+     "probability_pct": 0.4395,
+     "sex": "Female"
+    },
+    {
+     "color": "Black Smoke-White",
+     "probability_pct": 0.4395,
+     "sex": "Female"
+    },
+    {
+     "color": "Tortie Smoke",
+     "probability_pct": 0.4395,
+     "sex": "Female"
+    },
+    {
+     "color": "Tortie Smoke-White",
+     "probability_pct": 0.4395,
+     "sex": "Female"
+    },
+    {
+     "color": "Black Smoke",
+     "probability_pct": 0.4395,
+     "sex": "Male"
+    },
+    {
+     "color": "Black Smoke-White",
+     "probability_pct": 0.4395,
+     "sex": "Male"
+    },
+    {
+     "color": "Cameo",
+     "probability_pct": 0.4395,
+     "sex": "Male"
+    },
+    {
+     "color": "Cameo-White",
+     "probability_pct": 0.4395,
+     "sex": "Male"
+    },
+    {
+     "color": "Black",
+     "probability_pct": 0.1465,
+     "sex": "Female"
+    },
+    {
+     "color": "Black-White",
+     "probability_pct": 0.1465,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Cream Smoke",
+     "probability_pct": 0.1465,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Cream Smoke-White",
+     "probability_pct": 0.1465,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Smoke",
+     "probability_pct": 0.1465,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Smoke-White",
+     "probability_pct": 0.1465,
+     "sex": "Female"
+    },
+    {
+     "color": "Calico",
+     "probability_pct": 0.1465,
+     "sex": "Female"
+    },
+    {
+     "color": "Tortoiseshell",
+     "probability_pct": 0.1465,
+     "sex": "Female"
+    },
+    {
+     "color": "Black",
+     "probability_pct": 0.1465,
+     "sex": "Male"
+    },
+    {
+     "color": "Black-White",
+     "probability_pct": 0.1465,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Smoke",
+     "probability_pct": 0.1465,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Smoke-White",
+     "probability_pct": 0.1465,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream Smoke",
+     "probability_pct": 0.1465,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream Smoke-White",
+     "probability_pct": 0.1465,
+     "sex": "Male"
+    },
+    {
+     "color": "Red",
+     "probability_pct": 0.1465,
+     "sex": "Male"
+    },
+    {
+     "color": "Red-White",
+     "probability_pct": 0.1465,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue",
+     "probability_pct": 0.0488,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Cream",
+     "probability_pct": 0.0488,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue-White",
+     "probability_pct": 0.0488,
+     "sex": "Female"
+    },
+    {
+     "color": "Dilute Calico",
+     "probability_pct": 0.0488,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue",
+     "probability_pct": 0.0488,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue-White",
+     "probability_pct": 0.0488,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream",
+     "probability_pct": 0.0488,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream-White",
+     "probability_pct": 0.0488,
      "sex": "Male"
     }
    ],
@@ -2169,23 +4813,235 @@
  "Silver Tabby|Dilute Calico|-|normal": {
   "body": {
    "carrier_exploration_results": null,
+   "conditional_color_groups": [
+    {
+     "assumed_carriers": {
+      "sire": {
+       "A": "A/a"
+      }
+     },
+     "color_sexes": {
+      "Black Smoke": [
+       "Female",
+       "Male"
+      ],
+      "Black Smoke-White": [
+       "Female",
+       "Male"
+      ],
+      "Tortie Smoke": [
+       "Female"
+      ],
+      "Tortie Smoke-White": [
+       "Female"
+      ]
+     },
+     "colors": [
+      "Black Smoke",
+      "Black Smoke-White",
+      "Tortie Smoke",
+      "Tortie Smoke-White"
+     ],
+     "conditional_probability_pct": 37.5,
+     "family_label": "ブラック系",
+     "reverse_inference_label": "この色が出たら父が A/a 保因と確定します",
+     "scenario": "A_a_on_sire"
+    },
+    {
+     "assumed_carriers": {
+      "sire": {
+       "A": "A/a"
+      }
+     },
+     "color_sexes": {
+      "Cameo": [
+       "Male"
+      ],
+      "Cameo-White": [
+       "Male"
+      ]
+     },
+     "colors": [
+      "Cameo",
+      "Cameo-White"
+     ],
+     "conditional_probability_pct": 12.5,
+     "family_label": "レッド系",
+     "reverse_inference_label": "この色が出たら父が A/a 保因と確定します",
+     "scenario": "A_a_on_sire"
+    },
+    {
+     "assumed_carriers": {
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Blue Silver Patched Tabby": [
+       "Female"
+      ],
+      "Blue Silver Patched Tabby-White": [
+       "Female"
+      ],
+      "Blue Silver Tabby": [
+       "Female",
+       "Male"
+      ],
+      "Blue Silver Tabby-White": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Blue Silver Patched Tabby",
+      "Blue Silver Patched Tabby-White",
+      "Blue Silver Tabby",
+      "Blue Silver Tabby-White"
+     ],
+     "conditional_probability_pct": 37.5,
+     "family_label": "シルバー系",
+     "reverse_inference_label": "この色が出たら父が D/d 保因と確定します",
+     "scenario": "D_d_on_sire"
+    },
+    {
+     "assumed_carriers": {
+      "sire": {
+       "D": "D/d"
+      }
+     },
+     "color_sexes": {
+      "Cream Cameo Tabby": [
+       "Male"
+      ],
+      "Cream Cameo Tabby-White": [
+       "Male"
+      ]
+     },
+     "colors": [
+      "Cream Cameo Tabby",
+      "Cream Cameo Tabby-White"
+     ],
+     "conditional_probability_pct": 12.5,
+     "family_label": "クリーム系",
+     "reverse_inference_label": "この色が出たら父が D/d 保因と確定します",
+     "scenario": "D_d_on_sire"
+    },
+    {
+     "assumed_carriers": {
+      "sire": {
+       "I": "I/i"
+      }
+     },
+     "color_sexes": {
+      "Brown Patched Tabby": [
+       "Female"
+      ],
+      "Brown Patched Tabby-White": [
+       "Female"
+      ],
+      "Brown Tabby": [
+       "Female",
+       "Male"
+      ],
+      "Brown Tabby-White": [
+       "Female",
+       "Male"
+      ]
+     },
+     "colors": [
+      "Brown Patched Tabby",
+      "Brown Patched Tabby-White",
+      "Brown Tabby",
+      "Brown Tabby-White"
+     ],
+     "conditional_probability_pct": 37.5,
+     "family_label": "ブラック系",
+     "reverse_inference_label": "この色が出たら父が I/i 保因と確定します",
+     "scenario": "I_i_on_sire"
+    },
+    {
+     "assumed_carriers": {
+      "sire": {
+       "I": "I/i"
+      }
+     },
+     "color_sexes": {
+      "Red Tabby": [
+       "Male"
+      ],
+      "Red Tabby-White": [
+       "Male"
+      ]
+     },
+     "colors": [
+      "Red Tabby",
+      "Red Tabby-White"
+     ],
+     "conditional_probability_pct": 12.5,
+     "family_label": "レッド系",
+     "reverse_inference_label": "この色が出たら父が I/i 保因と確定します",
+     "scenario": "I_i_on_sire"
+    }
+   ],
+   "confirmed_results": [
+    {
+     "color": "Silver Patched Tabby",
+     "probability_pct": 12.5,
+     "sex": "Female"
+    },
+    {
+     "color": "Silver Patched Tabby-White",
+     "probability_pct": 12.5,
+     "sex": "Female"
+    },
+    {
+     "color": "Silver Tabby",
+     "probability_pct": 12.5,
+     "sex": "Female"
+    },
+    {
+     "color": "Silver Tabby-White",
+     "probability_pct": 12.5,
+     "sex": "Female"
+    },
+    {
+     "color": "Cameo Tabby",
+     "probability_pct": 12.5,
+     "sex": "Male"
+    },
+    {
+     "color": "Cameo Tabby-White",
+     "probability_pct": 12.5,
+     "sex": "Male"
+    },
+    {
+     "color": "Silver Tabby",
+     "probability_pct": 12.5,
+     "sex": "Male"
+    },
+    {
+     "color": "Silver Tabby-White",
+     "probability_pct": 12.5,
+     "sex": "Male"
+    }
+   ],
    "diagnostics": {
     "assumptions": [
-     "A (タビー): A/A 相当に固定 (A/a 非展開)",
+     "A/D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "A (タビー): タビー猫は A/A か A/a か見た目で区別できないため両方を計算。両親が A/a のとき子にソリッド (a/a) が出る",
      "B (黒/チョコ/シナモン): 表現型値に固定 (B/b・B/bl キャリア非展開)",
      "C (フルカラー/ポイント/セピア): 表現型値に固定 (C/cs・C/cb キャリア非展開)",
-     "Wb (ワイドバンド): 非展開",
-     "D/I/Mc/Ta: 優性ヘテロ未確定として X/- 展開 (50:50 中立)",
+     "Wb (ワイドバンド/ゴールデン): 劣性・非展開。Wb/Wb ホモのみ発現 (ヘテロはキャリア=非ゴールデン)。ゴールデン×非保因→F1は非ゴールデン",
      "S (白斑): 入力レベルで確定 (非展開)"
     ],
     "closed_loci": [
-     "A",
      "B",
      "C",
      "Wb"
     ],
     "matched_probability": 1.0,
     "opened_loci": [
+     "A",
      "D",
      "I",
      "Mc",
@@ -2203,174 +5059,326 @@
     "sire_carriers": null,
     "sire_color": "Silver Tabby"
    },
-   "parent_color_notes": [
-    {
-     "blocked_factors": [
-      "非アグーチ（ソリッド） a"
-     ],
-     "color": "Dilute Calico",
-     "parent": "dam"
-    }
-   ],
+   "parent_color_notes": [],
    "results": [
     {
      "color": "Silver Patched Tabby",
-     "probability_pct": 7.0312,
+     "probability_pct": 5.275,
      "sex": "Female"
     },
     {
      "color": "Silver Patched Tabby-White",
-     "probability_pct": 7.0312,
+     "probability_pct": 5.2734,
      "sex": "Female"
     },
     {
      "color": "Silver Tabby",
-     "probability_pct": 7.0312,
+     "probability_pct": 5.2734,
      "sex": "Female"
     },
     {
      "color": "Silver Tabby-White",
-     "probability_pct": 7.0312,
+     "probability_pct": 5.2734,
      "sex": "Female"
     },
     {
      "color": "Cameo Tabby",
-     "probability_pct": 7.0312,
+     "probability_pct": 5.2734,
      "sex": "Male"
     },
     {
      "color": "Cameo Tabby-White",
-     "probability_pct": 7.0312,
+     "probability_pct": 5.2734,
      "sex": "Male"
     },
     {
      "color": "Silver Tabby",
-     "probability_pct": 7.0312,
+     "probability_pct": 5.2734,
      "sex": "Male"
     },
     {
      "color": "Silver Tabby-White",
-     "probability_pct": 7.0312,
+     "probability_pct": 5.2734,
      "sex": "Male"
     },
     {
+     "color": "Black Smoke",
+     "probability_pct": 1.7578,
+     "sex": "Female"
+    },
+    {
+     "color": "Black Smoke-White",
+     "probability_pct": 1.7578,
+     "sex": "Female"
+    },
+    {
      "color": "Blue Silver Patched Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 1.7578,
      "sex": "Female"
     },
     {
      "color": "Blue Silver Patched Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 1.7578,
      "sex": "Female"
     },
     {
      "color": "Blue Silver Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 1.7578,
      "sex": "Female"
     },
     {
      "color": "Blue Silver Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 1.7578,
      "sex": "Female"
     },
     {
      "color": "Brown Patched Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 1.7578,
      "sex": "Female"
     },
     {
      "color": "Brown Patched Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 1.7578,
      "sex": "Female"
     },
     {
      "color": "Brown Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 1.7578,
      "sex": "Female"
     },
     {
      "color": "Brown Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 1.7578,
      "sex": "Female"
     },
     {
+     "color": "Tortie Smoke",
+     "probability_pct": 1.7578,
+     "sex": "Female"
+    },
+    {
+     "color": "Tortie Smoke-White",
+     "probability_pct": 1.7578,
+     "sex": "Female"
+    },
+    {
+     "color": "Black Smoke",
+     "probability_pct": 1.7578,
+     "sex": "Male"
+    },
+    {
+     "color": "Black Smoke-White",
+     "probability_pct": 1.7578,
+     "sex": "Male"
+    },
+    {
      "color": "Blue Silver Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 1.7578,
      "sex": "Male"
     },
     {
      "color": "Blue Silver Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 1.7578,
      "sex": "Male"
     },
     {
      "color": "Brown Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 1.7578,
      "sex": "Male"
     },
     {
      "color": "Brown Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 1.7578,
+     "sex": "Male"
+    },
+    {
+     "color": "Cameo",
+     "probability_pct": 1.7578,
+     "sex": "Male"
+    },
+    {
+     "color": "Cameo-White",
+     "probability_pct": 1.7578,
      "sex": "Male"
     },
     {
      "color": "Cream Cameo Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 1.7578,
      "sex": "Male"
     },
     {
      "color": "Cream Cameo Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 1.7578,
      "sex": "Male"
     },
     {
      "color": "Red Tabby",
-     "probability_pct": 2.3438,
+     "probability_pct": 1.7578,
      "sex": "Male"
     },
     {
      "color": "Red Tabby-White",
-     "probability_pct": 2.3438,
+     "probability_pct": 1.7578,
      "sex": "Male"
     },
     {
+     "color": "Black",
+     "probability_pct": 0.5859,
+     "sex": "Female"
+    },
+    {
+     "color": "Black-White",
+     "probability_pct": 0.5859,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Cream Smoke",
+     "probability_pct": 0.5859,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Cream Smoke-White",
+     "probability_pct": 0.5859,
+     "sex": "Female"
+    },
+    {
      "color": "Blue Patched Tabby",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.5859,
      "sex": "Female"
     },
     {
      "color": "Blue Patched Tabby-White",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.5859,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Smoke",
+     "probability_pct": 0.5859,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Smoke-White",
+     "probability_pct": 0.5859,
      "sex": "Female"
     },
     {
      "color": "Blue Tabby",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.5859,
      "sex": "Female"
     },
     {
      "color": "Blue Tabby-White",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.5859,
      "sex": "Female"
     },
     {
+     "color": "Calico",
+     "probability_pct": 0.5859,
+     "sex": "Female"
+    },
+    {
+     "color": "Tortoiseshell",
+     "probability_pct": 0.5859,
+     "sex": "Female"
+    },
+    {
+     "color": "Black",
+     "probability_pct": 0.5859,
+     "sex": "Male"
+    },
+    {
+     "color": "Black-White",
+     "probability_pct": 0.5859,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Smoke",
+     "probability_pct": 0.5859,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue Smoke-White",
+     "probability_pct": 0.5859,
+     "sex": "Male"
+    },
+    {
      "color": "Blue Tabby",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.5859,
      "sex": "Male"
     },
     {
      "color": "Blue Tabby-White",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.5859,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream Smoke",
+     "probability_pct": 0.5859,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream Smoke-White",
+     "probability_pct": 0.5859,
      "sex": "Male"
     },
     {
      "color": "Cream Tabby",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.5859,
      "sex": "Male"
     },
     {
      "color": "Cream Tabby-White",
-     "probability_pct": 0.7812,
+     "probability_pct": 0.5859,
+     "sex": "Male"
+    },
+    {
+     "color": "Red",
+     "probability_pct": 0.5859,
+     "sex": "Male"
+    },
+    {
+     "color": "Red-White",
+     "probability_pct": 0.5859,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue",
+     "probability_pct": 0.1953,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue Cream",
+     "probability_pct": 0.1953,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue-White",
+     "probability_pct": 0.1953,
+     "sex": "Female"
+    },
+    {
+     "color": "Dilute Calico",
+     "probability_pct": 0.1953,
+     "sex": "Female"
+    },
+    {
+     "color": "Blue",
+     "probability_pct": 0.1953,
+     "sex": "Male"
+    },
+    {
+     "color": "Blue-White",
+     "probability_pct": 0.1953,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream",
+     "probability_pct": 0.1953,
+     "sex": "Male"
+    },
+    {
+     "color": "Cream-White",
+     "probability_pct": 0.1953,
      "sex": "Male"
     }
    ],
@@ -2381,6 +5389,8 @@
  "White|Black|-|normal": {
   "body": {
    "carrier_exploration_results": null,
+   "conditional_color_groups": [],
+   "confirmed_results": null,
    "diagnostics": {
     "assumptions": [
      "W (優性白): 表現型からは W/W・W/w を区別できないため W/w を仮定 (X/- 展開)",
@@ -2388,7 +5398,6 @@
      "AOC: 白親の下の色が未確定な有色カテゴリ。生後の毛色で判明する集約表示"
     ],
     "closed_loci": [
-     "A",
      "B",
      "C",
      "Wb"
@@ -2396,6 +5405,7 @@
     "matched_probability": 1.0,
     "opened_loci": [
      "W",
+     "A",
      "D",
      "I",
      "Mc",

@@ -85,6 +85,12 @@ class ResolvedColor:
     display_allowed: bool
     input_allowed: bool
     sex_restriction: str            # female_only / unrestricted
+    # 色系統グルーピング (「もしこの色が出たら」) 用の分類軸 (canonical 行の値)。
+    color_group: str                # solid / tabby / point / ... (ColorGroup)
+    base_series: str                # black / chocolate / cinnamon / red / unknown (BaseSeries)
+    dilution: str                   # dense / dilute (Dilution)
+    silver_state: str               # silver / non_silver (SilverState)
+    point_state: str                # full / point / sepia / mink (PointState)
     # engine (PHENOTYPE_GENOTYPES) へ渡せる候補名。canonical 概念を優先した順序。
     engine_candidate_names: tuple[str, ...]
 
@@ -158,6 +164,11 @@ class ColorMaster:
             display_allowed=row.get("DisplayAllowed", "") == "true",
             input_allowed=row.get("InputAllowed", "") == "true",
             sex_restriction=canonical.get("SexRestriction", row.get("SexRestriction", "")),
+            color_group=canonical.get("ColorGroup", row.get("ColorGroup", "")),
+            base_series=canonical.get("BaseSeries", row.get("BaseSeries", "")),
+            dilution=canonical.get("Dilution", row.get("Dilution", "")),
+            silver_state=canonical.get("SilverState", row.get("SilverState", "")),
+            point_state=canonical.get("PointState", row.get("PointState", "")),
             engine_candidate_names=self._engine_candidates(row, canonical),
         )
 
@@ -255,3 +266,62 @@ def _load_master_rows() -> list[dict[str, str]]:
 
 # モジュール読み込み時に索引を構築する (engine から参照する単一インスタンス)。
 COLOR_MASTER = ColorMaster(_load_master_rows())
+
+
+# 色系統ラベル: BaseSeries (黒/チョコ/シナモン/赤) × Dilution (濃色/希釈) の合成。
+# 「もしこの色が出たら」を色系統でまとめて逆推論ラベルを付けるための表示単位。
+_FAMILY_BY_BASE_DILUTION: dict[tuple[str, str], str] = {
+    ("black", "dense"): "ブラック系",
+    ("black", "dilute"): "ブルー系",
+    ("chocolate", "dense"): "チョコレート系",
+    ("chocolate", "dilute"): "ライラック系",
+    ("cinnamon", "dense"): "シナモン系",
+    ("cinnamon", "dilute"): "フォーン系",
+    ("red", "dense"): "レッド系",
+    ("red", "dilute"): "クリーム系",
+}
+
+# 系統不明色のフォールバックラベル。
+COLOR_FAMILY_OTHER = "その他系"
+COLOR_FAMILY_POINT = "ポイント系"
+COLOR_FAMILY_SEPIA = "セピア系"
+COLOR_FAMILY_SILVER = "シルバー系"
+
+
+# ティッピングの度合い語 (Shell/Shaded/Chinchilla)。単語境界で剥がす ("Tortoiseshell" 内の
+# "shell" は語境界が無いので誤マッチしない)。
+_TIPPING_DEGREE_RE = re.compile(r"\b(?:Shell|Shaded|Chinchilla)\b\s*", re.IGNORECASE)
+
+
+def _strip_tipping_markers(name: str) -> str:
+    """構築名 (例 "Shell Blue Cream (Golden)") から度合い語と "(Golden)" を剥がして基底名を得る。"""
+
+    stripped = re.sub(r"\s*\(Golden\)\s*$", "", name, flags=re.IGNORECASE)
+    stripped = _TIPPING_DEGREE_RE.sub("", stripped)
+    return " ".join(stripped.split())
+
+
+def color_family(name: str) -> str:
+    """色名を色系統ラベルへ合成する (「もしこの色が出たら」のグルーピング単位)。
+
+    優先順位: ポイント (C/cs) > セピア (C/cb) > シルバー (I) > BaseSeries×Dilution。
+    master 未登録・分類不能は「その他系」にフォールバックする。
+    """
+
+    resolved = COLOR_MASTER.resolve(name)
+    if resolved is None:
+        # ワイドバンド構築名 (Shell Tortoiseshell (Golden) 等) は master 未登録なので、度合い語と
+        # "(Golden)" を剥がした基底トーティ名 (Tortoiseshell / Blue Cream) で再解決し系統を得る。
+        stripped = _strip_tipping_markers(name)
+        if stripped and stripped != name:
+            resolved = COLOR_MASTER.resolve(stripped)
+    if resolved is None:
+        return COLOR_FAMILY_OTHER
+    if resolved.point_state == "point":
+        return COLOR_FAMILY_POINT
+    if resolved.point_state == "sepia":
+        return COLOR_FAMILY_SEPIA
+    if resolved.silver_state == "silver":
+        return COLOR_FAMILY_SILVER
+    family = _FAMILY_BY_BASE_DILUTION.get((resolved.base_series, resolved.dilution))
+    return family or COLOR_FAMILY_OTHER

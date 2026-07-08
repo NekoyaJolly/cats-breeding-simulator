@@ -5,12 +5,14 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type {
   CalculationResponse,
   CarrierScenarioEntry,
+  ConditionalColorGroup,
   ParentColorNote,
   ResultEntry,
 } from "@/lib/schema";
 import { UI_TEXT, type Language } from "@/lib/i18n";
 import { LocusChip } from "./LocusChip";
 import { LOCUS_GLOSSARY } from "@/lib/lociGlossary";
+import { coatSwatchBackground } from "@/lib/coatColorSwatch";
 
 // 入力した親色が子に出ないときの注釈。劣性形質の理解補助 (なぜ親の色が出ないか)。
 function ParentColorNotes({
@@ -447,6 +449,184 @@ function CarrierScenario({
   );
 }
 
+// 遺伝子座 (シナリオ) 単位でまとめた条件付きカラー。同一 scenario の色系統グループを統合する。
+// colors は 基本色名 → 出得る性別集合 (バッジ枠線で♂♀を示すため)。
+type LocusConditionalGroup = {
+  scenario: string;
+  reverseLabel: string;
+  loci: string[];
+  colors: Map<string, Set<string>>;
+  pct: number;
+};
+
+// ♂♀の識別色 (結果カードの sky=♂ / pink=♀ に対応)。
+const SEX_MALE_COLOR = "#38bdf8"; // sky-400
+const SEX_FEMALE_COLOR = "#f472b6"; // pink-400
+
+// 条件付きカラーの1バッジ。バッジ全面を毛色そのもの (下地→先端のレイヤー) で塗り、色名を重ねる。
+// 枠線は出得る性別で色分けする (♂=sky / ♀=pink / 両方=左右で分割)。枠線は角丸を保つため外側の
+// 塗りパディングで表現し、内側に毛色バッジを重ねる。任意の色/グラデでも読めるよう暗幕＋白文字＋影。
+function ConditionalColorBadge({
+  color,
+  sexes,
+}: {
+  color: string;
+  sexes: string[];
+}) {
+  const hasMale = sexes.includes("Male");
+  const hasFemale = sexes.includes("Female");
+  const borderBackground =
+    hasMale && hasFemale
+      ? `linear-gradient(90deg, ${SEX_MALE_COLOR} 50%, ${SEX_FEMALE_COLOR} 50%)`
+      : hasMale
+        ? SEX_MALE_COLOR
+        : hasFemale
+          ? SEX_FEMALE_COLOR
+          : "rgba(0,0,0,0.12)";
+  // 性別は枠線色だけでなく、色以外の手段 (aria-label / title) でも伝える (色覚多様性・スクリーン
+  // リーダー対応)。♂=Male / ♀=Female。
+  const sexLabel =
+    hasMale && hasFemale
+      ? "♂♀ Male & Female"
+      : hasMale
+        ? "♂ Male"
+        : hasFemale
+          ? "♀ Female"
+          : "";
+  const badgeLabel = sexLabel ? `${color} — ${sexLabel}` : color;
+  return (
+    <span
+      className="inline-flex rounded-full p-[2px] shadow-sm"
+      style={{ background: borderBackground }}
+      title={badgeLabel}
+      aria-label={badgeLabel}
+    >
+      <span
+        className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold"
+        style={{
+          // 純白は眩しいので気持ちだけ落とす (白さは保つ)。
+          color: "rgba(255,255,255,0.97)",
+          background: `linear-gradient(rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.45) 100%), ${coatSwatchBackground(color)}`,
+          // 影はオフセット無しの対称の縁取り (下方向オフセットは残像に見える)。ただし濃い影は細い
+          // 文字に食い込んで白を鈍らせるため、1枚・軽めにして白を前に出す。
+          textShadow: "0 0 1.5px rgba(0,0,0,0.7)",
+          // 文字をグレースケールAAで描かせ、色つき背景での縁の色フリンジ (正面でのチラつき) を防ぐ。
+          transform: "translateZ(0)",
+          WebkitFontSmoothing: "antialiased",
+          MozOsxFontSmoothing: "grayscale",
+        }}
+      >
+        {color}
+      </span>
+    </span>
+  );
+}
+
+// 「If This Color Appears」セクション。隠れキャリアを仮定した場合にのみ出る条件付きカラーを、
+// 確定色 (メイン結果) とは分離して表示する。グルーピングは色系統ではなく「遺伝子座 (どの隠れキャリア
+// が原因か)」単位にし、座位アイコンと色見本バッジを横並びに置く (色は毛色そのものを swatch で表現)。
+function ConditionalColorSection({
+  groups,
+  language,
+}: {
+  groups: ConditionalColorGroup[];
+  language: Language;
+}) {
+  const text = UI_TEXT[language];
+  // デフォルトで開いておき、確定色と一緒に一覧で見えるようにする (畳みは任意で残す)。
+  const [open, setOpen] = useState(true);
+
+  // 遺伝子座 (scenario) 単位に統合する。色系統グループを潰し、原因座位と色を1カードにまとめる。
+  const byScenario = new Map<string, LocusConditionalGroup>();
+  for (const group of groups) {
+    const loci = [
+      ...new Set(
+        Object.values(group.assumed_carriers).flatMap((genotypes) =>
+          Object.keys(genotypes),
+        ),
+      ),
+    ];
+    const entry =
+      byScenario.get(group.scenario) ??
+      ({
+        scenario: group.scenario,
+        reverseLabel: group.reverse_inference_label,
+        loci,
+        colors: new Map<string, Set<string>>(),
+        pct: 0,
+      } satisfies LocusConditionalGroup);
+    // 「もしこの色が出たら」では白斑 (-White / -White Van) は出さず基本色に集約する
+    // (白斑は伝わるうえ、有無でバッジ幅が変わり同じ割合が違って見えるのを避ける)。
+    // 併せて 基本色ごとに出得る性別を集約する (枠線の♂♀表示に使う)。
+    for (const color of group.colors) {
+      const base = splitWhite(color).base;
+      const sexes = entry.colors.get(base) ?? new Set<string>();
+      for (const sex of group.color_sexes?.[color] ?? []) sexes.add(sex);
+      entry.colors.set(base, sexes);
+    }
+    entry.pct += group.conditional_probability_pct;
+    byScenario.set(group.scenario, entry);
+  }
+  const locusGroups = [...byScenario.values()].sort((a, b) => b.pct - a.pct);
+
+  return (
+    <section className="rounded-md border border-amber-200 bg-amber-50/60">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left"
+        aria-expanded={open}
+      >
+        <span className="min-w-0">
+          <span className="text-base font-semibold text-amber-900">
+            {text.parentResult.conditionalTitle}
+          </span>
+          <span className="mt-0.5 block text-xs font-normal text-amber-700">
+            {text.parentResult.conditionalHint}
+          </span>
+        </span>
+        <span className="shrink-0 text-xs font-medium text-amber-700">
+          {open ? text.parentResult.close : text.parentResult.conditionalOpen}
+        </span>
+      </button>
+      {open && (
+        <div className="space-y-3 px-4 pb-4">
+          {locusGroups.map((group) => (
+            <div
+              key={group.scenario}
+              className="rounded-md border border-amber-200 bg-white/70 p-3"
+            >
+              {/* 座位アイコン + 色見本バッジを横並び (原因の遺伝子座と、出る色) */}
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                  {group.loci.map((locus) => (
+                    <LocusChip key={locus} locus={locus} />
+                  ))}
+                  {[...group.colors.entries()].map(([color, sexes]) => (
+                    <ConditionalColorBadge
+                      key={color}
+                      color={color}
+                      sexes={[...sexes]}
+                    />
+                  ))}
+                </div>
+                <span className="shrink-0 text-xs tabular-nums text-amber-700">
+                  {text.parentResult.conditionalMaxPct}
+                  {formatPctInt(group.pct)}
+                </span>
+              </div>
+              {/* 説明文 (どの遺伝子座がどう確定するか) */}
+              <p className="mt-1.5 text-xs leading-relaxed text-amber-800">
+                {group.reverseLabel}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function ResultView({
   data,
   language,
@@ -473,21 +653,37 @@ export function ResultView({
   );
   return (
     <div className="space-y-6">
-      <section>
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-lg font-semibold">{text.parentResult.title}</h2>
-          <span className="rounded bg-slate-200 px-2 py-0.5 text-xs text-slate-600">
-            {text.parentResult.mode}: {data.mode}
-          </span>
-        </div>
-        <div className="mt-3">
+      {/* 「予測結果」は枠線上に乗るフローティングラベル (入力欄の FloatingField と同じ作法)。 */}
+      <section className="relative rounded-lg border border-slate-300 bg-white px-4 pb-4 pt-5 shadow-sm">
+        <h2 className="absolute -top-0 left-3 z-[1] -translate-y-1/2 bg-white px-1 text-[11px] font-semibold leading-4 text-slate-600">
+          {text.parentResult.title}
+        </h2>
+        <span className="absolute -top-0 right-3 z-[1] -translate-y-1/2 rounded bg-white px-1 text-[11px] leading-4 text-slate-500">
+          {text.parentResult.mode}: {data.mode}
+        </span>
+        {/* 確定カラー (基本確定事項) = オス / メス。すぐ下に条件付き (If…) を並べる。 */}
+        <div>
+          <h3 className="mb-2 text-sm font-semibold text-slate-600">
+            {text.parentResult.confirmedTitle}
+          </h3>
           <SexSplitResults
             key={resultsKey}
-            rows={data.results}
+            rows={data.confirmed_results ?? data.results}
             language={language}
             whiteSide={whiteSide}
           />
         </div>
+        {/* 「もしこの色が出たら」= オス・メス(確定色)のすぐ下にドッキングし、
+            デフォルト展開で一覧できるようにする (normal かつ条件付きカラー群があるときだけ)。 */}
+        {data.mode === "normal" && data.conditional_color_groups.length > 0 && (
+          <div className="mt-3">
+            <ConditionalColorSection
+              groups={data.conditional_color_groups}
+              language={language}
+            />
+          </div>
+        )}
+        {/* 入力色が子に出ない場合の注意書き → もし出たら の下、通常モード注記の上。 */}
         <ParentColorNotes notes={data.parent_color_notes} language={language} />
         {data.mode === "normal" && <NormalModeNote language={language} />}
       </section>

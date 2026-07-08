@@ -52,6 +52,9 @@ CROSSES: list[tuple[str, str, str | None, str]] = [
     ("Sable", "Sable", "Burmese", "normal"),                      # セピア cb + 猫種
     ("Natural Mink", "Natural Mink", "Tonkinese", "normal"),      # ミンク cs/cb + 猫種
     ("Blue Tabby-White", "Shell Cameo", None, "normal"),          # 親色不在注釈: O ブロッカー (赤ダム) / D 誤検出なし
+    # ワイドバンドは劣性 (Phase B): Golden(Wb/Wb) × 非保因(Red Tabby=wb/wb) → F1 全キャリア(Wb/wb)で
+    # 非ゴールデン (息子 Brown Tabby / 娘 Brown Patched Tabby 等)。ゴールデンは1代で落ちる = 実際の遺伝。
+    ("Red Tabby", "Blue Chinchilla Golden", None, "normal"),
 ]
 
 

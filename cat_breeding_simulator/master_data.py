@@ -11,8 +11,18 @@ AUTOSOMAL_LOCI: tuple[str, ...] = ("B", "D", "A", "C", "W", "S", "Mc", "Ta", "Sp
 SUPPORTED_MODES: tuple[str, ...] = ("normal", "explicit_carrier", "carrier_exploration")
 
 # normal_mode で X/- 展開する座位 (優性ヘテロ未確定) と、閉じる座位 (キャリア非展開)。
-NORMAL_OPENED_LOCI: tuple[str, ...] = ("D", "I", "Mc", "Ta")
-NORMAL_CLOSED_LOCI: tuple[str, ...] = ("A", "B", "C", "Wb")
+# A (タビー) は D/I/Mc/Ta と同じ「優性ヘテロ未確定」として展開する。タビー猫は表現型からは
+# A/A (純ホモ) か A/a (ソリッドを隠し持つヘテロ) か区別できないため両方を計算対象にする。
+# これにより タビー×タビー から (両親が A/a の場合) ソリッドの子が正しい確率で出る。
+# 逆方向 (a/a×a/a → タビー) は配偶子に A が無いため原理的に発生せず、不可逆ルールは保たれる。
+NORMAL_OPENED_LOCI: tuple[str, ...] = ("A", "D", "I", "Mc", "Ta")
+NORMAL_CLOSED_LOCI: tuple[str, ...] = ("B", "C", "Wb")
+
+# カテゴリA (優性ヘテロ未確定) としてヘテロ展開する座位。P2「もしこの色が出たら」の
+# 確定色 (confirmed_results) 計算では、この座位群の X/- 展開を抑止して「隠れキャリアを
+# 仮定しない確定色のみ」を得る (expand_category_a=False)。W (優性白) はこの集合に含めず、
+# 確定色計算でも W/w 仮定を維持する。
+_CATEGORY_A_EXPAND_LOCI: frozenset[str] = frozenset(NORMAL_OPENED_LOCI)
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,6 +74,13 @@ def expressed_genotype_key(loci: dict[str, tuple[str, str]], sex: str) -> tuple:
     else:
         base = "cinnamon"
 
+    # 純オレンジ (赤/クリーム) は赤色素 (フェオメラニン) が eumelanin (黒/チョコ/シナモン) を
+    # マスクするため、B 座位の base 差は表現型に現れない。逆引きキーを base 非依存にして、
+    # b/b・bl/bl 由来の赤も黒ベースの赤と同一表現型 (Red 等) に分類する。トーティ (O/o) は
+    # 黒/チョコ斑が可視のため base を残す (Brown Tortie と Chocolate Tortie を区別する)。
+    if orange == "orange":
+        base = "black"
+
     dilute = "dilute" if loci["D"][0] == "d" and loci["D"][1] == "d" else "dense"
     agouti = "agouti" if "A" in loci["A"] else "solid"
 
@@ -91,7 +108,11 @@ def expressed_genotype_key(loci: dict[str, tuple[str, str]], sex: str) -> tuple:
         spotting = "none"
 
     silver = "silver" if "I" in loci["I"] else "non_silver"
-    wideband = "wide" if "Wb" in loci["Wb"] else "narrow"
+    # ワイドバンド (ゴールデン/tipping の本体) は劣性で近似する (一次資料: CORIN の wideband 変異は
+    # 劣性)。実際はポリジーンだが単一座位・劣性ホモ発現として扱う。よって Wb/Wb のみワイドバンド
+    # 発現 (ゴールデン/チンチラ/シェーデッド)、ヘテロ Wb/wb はキャリア (非発現) となる。これにより
+    # ゴールデン × 非保因 → F1 は全キャリアで非ゴールデン、という実際の遺伝を再現する。
+    wideband = "wide" if loci["Wb"] == ("Wb", "Wb") else "narrow"
 
     return (
         orange,
@@ -114,27 +135,35 @@ class ColorBase:
     o: tuple[str, str]                      # O_Locus (例: ("o","o"), ("O","o"))
 
 
-def _build_normal_parent_genotypes(phenotype: str, sex: str, base_loci: dict[str, tuple[str, str]]) -> list[ParentGenotype]:
+def _build_normal_parent_genotypes(
+    phenotype: str,
+    sex: str,
+    base_loci: dict[str, tuple[str, str]],
+    expand_category_a: bool = True,
+) -> list[ParentGenotype]:
     """通常モード用の親遺伝子型候補を構築する。
+
+    expand_category_a=False のときは、カテゴリA座位 (A/D/I/Mc/Ta) の X/- ヘテロ展開を
+    抑止する (「もしこの色が出たら」の確定色計算用)。W (優性白) は対象外で、常に W/w を
+    仮定する (下の色が不定でも White 親が w を渡し得るため)。デフォルト True で後方互換。
 
     「優性表現型のヘテロ未確定ルール (Dominant Expressed Unknown Rule)」に従う。
     優性形質が表現されている座は、表現型だけからホモ接合と断定できないため
     X/- = {X/X, X/x} の両方を計算対象に含める。
 
     - カテゴリA (表現型確定・優性ヘテロ不確定 / 通常モードでも展開する):
-        D 濃色 -> D/-, I シルバー -> I/-, Mc マッカレル -> Mc/-, Ta ティックド -> Ta/-。
-    - カテゴリA' (タビーの A-locus / 通常モードでは展開しない):
-        A タビーは normal_mode では A/A 相当として扱い A/a を展開しない。
-        理由: A/a を展開すると a/a×a/a が成立し、タビー親から Solid / Tortie /
-        Calico / Smoke (いずれも a/a 前提) が出てしまう。A/a は explicit_carrier_mode /
-        carrier_exploration_mode でのみ使う。
+        A タビー -> A/-, D 濃色 -> D/-, I シルバー -> I/-, Mc マッカレル -> Mc/-,
+        Ta ティックド -> Ta/-。
+        A (タビー) はタビー猫が A/A か A/a か表現型から区別できないため両方を展開し、
+        両親が A/a のとき生じるソリッドの子 (a/a) を正しい確率で出す。逆方向
+        (a/a×a/a → タビー) は配偶子に A が無く発生しないため不可逆ルールは維持される。
     - カテゴリB (表現型確定・劣性固定 / 固定する):
         d/d, a/a, cs/cs, cb/cb, cb/cs, i/i, s/s など。CSVの劣性ホモはそのまま固定。
     - カテゴリC (表現型から要求されない潜在キャリア / 通常モードでは展開しない):
         B/b チョコ, B/bl シナモン, C/cs ポイント, C/cb セピア, Wb ワイドバンド。
         明示キャリア情報または血統・産子履歴がある場合のみ explicit_carrier で扱う。
 
-    シミュレーター正本 V9 §2.4 に準拠 (A・Wb の非展開を含む)。
+    シミュレーター正本 V9 §2.4 に準拠 (A はカテゴリA として展開、Wb は非展開)。
     """
 
     import itertools
@@ -157,10 +186,11 @@ def _build_normal_parent_genotypes(phenotype: str, sex: str, base_loci: dict[str
 
     # カテゴリA: 優性ホモで記載されている座に、ヘテロ (優性/劣性) の可能性を加える。
     #
-    # A (タビー) は除外する。normal_mode では A を A/A 相当に固定し A/a を展開しない。
-    #   A/a を展開すると a/a×a/a が成立し、タビー親から Solid / Tortie / Calico / Smoke
-    #   (a/a 前提) が出てしまうため。A/a は explicit_carrier / carrier_exploration でのみ扱う。
-    # Wb (ワイドバンド) も除外する。normal_mode では Wb を展開しない (Shell/Shaded/Chinchilla/
+    # A (タビー) も展開する。normal_mode で A/- を {A/A, A/a} として扱う。タビー猫は表現型からは
+    #   純ホモ (A/A) かソリッドキャリア (A/a) か区別できないため、両親が A/a の場合に生じる
+    #   ソリッドの子 (a/a) を正しい確率で出す。逆方向 (a/a×a/a → タビー) は配偶子に A が
+    #   無いため発生しない (不可逆ルールは維持)。生じ得る低確率カラーの増加は表示側で抑制する。
+    # Wb (ワイドバンド) は除外する。normal_mode では Wb を展開しない (Shell/Shaded/Chinchilla/
     #   Golden の wide band キャリアを自動展開しない)。Wb は explicit_carrier 等でのみ扱う。
     # S (白斑) は除外する。白斑は不完全優性で S/S(Van) と S/s(バイカラー/-White) は
     # 表現型で区別でき、入力の白斑レベルから接合性が確定する (= ヘテロ不可視ではない)。
@@ -175,6 +205,7 @@ def _build_normal_parent_genotypes(phenotype: str, sex: str, base_loci: dict[str
     # なお順方向 (normal) の表示割合は、White の下の色が不定なため engine 側で W/w を仮定した
     # 専用集計 (AOC 集約) を行う (§2.1/§2.2)。ここでの展開は逆引き・リター推定の候補生成に効く。
     dominant_expandable: dict[str, tuple[str, str]] = {
+        "A": ("A", "a"),
         "D": ("D", "d"),
         "I": ("I", "i"),
         "Mc": ("Mc", "mc"),
@@ -187,9 +218,12 @@ def _build_normal_parent_genotypes(phenotype: str, sex: str, base_loci: dict[str
         options = [val]
         hetero = dominant_expandable.get(locus)
         # 優性形質が「優性ホモ」で表現されている場合のみ X/- としてヘテロを追加する。
-        # 劣性ホモ (カテゴリB) や B/C/A/Wb (カテゴリC/A') はここで展開しない。
+        # 劣性ホモ (カテゴリB) や B/C/Wb (カテゴリC) はここで展開しない。
+        # expand_category_a=False の確定色計算では、カテゴリA座位 (A/D/I/Mc/Ta) の
+        # 展開だけを抑止する (W はカテゴリA外なので常に展開する)。
         if hetero is not None and val == (hetero[0], hetero[0]):
-            options.append(hetero)
+            if expand_category_a or locus not in _CATEGORY_A_EXPAND_LOCI:
+                options.append(hetero)
         loci_options[locus] = options
 
     keys = list(loci_options.keys())
@@ -212,6 +246,11 @@ def _color_base_from_row(color: str, locus_cols: list[str], row: dict[str, str])
         or "choco" in color_lower
         or "champagne" in color_lower
         or "platinum" in color_lower
+        # Chestnut は Oriental 文脈での Chocolate の呼び換え (master でも chocolate の alias)。
+        # 名前推定のチョコ判定に含めないと B/B (黒) と誤コードされるため明示する。
+        or "chestnut" in color_lower
+        # Lavender も Oriental 文脈での Lilac (希釈チョコ b/b d/d) の呼び換え。同様に明示する。
+        or "lavender" in color_lower
     ):
         b_allele = ("b", "b")
     elif "cinnamon" in color_lower or "fawn" in color_lower:
@@ -338,11 +377,15 @@ def build_parent_genotypes(
     sex: str,
     mode: str = "normal",
     carriers: dict[str, str] | None = None,
+    expand_category_a: bool = True,
 ) -> list[ParentGenotype]:
     """指定モードに応じた親遺伝子型候補を生成する。
 
     - normal: 未明示キャリアを閉じる (A/B/C/Wb 非展開、D/I/Mc/Ta のみ X/- 展開)。
     - explicit_carrier: normal を基準に、carriers で指定された座位のみ上書きで開ける。
+
+    expand_category_a=False のときはカテゴリA座位 (A/D/I/Mc/Ta) の X/- 展開を抑止する
+    (「もしこの色が出たら」の確定色計算用)。デフォルト True で後方互換。
 
     carrier_exploration は本関数では扱わない (Phase 2)。色が未知なら空リストを返す。
     """
@@ -364,7 +407,7 @@ def build_parent_genotypes(
         else:
             sex_loci["O"] = entry.o
 
-        genotypes = _build_normal_parent_genotypes(color, sex, sex_loci)
+        genotypes = _build_normal_parent_genotypes(color, sex, sex_loci, expand_category_a)
         if mode == "explicit_carrier" and carriers:
             genotypes = _apply_explicit_carriers(genotypes, color, sex, carriers)
 

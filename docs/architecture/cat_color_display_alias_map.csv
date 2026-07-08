@@ -1,8 +1,8 @@
-AliasId,CanonicalPhenotype,GeneralDisplayName,Breed,BreedSpecificDisplayName,Registry,OfficialStatus,DisplayContext,Priority,Notes
+﻿AliasId,CanonicalPhenotype,GeneralDisplayName,Breed,BreedSpecificDisplayName,Registry,OfficialStatus,DisplayContext,Priority,Notes
 1,Brown Ticked Tabby,Brown Ticked Tabby,Abyssinian,Ruddy,,official,breed_specific,20,Abyssinian のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
 2,Black Ticked Tabby,Black Ticked Tabby,Abyssinian,Ruddy,,official,breed_specific,20,Abyssinian のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
 3,Blue Ticked Tabby,Blue Ticked Tabby,Abyssinian,Blue,,official,breed_specific,20,Abyssinian のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
-4,Cinnamon Ticked Tabby,Cinnamon Ticked Tabby,Abyssinian,Cinnamon,,official,breed_specific,20,Abyssinian のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+4,Cinnamon Ticked Tabby,Cinnamon Ticked Tabby,Abyssinian,Red,,official,breed_specific,20,Abyssinian の Red(Sorrel)= シナモン (bl/bl) ティックド。猫種呼称は Red。一般表示は CanonicalPhenotype のまま。
 5,Fawn Ticked Tabby,Fawn Ticked Tabby,Abyssinian,Fawn,,official,breed_specific,20,Abyssinian のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
 6,Red Ticked Tabby,Red Ticked Tabby,Abyssinian,Red,,official,breed_specific,20,Abyssinian のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
 7,Silver Ticked Tabby,Silver Ticked Tabby,Abyssinian,Silver,,official,breed_specific,20,Abyssinian のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
@@ -14,7 +14,7 @@ AliasId,CanonicalPhenotype,GeneralDisplayName,Breed,BreedSpecificDisplayName,Reg
 13,Brown Ticked Tabby,Brown Ticked Tabby,Somali,Ruddy,,official,breed_specific,20,Somali のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
 14,Black Ticked Tabby,Black Ticked Tabby,Somali,Ruddy,,official,breed_specific,20,Somali のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
 15,Blue Ticked Tabby,Blue Ticked Tabby,Somali,Blue,,official,breed_specific,20,Somali のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
-16,Cinnamon Ticked Tabby,Cinnamon Ticked Tabby,Somali,Cinnamon,,official,breed_specific,20,Somali のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
+16,Cinnamon Ticked Tabby,Cinnamon Ticked Tabby,Somali,Red,,official,breed_specific,20,Somali の Red(Sorrel)= シナモン (bl/bl) ティックド。猫種呼称は Red。一般表示は CanonicalPhenotype のまま。
 17,Fawn Ticked Tabby,Fawn Ticked Tabby,Somali,Fawn,,official,breed_specific,20,Somali のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
 18,Red Ticked Tabby,Red Ticked Tabby,Somali,Red,,official,breed_specific,20,Somali のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
 19,Silver Ticked Tabby,Silver Ticked Tabby,Somali,Silver,,official,breed_specific,20,Somali のティックドタビー呼称。一般表示は CanonicalPhenotype のまま。
@@ -44,11 +44,22 @@ AliasId,CanonicalPhenotype,GeneralDisplayName,Breed,BreedSpecificDisplayName,Reg
 43,Dilute Calico,Dilute Calico,Japanese Bobtail,Dilute Mike,,official,breed_specific,20,Japanese Bobtail の三毛系呼称。一般表示は CanonicalPhenotype のまま。
 44,Tortie Smoke-White,Tortie Smoke-White,Japanese Bobtail,Smoke Mike,,official,breed_specific,20,Japanese Bobtail の三毛系呼称。一般表示は CanonicalPhenotype のまま。
 45,Blue Cream Smoke-White,Blue Cream Smoke-White,Japanese Bobtail,Dilute Smoke Mike,,official,breed_specific,20,Japanese Bobtail の三毛系呼称。一般表示は CanonicalPhenotype のまま。
-46,Blue Solid,Blue Solid,Burmese,Blue,,official,breed_specific,20,Burmese のセピア希釈呼称。一般表示は CanonicalPhenotype のまま。
-47,Sable,Sable,Tonkinese,Natural Solid,,official,breed_specific,20,Tonkinese の Solid class 呼称。一般表示は CanonicalPhenotype のまま。
-48,Champagne,Champagne,Tonkinese,Champagne Solid,,official,breed_specific,20,Tonkinese の Solid class 呼称。一般表示は CanonicalPhenotype のまま。
-49,Platinum,Platinum,Tonkinese,Platinum Solid,,official,breed_specific,20,Tonkinese の Solid class 呼称。一般表示は CanonicalPhenotype のまま。
-50,Van Calico,Calico,Any,,,derived,general,30,一般表示では Van を出さず Calico へ寄せる。Calico は白斑を含む三毛呼称。
-51,Dilute Calico Van,Dilute Calico,Any,,,derived,general,30,一般表示では Van を出さず Dilute Calico へ寄せる。Dilute Calico は白斑を含む三毛呼称。
-52,Tortoiseshell-White Van,Calico,Any,,,derived,general,30,一般表示では Van を出さず Calico へ寄せる。
-53,Blue Cream-White Van,Dilute Calico,Any,,,derived,general,30,一般表示では Van を出さず Dilute Calico へ寄せる。
+46,Sable,Sable,European Burmese,Brown,,official,breed_specific,20,European Burmese のセピア呼称。一般表示は CanonicalPhenotype のまま。
+47,Blue Solid,Blue Solid,European Burmese,Blue,,official,breed_specific,20,European Burmese のセピア呼称。一般表示は CanonicalPhenotype のまま。
+48,Champagne,Champagne,European Burmese,Chocolate,,official,breed_specific,20,European Burmese のセピア呼称。一般表示は CanonicalPhenotype のまま。
+49,Platinum,Platinum,European Burmese,Lilac,,official,breed_specific,20,European Burmese のセピア呼称。一般表示は CanonicalPhenotype のまま。
+50,Sable,Sable,Burmese,Sable Brown,,official,breed_specific,20,Burmese のセピア呼称。一般表示は CanonicalPhenotype のまま。
+51,Blue Solid,Blue Solid,Burmese,Blue,,official,breed_specific,20,Burmese のセピア呼称。一般表示は CanonicalPhenotype のまま。
+52,Sable,Sable,Tonkinese,Natural Solid,,official,breed_specific,20,Tonkinese の Solid class 呼称。一般表示は CanonicalPhenotype のまま。
+53,Champagne,Champagne,Tonkinese,Champagne Solid,,official,breed_specific,20,Tonkinese の Solid class 呼称。一般表示は CanonicalPhenotype のまま。
+54,Platinum,Platinum,Tonkinese,Platinum Solid,,official,breed_specific,20,Tonkinese の Solid class 呼称。一般表示は CanonicalPhenotype のまま。
+55,Van Calico,Calico,Any,,,derived,general,30,一般表示では Van を出さず Calico へ寄せる。Calico は白斑を含む三毛呼称。
+56,Dilute Calico Van,Dilute Calico,Any,,,derived,general,30,一般表示では Van を出さず Dilute Calico へ寄せる。Dilute Calico は白斑を含む三毛呼称。
+57,Tortoiseshell-White Van,Calico,Any,,,derived,general,30,一般表示では Van を出さず Calico へ寄せる。
+58,Blue Cream-White Van,Dilute Calico,Any,,,derived,general,30,一般表示では Van を出さず Dilute Calico へ寄せる。
+59,Red Sepia,Red Sepia,European Burmese,Red,,official,breed_specific,20,European Burmese のセピア呼称。一般表示は CanonicalPhenotype のまま。
+60,Cream Sepia,Cream Sepia,European Burmese,Cream,,official,breed_specific,20,European Burmese のセピア呼称。一般表示は CanonicalPhenotype のまま。
+61,Brown Tortie Sepia,Brown Tortie Sepia,European Burmese,Brown Tortie,,official,breed_specific,20,European Burmese のセピア呼称。一般表示は CanonicalPhenotype のまま。
+62,Blue Tortie Sepia,Blue Tortie Sepia,European Burmese,Blue Tortie,,official,breed_specific,20,European Burmese のセピア呼称。一般表示は CanonicalPhenotype のまま。
+63,Chocolate Tortie Sepia,Chocolate Tortie Sepia,European Burmese,Chocolate Tortie,,official,breed_specific,20,European Burmese のセピア呼称。一般表示は CanonicalPhenotype のまま。
+64,Lilac Tortie Sepia,Lilac Tortie Sepia,European Burmese,Lilac Tortie,,official,breed_specific,20,European Burmese のセピア呼称。一般表示は CanonicalPhenotype のまま。
