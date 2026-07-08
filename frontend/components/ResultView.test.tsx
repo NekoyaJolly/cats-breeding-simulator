@@ -194,6 +194,51 @@ describe("ResultView full distribution", () => {
     expect(screen.getAllByText("Chocolate").length).toBeGreaterThan(0);
   });
 
+  it("確定色があるとき全分布は既定で折りたたみ、無いとき (優性白など) は開く", () => {
+    const confirmed: ResultEntry[] = [
+      { sex: "Male", color: "Black", probability_pct: 50 },
+      { sex: "Female", color: "Black", probability_pct: 50 },
+    ];
+    const withConfirmed: CalculationResponse = {
+      ...buildResponse("Black", "Black", confirmed),
+      confirmed_results: confirmed,
+    };
+    const { unmount } = render(<ResultView data={withConfirmed} language="ja" />);
+    expect(screen.getByRole("button", { name: /全分布/ })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    unmount();
+
+    // 確定色が無い (優性白) ケースは肝心の色が隠れないよう既定で開く。
+    const noConfirmed = buildResponse("White", "Black", [
+      { sex: "Male", color: "White", probability_pct: 50 },
+      { sex: "Female", color: "AOC", probability_pct: 50 },
+    ]);
+    render(<ResultView data={noConfirmed} language="ja" />);
+    expect(screen.getByRole("button", { name: /全分布/ })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+  });
+
+  it("確定色は -White を合算せず、ベース色と -White を別チップで表示する", () => {
+    const confirmed: ResultEntry[] = [
+      { sex: "Female", color: "Brown Tabby", probability_pct: 25 },
+      { sex: "Female", color: "Brown Tabby-White", probability_pct: 25 },
+      { sex: "Male", color: "Brown Tabby", probability_pct: 25 },
+      { sex: "Male", color: "Brown Tabby-White", probability_pct: 25 },
+    ];
+    const data: CalculationResponse = {
+      ...buildResponse("Brown Tabby", "Brown Tabby-White", confirmed),
+      confirmed_results: confirmed,
+    };
+    render(<ResultView data={data} language="ja" />);
+    // ベース色と -White が (合算されず) 別々のチップとして両方出る。
+    expect(screen.getAllByText("Brown Tabby").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Brown Tabby-White").length).toBeGreaterThan(0);
+  });
+
   it("白斑レベル (-White) は合算されず副次行で表示される", () => {
     const results: ResultEntry[] = [
       { sex: "Male", color: "Silver Tabby", probability_pct: 25 },

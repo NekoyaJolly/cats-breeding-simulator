@@ -123,7 +123,7 @@ function SectionLabel({
 
 // ♂/♀ の視覚記号 + スクリーンリーダー向けの性別テキスト (記号は aria-hidden なので
 // sr-only テキストで性別を必ず読み上げ可能にする)。
-// 性別の並び順 (Male → Female)。明示チェックで Object.prototype キーを拾わないようにする。
+// 性別の並び順キー: Male → Female。それ以外 (想定外の文字列) は末尾へ回す。
 function sexRank(sex: string): number {
   return sex === "Male" ? 0 : sex === "Female" ? 1 : 9;
 }
