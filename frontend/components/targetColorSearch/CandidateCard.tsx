@@ -22,20 +22,20 @@ function OtherColorRows({
   const groups = groupedColorNameRows(rows);
   if (groups.length === 0) {
     return (
-      <p className="mt-1 text-xs leading-5 text-slate-600">
+      <p className="mt-1 text-xs leading-5 text-ink-soft">
         {emptyText}
       </p>
     );
   }
 
   return (
-    <div className="mt-1 space-y-1 text-xs leading-5 text-slate-600">
+    <div className="mt-1 space-y-1 text-xs leading-5 text-ink-soft">
       {groups.map((group) => (
         <p key={group.sex}>
-          <span className="font-semibold text-slate-700">{group.symbol}</span>{" "}
+          <span className="font-semibold text-ink-soft">{group.symbol}</span>{" "}
           <span>{group.colors.join(" / ")}</span>
           {group.hiddenCount > 0 && (
-            <span className="ml-1 text-slate-400">
+            <span className="ml-1 text-muted">
               {moreCountLabel(group.hiddenCount, language)}
             </span>
           )}
@@ -65,51 +65,51 @@ export function CandidateCard({
       : candidate.conditional_max_probability_pct;
 
   return (
-    <details className="rounded-md border border-slate-200 bg-white">
+    <details className="rounded-md border border-line bg-surface">
       <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-3 px-4 py-3">
         <div>
-          <p className="text-xs font-medium text-slate-400">
+          <p className="text-xs font-medium text-muted">
             {text.targetForm.matchLabel} {index + 1}
           </p>
-          <h4 className="text-base font-semibold text-slate-800">
+          <h4 className="text-base font-semibold text-ink">
             {candidate.sire.name} × {candidate.dam.name}
           </h4>
           <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs leading-5">
-            <span className="inline-flex items-center gap-1 rounded bg-sky-50 px-1.5 py-0.5 font-medium leading-5 text-sky-700">
+            <span className="inline-flex items-center gap-1 rounded bg-accent/10 px-1.5 py-0.5 font-medium leading-5 text-accent">
               <GenderMale aria-hidden="true" className="h-3.5 w-3.5" weight="duotone" />
               {candidate.sire.color}
             </span>
-            <span className="inline-flex items-center gap-1 rounded bg-rose-50 px-1.5 py-0.5 font-medium leading-5 text-rose-700">
+            <span className="inline-flex items-center gap-1 rounded bg-danger-bg px-1.5 py-0.5 font-medium leading-5 text-danger">
               <GenderFemale aria-hidden="true" className="h-3.5 w-3.5" weight="duotone" />
               {candidate.dam.color}
             </span>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="rounded bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
+          <span className="rounded bg-surface-2 px-2 py-1 text-xs font-medium text-ink-soft">
             {categoryLabel}
           </span>
-          <span className="text-lg font-semibold tabular-nums text-slate-800">
+          <span className="text-lg font-semibold tabular-nums text-ink">
             {formatPct(summaryProbability)}
           </span>
         </div>
       </summary>
 
-      <div className="border-t border-slate-100 p-4">
+      <div className="border-t border-line-soft p-4">
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-md bg-emerald-50 p-3">
-            <p className="text-xs text-emerald-700">
+          <div className="rounded-md bg-confirmed-bg p-3">
+            <p className="text-xs text-confirmed">
               {text.targetForm.confirmedProbability}
             </p>
-            <p className="text-xl font-semibold tabular-nums text-emerald-900">
+            <p className="text-xl font-semibold tabular-nums text-confirmed">
               {formatPct(candidate.confirmed_probability_pct)}
             </p>
           </div>
-          <div className="rounded-md bg-amber-50 p-3">
-            <p className="text-xs text-amber-700">
+          <div className="rounded-md bg-conditional-bg p-3">
+            <p className="text-xs text-conditional">
               {text.targetForm.conditionalMaxProbability}
             </p>
-            <p className="text-xl font-semibold tabular-nums text-amber-900">
+            <p className="text-xl font-semibold tabular-nums text-conditional">
               {formatPct(candidate.conditional_max_probability_pct)}
             </p>
           </div>
@@ -136,16 +136,16 @@ export function CandidateCard({
                 : [text.targetForm.noRecommendedTests]
             }
           />
-          <div className="rounded-md bg-slate-50 p-3 text-sm">
-            <p className="font-medium text-slate-700">
+          <div className="rounded-md bg-bg p-3 text-sm">
+            <p className="font-medium text-ink-soft">
               {text.targetForm.targetPossibleCoats}
             </p>
-            <p className="mt-1 text-xs leading-5 text-slate-600">
+            <p className="mt-1 text-xs leading-5 text-ink-soft">
               {colorRows(candidate.target_possible_colors, text.targetForm.noTargetCoats)}
             </p>
           </div>
-          <div className="rounded-md bg-slate-50 p-3 text-sm">
-            <p className="font-medium text-slate-700">
+          <div className="rounded-md bg-bg p-3 text-sm">
+            <p className="font-medium text-ink-soft">
               {text.targetForm.otherPossibleCoats}
             </p>
             <OtherColorRows
@@ -156,9 +156,9 @@ export function CandidateCard({
           </div>
         </div>
 
-        <div className="mt-4 overflow-hidden rounded-md border border-slate-200">
+        <div className="mt-4 overflow-hidden rounded-md border border-line">
           <table className="min-w-full text-left text-xs">
-            <thead className="bg-slate-50 text-slate-500">
+            <thead className="bg-bg text-muted">
               <tr>
                 <th className="px-3 py-2 font-medium">{text.targetForm.locus}</th>
                 <th className="px-3 py-2 font-medium">
@@ -169,7 +169,7 @@ export function CandidateCard({
                 <th className="px-3 py-2 font-medium">{text.targetForm.basis}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-line-soft">
               {candidate.locus_evidence.map((evidence) => {
                 const tone = getLocusTone(evidence.locus);
                 return (
@@ -177,10 +177,10 @@ export function CandidateCard({
                     <td className={`px-3 py-2 font-medium ${tone.tableCellClass}`}>
                       <LocusChip locus={evidence.locus} />
                     </td>
-                    <td className="px-3 py-2 text-slate-600">{evidence.target}</td>
-                    <td className="px-3 py-2 text-slate-600">{evidence.sire}</td>
-                    <td className="px-3 py-2 text-slate-600">{evidence.dam}</td>
-                    <td className="px-3 py-2 text-slate-500">{evidence.note}</td>
+                    <td className="px-3 py-2 text-ink-soft">{evidence.target}</td>
+                    <td className="px-3 py-2 text-ink-soft">{evidence.sire}</td>
+                    <td className="px-3 py-2 text-ink-soft">{evidence.dam}</td>
+                    <td className="px-3 py-2 text-muted">{evidence.note}</td>
                   </tr>
                 );
               })}

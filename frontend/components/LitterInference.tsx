@@ -28,7 +28,7 @@ type KittenInput = {
 };
 
 const secondaryButtonClass =
-  "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50";
+  "rounded-md border border-line bg-surface px-3 py-2 text-sm font-medium text-ink-soft hover:bg-surface-2";
 function createKittenId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();
@@ -61,21 +61,21 @@ function FindingList({
   supportLabel: string;
 }) {
   return (
-    <div className="rounded-md bg-slate-50 p-3">
-      <h3 className="text-sm font-semibold text-slate-700">{title}</h3>
+    <div className="rounded-md bg-bg p-3">
+      <h3 className="text-sm font-semibold text-ink-soft">{title}</h3>
       {items.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-500">{emptyText}</p>
+        <p className="mt-2 text-sm text-muted">{emptyText}</p>
       ) : (
         <ul className="mt-2 space-y-2">
           {items.map((item, index) => (
             <li key={`${item.category}-${item.parent}-${item.locus}-${index}`} className="text-sm">
-              <p className="font-medium text-slate-800">
+              <p className="font-medium text-ink">
                 {item.parent} / <LocusChip locus={item.locus} />: {item.genotype}
-                <span className="ml-2 text-xs text-slate-400">
+                <span className="ml-2 text-xs text-muted">
                   {supportLabel} {supportText(item.support_pct)}
                 </span>
               </p>
-              <p className="mt-1 text-xs leading-5 text-slate-600">{item.note}</p>
+              <p className="mt-1 text-xs leading-5 text-ink-soft">{item.note}</p>
             </li>
           ))}
         </ul>
@@ -93,12 +93,12 @@ function ResultPanel({
 }) {
   const text = UI_TEXT[language];
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+    <section className="rounded-lg border border-line bg-surface p-4 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-slate-800">
+        <h2 className="text-lg font-semibold text-ink">
           {text.kittenForm.resultTitle}
         </h2>
-        <span className="rounded bg-slate-100 px-2 py-1 text-sm font-medium text-slate-600">
+        <span className="rounded bg-surface-2 px-2 py-1 text-sm font-medium text-ink-soft">
           {language === "ja"
             ? `${data.response_category} / ${text.kittenForm.candidateCount} ${data.candidate_pair_count} 件`
             : `${data.response_category} / ${data.candidate_pair_count} ${text.kittenForm.candidateCount}`}
@@ -106,7 +106,7 @@ function ResultPanel({
       </div>
 
       {data.contradictions.length > 0 && (
-        <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-4 rounded-md border border-danger/30 bg-danger-bg p-3 text-sm text-danger">
           <ul className="list-disc space-y-1 pl-5">
             {data.contradictions.map((item) => (
               <li key={item}>{item}</li>
@@ -143,11 +143,11 @@ function ResultPanel({
       </div>
 
       {data.warnings.length > 0 && (
-        <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3">
-          <h3 className="text-sm font-semibold text-amber-800">
+        <div className="mt-4 rounded-md border border-conditional/30 bg-conditional-bg p-3">
+          <h3 className="text-sm font-semibold text-conditional">
             {text.kittenForm.warnings}
           </h3>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-800">
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-conditional">
             {data.warnings.map((item) => (
               <li key={item}>{item}</li>
             ))}
@@ -156,11 +156,11 @@ function ResultPanel({
       )}
 
       {data.recommended_tests.length > 0 && (
-        <div className="mt-4 rounded-md bg-slate-50 p-3">
-          <h3 className="text-sm font-semibold text-slate-700">
+        <div className="mt-4 rounded-md bg-bg p-3">
+          <h3 className="text-sm font-semibold text-ink-soft">
             {text.kittenForm.recommendedTests}
           </h3>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-soft">
             {data.recommended_tests.map((item) => (
               <li key={item}>{item}</li>
             ))}
@@ -294,9 +294,9 @@ export function LitterInference({ language }: { language: Language }) {
     <div className="space-y-4 sm:space-y-6">
       <section
         data-tour="kitten-panel"
-        className="relative rounded-lg border border-slate-200 bg-white px-4 pb-4 pt-5 shadow-sm sm:px-6 sm:pb-6 sm:pt-6"
+        className="relative rounded-lg border border-line bg-surface px-4 pb-4 pt-5 shadow-sm sm:px-6 sm:pb-6 sm:pt-6"
       >
-        <h2 className="absolute -top-2.5 left-4 bg-white px-1 text-sm font-semibold leading-5 text-slate-700 sm:left-6">
+        <h2 className="absolute -top-2.5 left-4 bg-surface px-1 text-sm font-semibold leading-5 text-ink-soft sm:left-6">
           {text.kittenForm.sectionTitle}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
@@ -342,8 +342,8 @@ export function LitterInference({ language }: { language: Language }) {
             femaleOnlyLabel={text.common.femaleOnly}
           />
 
-          <section className="relative rounded-md border border-slate-200 px-2.5 pb-2.5 pt-5 sm:px-3 sm:pb-3 sm:pt-5">
-            <h3 className="absolute -top-2.5 left-3 bg-white px-1 text-sm font-semibold leading-5 text-slate-700">
+          <section className="relative rounded-md border border-line px-2.5 pb-2.5 pt-5 sm:px-3 sm:pb-3 sm:pt-5">
+            <h3 className="absolute -top-2.5 left-3 bg-surface px-1 text-sm font-semibold leading-5 text-ink-soft">
               {text.kittenForm.kittenSection}
             </h3>
             <div className="space-y-3">
@@ -411,14 +411,14 @@ export function LitterInference({ language }: { language: Language }) {
           <button
             type="submit"
             disabled={!canSubmit}
-            className="rounded-md bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink shadow-sm hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? text.kittenForm.loading : text.kittenForm.button}
           </button>
         </form>
 
         {error && (
-          <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div className="mt-4 rounded-md border border-danger/30 bg-danger-bg p-3 text-sm text-danger">
             {error}
           </div>
         )}

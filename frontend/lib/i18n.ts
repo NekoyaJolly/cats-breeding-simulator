@@ -25,6 +25,12 @@ export const UI_TEXT = {
       japanese: "日本語",
       english: "English",
     },
+    theme: {
+      label: "テーマ",
+      light: "ライト",
+      dark: "ダーク",
+      system: "システム",
+    },
     feedback: {
       trigger: "フィードバックを送る",
       title: "フィードバック",
@@ -302,6 +308,12 @@ export const UI_TEXT = {
       languageLabel: "Language",
       japanese: "日本語",
       english: "English",
+    },
+    theme: {
+      label: "Theme",
+      light: "Light",
+      dark: "Dark",
+      system: "System",
     },
     feedback: {
       trigger: "Send feedback",

@@ -51,7 +51,7 @@ export function BreedColorsHint({ breed }: { breed: string }) {
   }
 
   return (
-    <div className="mt-3 rounded-md border border-slate-200 bg-white p-3 text-slate-700">
+    <div className="mt-3 rounded-md border border-line bg-surface p-3 text-ink-soft">
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="text-xs font-semibold">
           「{breed}」で使える毛色（クリックでコピー）
@@ -59,7 +59,7 @@ export function BreedColorsHint({ breed }: { breed: string }) {
         <button
           type="button"
           onClick={() => copy(colors.join("\n"), "__all__")}
-          className="shrink-0 text-xs text-blue-600 hover:underline"
+          className="shrink-0 text-xs text-accent hover:underline"
         >
           {copied === "__all__" ? "✓ コピーしました" : "一覧をコピー"}
         </button>
@@ -70,7 +70,7 @@ export function BreedColorsHint({ breed }: { breed: string }) {
             key={color}
             type="button"
             onClick={() => copy(color, color)}
-            className="rounded border border-slate-300 bg-slate-50 px-2 py-1 text-xs hover:bg-slate-100"
+            className="rounded border border-line bg-bg px-2 py-1 text-xs hover:bg-surface-2"
             title="クリックでコピー"
           >
             {copied === color ? "✓ コピー" : color}

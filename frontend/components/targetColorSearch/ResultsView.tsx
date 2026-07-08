@@ -40,10 +40,10 @@ export function ResultsView({
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-lg font-semibold text-slate-800">
+        <h3 className="text-lg font-semibold text-ink">
           {text.targetForm.ranking}
         </h3>
-        <span className="rounded bg-slate-100 px-2 py-1 text-xs leading-5 text-slate-600">
+        <span className="rounded bg-surface-2 px-2 py-1 text-xs leading-5 text-ink-soft">
           {text.targetForm.targetSummary}: {targetSex} / {data.target_color}
         </span>
       </div>
@@ -52,19 +52,19 @@ export function ResultsView({
       )}
       {grouped.map((group) => (
         <section key={group.category} className="space-y-3">
-          <div className="flex items-start justify-between gap-3 border-b border-slate-200 pb-1">
+          <div className="flex items-start justify-between gap-3 border-b border-line pb-1">
             <div>
-              <p className="text-[11px] font-medium text-slate-400">
+              <p className="text-[11px] font-medium text-muted">
                 {text.targetForm.productionCondition}
               </p>
-              <h4 className="text-sm font-semibold text-slate-700">
+              <h4 className="text-sm font-semibold text-ink-soft">
                 {categoryLabel(group.category)}
               </h4>
-              <p className="text-xs leading-5 text-slate-500">
+              <p className="text-xs leading-5 text-muted">
                 {categoryDescription(group.category)}
               </p>
             </div>
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-muted">
               {language === "ja"
                 ? `${group.candidates.length} 件`
                 : group.candidates.length}

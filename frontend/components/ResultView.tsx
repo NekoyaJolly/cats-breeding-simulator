@@ -1,14 +1,7 @@
 "use client";
 
 import { GenderFemale, GenderMale } from "@phosphor-icons/react";
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type CSSProperties,
-  type ReactNode,
-} from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type {
   CalculationResponse,
   ConditionalColorGroup,
@@ -20,29 +13,10 @@ import { LocusChip } from "./LocusChip";
 import { LOCUS_GLOSSARY } from "@/lib/lociGlossary";
 import { coatSwatchBackground } from "@/lib/coatColorSwatch";
 
-// レポートの独自トークン (暖かいダーク島)。アプリの slate 体系から独立して、
-// 白基調の眩しさを避けたレポート専用の配色を CSS カスタムプロパティで供給する。
-const REPORT_TOKENS = {
-  "--r-surface": "#221d16",
-  "--r-surface-2": "#2c261d",
-  "--r-inset": "#1b1710",
-  "--r-ink": "#efe7d8",
-  "--r-ink-soft": "#cabda7",
-  "--r-muted": "#9a8e79",
-  "--r-hairline": "#3a332a",
-  "--r-hairline-soft": "#2c261e",
-  "--r-accent": "#6cb0b6",
-  "--r-confirmed": "#77c094",
-  "--r-confirmed-bg": "#1e2c22",
-  "--r-conditional": "#d8a655",
-  "--r-conditional-bg": "#2e2617",
-  "--r-male": "#85b3cd",
-  "--r-female": "#cf8dac",
-} as CSSProperties;
-
-// ♂♀の識別色 (条件付きバッジ枠線に使う。トークンと同値)。
-const SEX_MALE_COLOR = "#85b3cd";
-const SEX_FEMALE_COLOR = "#cf8dac";
+// レポートの配色トークン (--r-*) は globals.css で light/dark 両対応に定義している。
+// ここでは ♂♀ の識別色 (条件付きバッジ枠線に使う) のみ、テーマ対応トークンを参照する。
+const SEX_MALE_COLOR = "var(--r-male)";
+const SEX_FEMALE_COLOR = "var(--r-female)";
 
 // 1%未満を集約する閾値。ユーザー指定 (低確率は畳んで一覧性を上げる)。
 const LOW_PCT_THRESHOLD = 1;
@@ -736,7 +710,7 @@ export function ResultView({
   const otherLoci = Object.keys(LOCUS_GLOSSARY).filter((locus) => !shownLoci.has(locus));
 
   return (
-    <div style={REPORT_TOKENS} className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       {/* レポート本体 (確定色 → 全分布 → 推定色 → 注釈)。暖かいダーク島。 */}
       <section
         className="relative rounded-2xl px-4 pb-4 pt-5 shadow-sm"

@@ -12,7 +12,7 @@ export function NoCandidateAnalysis({
 }) {
   const text = UI_TEXT[language];
   return (
-    <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+    <div className="rounded-md border border-conditional/30 bg-conditional-bg p-4 text-sm text-conditional">
       <p className="font-semibold">{text.targetForm.noCandidateMessage}</p>
       <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
         <InfoList
@@ -28,7 +28,7 @@ export function NoCandidateAnalysis({
           items={data.recommended_checks}
         />
       </div>
-      <p className="mt-3 text-xs leading-5 text-amber-800">
+      <p className="mt-3 text-xs leading-5 text-conditional">
         {text.targetForm.complexScopeNote}
       </p>
     </div>

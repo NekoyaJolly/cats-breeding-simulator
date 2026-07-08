@@ -12,11 +12,11 @@ import { carriersText } from "./targetColorSearch/format";
 import { useTargetColorSearch } from "./targetColorSearch/useTargetColorSearch";
 
 const secondaryButtonClass =
-  "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50";
+  "rounded-md border border-line bg-surface px-3 py-2 text-sm font-medium text-ink-soft hover:bg-surface-2";
 const sectionClass =
-  "relative rounded-lg border border-slate-200 bg-white px-4 pb-4 pt-5 shadow-sm sm:px-6 sm:pb-6 sm:pt-6";
+  "relative rounded-lg border border-line bg-surface px-4 pb-4 pt-5 shadow-sm sm:px-6 sm:pb-6 sm:pt-6";
 const sectionTitleClass =
-  "absolute -top-2.5 left-4 bg-white px-1 text-sm font-semibold leading-5 text-slate-700 sm:left-6";
+  "absolute -top-2.5 left-4 bg-surface px-1 text-sm font-semibold leading-5 text-ink-soft sm:left-6";
 
 function SectionCard({
   title,
@@ -106,13 +106,13 @@ export function TargetColorSearch({ language }: { language: Language }) {
   function renderCatList(groupCats: RegisteredCat[]) {
     if (groupCats.length === 0) {
       return (
-        <p className="px-4 py-3 text-sm text-slate-500">
+        <p className="px-4 py-3 text-sm text-muted">
           {text.targetForm.emptyGroup}
         </p>
       );
     }
     return (
-      <ul className="divide-y divide-slate-100">
+      <ul className="divide-y divide-line-soft">
         {groupCats.map((cat) => (
           <li key={cat.id} className="px-4 py-3 text-sm">
             {editingId === cat.id ? (
@@ -170,7 +170,7 @@ export function TargetColorSearch({ language }: { language: Language }) {
                 <div className="flex gap-2">
                   <button
                     type="submit"
-                    className="rounded-md bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink shadow-sm hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={!editName.trim() || !editColor.trim()}
                   >
                     {text.common.update}
@@ -183,10 +183,10 @@ export function TargetColorSearch({ language }: { language: Language }) {
             ) : (
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="font-medium text-slate-800">
-                    {cat.name} <span className="text-slate-400">{catSexLabel(cat.sex)}</span>
+                  <p className="font-medium text-ink">
+                    {cat.name} <span className="text-muted">{catSexLabel(cat.sex)}</span>
                   </p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted">
                     {cat.color}
                     {cat.breed ? ` / ${cat.breed}` : ""}
                     {cat.carriers
@@ -243,20 +243,20 @@ export function TargetColorSearch({ language }: { language: Language }) {
             type="button"
             onClick={handleSearch}
             disabled={!targetColor.trim() || loading}
-            className="h-11 rounded-md bg-slate-800 px-4 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 rounded-md bg-accent px-4 text-sm font-semibold text-accent-ink shadow-sm hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? text.targetForm.loading : text.targetForm.button}
           </button>
         </div>
         {error && (
-          <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div className="mt-4 rounded-md border border-danger/30 bg-danger-bg p-3 text-sm text-danger">
             {error}
           </div>
         )}
       </SectionCard>
 
       {result && (
-        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+        <section className="rounded-lg border border-line bg-surface p-4 shadow-sm sm:p-6">
           <ResultsView data={result} language={language} />
         </section>
       )}
@@ -354,41 +354,41 @@ export function TargetColorSearch({ language }: { language: Language }) {
           ))}
           <button
             type="submit"
-            className="w-full rounded-md bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+            className="w-full rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink shadow-sm hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             disabled={colorsToRegister.length === 0}
           >
             {text.targetForm.addCandidate}
           </button>
         </form>
         {registrationError && (
-          <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div className="mt-4 rounded-md border border-danger/30 bg-danger-bg p-3 text-sm text-danger">
             {registrationError}
           </div>
         )}
 
         <div className="mt-5 space-y-2">
-          <h3 className="text-sm font-semibold text-slate-700">
+          <h3 className="text-sm font-semibold text-ink-soft">
             {text.targetForm.savedTitle}
           </h3>
           {cats.length === 0 ? (
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-muted">
               {text.targetForm.savedEmpty}
             </p>
           ) : (
             <div className="space-y-2">
               <details className={`rounded-md border ${PARENT_GROUP_ACCENT_CLASS.sire}`}>
-                <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold text-slate-700">
+                <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold text-ink-soft">
                   <span>{text.targetForm.sireGroup}</span>
-                  <span className="text-slate-400">
+                  <span className="text-muted">
                     {language === "ja" ? `${sires.length} 件` : sires.length}
                   </span>
                 </summary>
                 {renderCatList(sires)}
               </details>
               <details className={`rounded-md border ${PARENT_GROUP_ACCENT_CLASS.dam}`}>
-                <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold text-slate-700">
+                <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold text-ink-soft">
                   <span>{text.targetForm.damGroup}</span>
-                  <span className="text-slate-400">
+                  <span className="text-muted">
                     {language === "ja" ? `${dams.length} 件` : dams.length}
                   </span>
                 </summary>

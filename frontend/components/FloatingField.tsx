@@ -31,16 +31,16 @@ type FloatingSelectProps = {
 } & Pick<SelectHTMLAttributes<HTMLSelectElement>, "aria-label">;
 
 const fieldBaseClass =
-  "h-11 w-full rounded-md border border-slate-300 bg-white py-2 text-base leading-6 shadow-sm transition focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 sm:text-sm sm:leading-5";
+  "h-11 w-full rounded-md border border-line bg-surface py-2 text-base leading-6 text-ink placeholder:text-muted shadow-sm transition focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40 disabled:cursor-not-allowed disabled:bg-bg disabled:text-muted sm:text-sm sm:leading-5";
 const floatingLabelBaseClass =
-  "absolute left-3 z-[1] truncate bg-white px-1 transition-all duration-150";
+  "absolute left-3 z-[1] truncate bg-surface px-1 transition-all duration-150";
 const floatingLabelClass =
-  "top-0 -translate-y-1/2 text-[11px] leading-4 text-slate-600";
+  "top-0 -translate-y-1/2 text-[11px] leading-4 text-ink-soft";
 const restingLabelClass =
-  "top-1/2 -translate-y-1/2 text-sm leading-5 text-slate-500";
+  "top-1/2 -translate-y-1/2 text-sm leading-5 text-muted";
 
 function requiredMark(required: boolean): ReactNode {
-  return required ? <span className="text-red-500"> *</span> : null;
+  return required ? <span className="text-danger"> *</span> : null;
 }
 
 export function FloatingTextInput({

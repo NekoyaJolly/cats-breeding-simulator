@@ -14,6 +14,7 @@ import { BreedColorsHint } from "@/components/BreedColorsHint";
 import { LitterInference } from "@/components/LitterInference";
 import { ResultView } from "@/components/ResultView";
 import { TargetColorSearch } from "@/components/TargetColorSearch";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { calculate, type CalculateInput } from "@/lib/api";
 import {
   LANGUAGE_OPTIONS,
@@ -32,19 +33,19 @@ const TAB_ITEMS = [
     view: "parent",
     label: "Parent Coats",
     Icon: Dna,
-    iconClass: "text-emerald-600",
+    iconClass: "text-confirmed",
   },
   {
     view: "target",
     label: "Target Coat",
     Icon: Crosshair,
-    iconClass: "text-violet-600",
+    iconClass: "text-accent",
   },
   {
     view: "kitten",
     label: "Kitten Coats",
     Icon: Baby,
-    iconClass: "text-amber-600",
+    iconClass: "text-conditional",
   },
 ] as const satisfies readonly {
   view: ActiveView;
@@ -133,10 +134,10 @@ export default function HomePage() {
       <header className="mb-4 sm:mb-7">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-2xl font-bold tracking-normal text-slate-950 sm:text-3xl">
+            <h1 className="text-2xl font-bold tracking-normal text-ink sm:text-3xl">
               {text.app.name}
             </h1>
-            <p className="mt-1 text-sm text-slate-600">{text.app.subtitle}</p>
+            <p className="mt-1 text-sm text-ink-soft">{text.app.subtitle}</p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <AppTour
@@ -145,24 +146,25 @@ export default function HomePage() {
               activeView={activeView}
               onViewChange={setActiveView}
             />
+            <ThemeToggle language={language} />
             <div className="relative" ref={languageMenuRef}>
               <button
                 type="button"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-sky-100 bg-white shadow-sm transition hover:bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-300"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-accent/30 bg-surface shadow-sm transition hover:bg-accent/10 focus:outline-none focus:ring-2 focus:ring-accent/40"
                 aria-label={text.app.languageLabel}
                 aria-expanded={languageMenuOpen}
                 onClick={() => setLanguageMenuOpen((open) => !open)}
               >
                 <GlobeHemisphereEast
                   aria-hidden="true"
-                  className="h-5 w-5 text-sky-600"
+                  className="h-5 w-5 text-accent"
                   weight="duotone"
                 />
               </button>
               {languageMenuOpen && (
                 <div
                   aria-label={text.app.languageLabel}
-                  className="absolute right-0 z-30 mt-2 w-40 overflow-hidden rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg"
+                  className="absolute right-0 z-30 mt-2 w-40 overflow-hidden rounded-md border border-line bg-surface py-1 text-sm shadow-lg"
                 >
                   {LANGUAGE_OPTIONS.map((option) => (
                     <button
@@ -171,8 +173,8 @@ export default function HomePage() {
                       aria-pressed={language === option.value}
                       className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left ${
                         language === option.value
-                          ? "bg-slate-100 font-semibold text-slate-900"
-                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                          ? "bg-surface-2 font-semibold text-ink"
+                          : "text-ink-soft hover:bg-surface-2 hover:text-ink"
                       }`}
                       onClick={() => {
                         setLanguage(option.value);
@@ -183,7 +185,7 @@ export default function HomePage() {
                       {language === option.value && (
                         <CheckCircle
                           aria-hidden="true"
-                          className="h-4 w-4 text-emerald-600"
+                          className="h-4 w-4 text-confirmed"
                           weight="fill"
                         />
                       )}
@@ -198,7 +200,7 @@ export default function HomePage() {
 
       <div
         data-tour="app-tabs"
-        className="mb-3 grid grid-cols-3 gap-1 rounded-md bg-slate-100 p-1 sm:mb-5"
+        className="mb-3 grid grid-cols-3 gap-1 rounded-md bg-surface-2 p-1 sm:mb-5"
       >
         {TAB_ITEMS.map((tab) => {
           const Icon = tab.Icon;
@@ -210,15 +212,15 @@ export default function HomePage() {
               data-tour={`${tab.view}-tab`}
               className={`min-w-0 rounded px-1 py-1.5 text-center text-xs font-semibold sm:px-3 sm:py-2 sm:text-sm ${
                 active
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-800"
+                  ? "bg-surface text-ink shadow-sm"
+                  : "text-muted hover:text-ink"
               }`}
               onClick={() => setActiveView(tab.view)}
             >
               <span className="flex min-w-0 items-center justify-center gap-1.5">
                 <Icon
                   aria-hidden="true"
-                  className={`h-4 w-4 shrink-0 ${active ? tab.iconClass : "text-slate-400"}`}
+                  className={`h-4 w-4 shrink-0 ${active ? tab.iconClass : "text-muted"}`}
                   weight={active ? "duotone" : "regular"}
                 />
                 <span className="truncate">{tab.label}</span>
@@ -229,7 +231,7 @@ export default function HomePage() {
       </div>
 
       <section className="mb-4 sm:mb-5">
-        <p className="text-xs leading-5 text-slate-600 sm:text-sm sm:leading-6">
+        <p className="text-xs leading-5 text-ink-soft sm:text-sm sm:leading-6">
           {activeIntro.description}
         </p>
       </section>
@@ -238,7 +240,7 @@ export default function HomePage() {
         <>
           <div
             data-tour="parent-panel"
-            className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
+            className="rounded-lg border border-line bg-surface p-4 shadow-sm sm:p-6"
           >
             <BreedingForm
               onSubmit={handleSubmit}
@@ -248,7 +250,7 @@ export default function HomePage() {
           </div>
 
           {error && (
-            <div className="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <div className="mt-6 rounded-md border border-danger/30 bg-danger-bg p-4 text-sm text-danger">
               {error}
               {/* 猫種の認定カラーに無い旨のエラーなら、使える毛色をコピペ可能に案内する。 */}
               {submittedBreed && error.includes("認定カラー") && (
@@ -258,7 +260,7 @@ export default function HomePage() {
           )}
 
           {result && (
-            <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+            <div className="mt-6 rounded-lg border border-line bg-surface p-4 shadow-sm sm:p-6">
               <ResultView data={result} language={language} />
             </div>
           )}

@@ -184,13 +184,13 @@ const CARRIER_LOCI = [
 ] as const satisfies readonly CarrierLocusDefinition[];
 
 const inactiveCarrierButtonClass: Record<CarrierParent, string> = {
-  sire: "border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100",
-  dam: "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100",
+  sire: "border-accent/40 bg-accent/10 text-accent hover:bg-accent/15",
+  dam: "border-danger/30 bg-danger-bg text-danger hover:bg-danger/15",
 };
 
 const activeCarrierButtonClass: Record<CarrierParent, string> = {
-  sire: "border-sky-600 bg-sky-600 text-white hover:bg-sky-700",
-  dam: "border-rose-600 bg-rose-600 text-white hover:bg-rose-700",
+  sire: "border-accent bg-accent text-accent-ink hover:bg-accent",
+  dam: "border-danger bg-danger text-accent-ink hover:bg-danger",
 };
 
 function optionsForParent(
@@ -273,32 +273,32 @@ export function CarrierSelectorButton({
   const active = selectedCount > 0;
   const modalContent = open ? (
     <div
-      className="fixed inset-0 z-50 flex items-end bg-slate-900/40 px-2 pb-2 pt-4 sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-end bg-black/50 px-2 pb-2 pt-4 sm:items-center sm:p-4"
       onClick={() => setOpen(false)}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={modalTitleId}
-        className="max-h-[88vh] w-full overflow-hidden rounded-lg bg-white shadow-xl sm:mx-auto sm:max-w-3xl"
+        className="max-h-[88vh] w-full overflow-hidden rounded-lg bg-surface shadow-xl sm:mx-auto sm:max-w-3xl"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="border-b border-slate-200 px-4 py-3">
+        <div className="border-b border-line px-4 py-3">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h2
                 id={modalTitleId}
-                className="text-base font-semibold text-slate-900"
+                className="text-base font-semibold text-ink"
               >
                 {modalTitle}
               </h2>
-              <p className="mt-1 text-xs leading-5 text-slate-500">
+              <p className="mt-1 text-xs leading-5 text-muted">
                 {text.parentForm.carrierSelector.description}
               </p>
             </div>
             <button
               type="button"
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line text-muted transition hover:bg-surface-2 hover:text-ink focus:outline-none focus:ring-2 focus:ring-accent/40"
               aria-label={text.parentForm.carrierSelector.close}
               onClick={() => setOpen(false)}
             >
@@ -331,7 +331,7 @@ export function CarrierSelectorButton({
               <div
                 key={definition.locus}
                 data-carrier-row="true"
-                className="rounded-lg border border-slate-200 bg-white p-2.5 shadow-sm transition hover:border-slate-300"
+                className="rounded-lg border border-line bg-surface p-2.5 shadow-sm transition hover:border-line"
               >
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(10rem,13rem)_minmax(0,1fr)] sm:items-center sm:gap-3">
                   <div className="flex min-w-0 items-center gap-2">
@@ -341,12 +341,12 @@ export function CarrierSelectorButton({
                       {definition.locus}
                     </div>
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold text-slate-900">
+                      <div className="truncate text-sm font-semibold text-ink">
                         {definition.name[language]}
                       </div>
                       <div
                         className={`mt-0.5 truncate text-xs ${
-                          selectedValue ? tone.textClass : "text-slate-500"
+                          selectedValue ? tone.textClass : "text-muted"
                         }`}
                         title={selectedDescription}
                       >
@@ -359,7 +359,7 @@ export function CarrierSelectorButton({
                       {definition.locus} {text.parentForm.carrierSelector.selected}
                     </legend>
                     <div
-                      className="inline-flex max-w-full touch-pan-y select-none flex-wrap gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1 shadow-inner"
+                      className="inline-flex max-w-full touch-pan-y select-none flex-wrap gap-1 rounded-lg border border-line bg-surface-2 p-1 shadow-inner"
                       onPointerDown={(event) => {
                         event.preventDefault();
                         activePointerId.current = event.pointerId;
@@ -387,7 +387,7 @@ export function CarrierSelectorButton({
                         const isExplicitChoice = choice.value.length > 0;
                         const selectedClass = isExplicitChoice
                           ? tone.selectedClass
-                          : "bg-white text-slate-600 shadow-sm ring-1 ring-slate-200";
+                          : "bg-surface text-ink-soft shadow-sm ring-1 ring-line";
                         const inputId = `${groupName}-${index}`;
 
                         return (
@@ -396,10 +396,10 @@ export function CarrierSelectorButton({
                             htmlFor={inputId}
                             data-carrier-group={groupName}
                             data-carrier-value={choice.value}
-                            className={`relative flex min-h-8 min-w-11 cursor-ew-resize items-center justify-center rounded-md px-1.5 text-center text-xs font-semibold leading-tight transition has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-emerald-500 has-[:focus-visible]:ring-offset-1 ${
+                            className={`relative flex min-h-8 min-w-11 cursor-ew-resize items-center justify-center rounded-md px-1.5 text-center text-xs font-semibold leading-tight transition has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-confirmed/40 has-[:focus-visible]:ring-offset-1 ${
                               isSelected
                                 ? selectedClass
-                                : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
+                                : "text-ink-soft hover:bg-surface/70 hover:text-ink"
                             }`}
                           >
                             <input
@@ -426,10 +426,10 @@ export function CarrierSelectorButton({
           })}
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-t border-slate-200 px-4 py-3">
+        <div className="flex items-center justify-between gap-3 border-t border-line px-4 py-3">
           <button
             type="button"
-            className="rounded-md border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400"
+            className="rounded-md border border-line px-3 py-2 text-xs font-medium text-ink-soft transition hover:bg-surface-2 focus:outline-none focus:ring-2 focus:ring-accent/40"
             disabled={selectedCount === 0}
             onClick={() => onChange({})}
           >
@@ -437,7 +437,7 @@ export function CarrierSelectorButton({
           </button>
           <button
             type="button"
-            className="rounded-md bg-slate-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400"
+            className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink transition hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent/40"
             onClick={() => setOpen(false)}
           >
             {text.parentForm.carrierSelector.close}
@@ -490,7 +490,7 @@ export function CarrierSelectorButton({
     <>
       <button
         type="button"
-        className={`inline-flex h-8 items-center gap-1 rounded-full border px-2 text-xs font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-400 ${
+        className={`inline-flex h-8 items-center gap-1 rounded-full border px-2 text-xs font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-accent/40 ${
           active ? activeCarrierButtonClass[parent] : inactiveCarrierButtonClass[parent]
         }`}
         aria-label={buttonLabel}

@@ -31,7 +31,7 @@ export function LocusChip({ locus }: { locus: string }) {
 
   // 解説が未登録の座位はプレーンなテキストで出す (解説なし)。
   if (!entry) {
-    return <span className="tabular-nums text-slate-600">{locus}</span>;
+    return <span className="tabular-nums text-ink-soft">{locus}</span>;
   }
 
   return (
@@ -60,21 +60,21 @@ export function LocusChip({ locus }: { locus: string }) {
       <span
         role="tooltip"
         id={tooltipId}
-        className={`absolute left-0 top-full z-20 mt-1 w-56 max-w-[80vw] rounded-md border border-slate-200 bg-white p-2 text-left text-xs font-normal text-slate-600 shadow-lg ${
+        className={`absolute left-0 top-full z-20 mt-1 w-56 max-w-[80vw] rounded-md border border-line bg-surface p-2 text-left text-xs font-normal text-ink-soft shadow-lg ${
           open ? "block" : "hidden"
         }`}
       >
-        <span className="block font-semibold text-slate-800">
+        <span className="block font-semibold text-ink">
           {entry.symbol} — {entry.name}
         </span>
-        <span className="mt-0.5 block text-[11px] text-slate-400">
+        <span className="mt-0.5 block text-[11px] text-muted">
           {entry.inheritance}
         </span>
         {entry.layers ? (
           <span className="mt-1 block space-y-1">
             {entry.layers.map((layer) => (
               <span key={layer.label} className="block leading-relaxed">
-                <span className="block text-[11px] font-semibold text-slate-500">
+                <span className="block text-[11px] font-semibold text-muted">
                   {layer.label}
                 </span>
                 <span className="block">{layer.text}</span>

@@ -2,14 +2,86 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== テーマトークン (light / dark) =====
+ * 値は「R G B」チャンネル (Tailwind の <alpha-value> で不透明度を付けられるようにするため)。
+ * Tailwind 側は colors を rgb(var(--token) / <alpha-value>) にマップする (tailwind.config.ts)。
+ * .dark クラスは <html> に付与し (ThemeScript / ThemeToggle)、prefers-color-scheme を既定とする。
+ * --r-* はレポート (ResultView) のインライン style 用エイリアス (同一トークンを色として供給)。 */
+:root {
+  --bg: 244 241 234;
+  --surface: 251 249 244;
+  --surface-2: 236 229 214;
+  --inset: 239 233 221;
+  --ink: 38 34 29;
+  --ink-soft: 76 67 54;
+  --muted: 133 124 109;
+  --line: 221 211 192;
+  --line-soft: 232 224 208;
+  --accent: 47 93 98;
+  --accent-ink: 255 255 255;
+  --male: 61 107 132;
+  --female: 138 71 99;
+  --confirmed: 47 107 78;
+  --confirmed-bg: 228 239 229;
+  --conditional: 154 101 22;
+  --conditional-bg: 243 233 213;
+  --danger: 179 65 47;
+  --danger-bg: 247 228 223;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: 23 20 15;
+  --surface: 34 29 22;
+  --surface-2: 44 38 29;
+  --inset: 27 23 16;
+  --ink: 239 231 216;
+  --ink-soft: 202 189 167;
+  --muted: 154 142 121;
+  --line: 58 51 42;
+  --line-soft: 44 38 30;
+  --accent: 108 176 182;
+  --accent-ink: 23 20 15;
+  --male: 133 179 205;
+  --female: 207 141 172;
+  --confirmed: 119 192 148;
+  --confirmed-bg: 30 44 34;
+  --conditional: 216 166 85;
+  --conditional-bg: 46 38 23;
+  --danger: 224 128 111;
+  --danger-bg: 51 28 23;
+  color-scheme: dark;
+}
+
+/* レポート (ResultView) のインライン style 用エイリアス。上のトークンを色値として供給する。 */
+:root {
+  --r-surface: rgb(var(--surface));
+  --r-surface-2: rgb(var(--surface-2));
+  --r-inset: rgb(var(--inset));
+  --r-ink: rgb(var(--ink));
+  --r-ink-soft: rgb(var(--ink-soft));
+  --r-muted: rgb(var(--muted));
+  --r-hairline: rgb(var(--line));
+  --r-hairline-soft: rgb(var(--line-soft));
+  --r-accent: rgb(var(--accent));
+  --r-confirmed: rgb(var(--confirmed));
+  --r-confirmed-bg: rgb(var(--confirmed-bg));
+  --r-conditional: rgb(var(--conditional));
+  --r-conditional-bg: rgb(var(--conditional-bg));
+  --r-male: rgb(var(--male));
+  --r-female: rgb(var(--female));
+}
+
+/* ===== AppTour (driver.js) ポップオーバー。トークン駆動でテーマ対応。 ===== */
 .ccp-driver-popover {
   max-width: min(320px, calc(100vw - 32px));
-  border: 1px solid rgb(226 232 240);
+  border: 1px solid rgb(var(--line));
   border-radius: 8px;
-  color: rgb(15 23 42);
+  background: rgb(var(--surface));
+  color: rgb(var(--ink));
   box-shadow:
-    0 22px 44px rgb(15 23 42 / 0.18),
-    0 2px 8px rgb(15 23 42 / 0.08);
+    0 22px 44px rgb(0 0 0 / 0.22),
+    0 2px 8px rgb(0 0 0 / 0.12);
 }
 
 .ccp-driver-popover .driver-popover-title {
@@ -17,16 +89,17 @@
   font-weight: 700;
   line-height: 1.5;
   letter-spacing: 0;
+  color: rgb(var(--ink));
 }
 
 .ccp-driver-popover .driver-popover-description {
-  color: rgb(71 85 105);
+  color: rgb(var(--ink-soft));
   font-size: 12px;
   line-height: 1.65;
 }
 
 .ccp-driver-popover .driver-popover-progress-text {
-  color: rgb(100 116 139);
+  color: rgb(var(--muted));
   font-size: 11px;
   font-weight: 600;
 }
@@ -34,26 +107,26 @@
 .ccp-driver-popover .driver-popover-prev-btn,
 .ccp-driver-popover .driver-popover-next-btn {
   border-radius: 6px;
-  border-color: rgb(203 213 225);
+  border-color: rgb(var(--line));
   font-size: 12px;
   font-weight: 700;
   text-shadow: none;
 }
 
 .ccp-driver-popover .driver-popover-next-btn {
-  border-color: rgb(5 150 105);
-  background: rgb(5 150 105);
-  color: white;
+  border-color: rgb(var(--accent));
+  background: rgb(var(--accent));
+  color: rgb(var(--accent-ink));
 }
 
 .ccp-driver-popover .driver-popover-prev-btn {
-  background: white;
-  color: rgb(51 65 85);
+  background: rgb(var(--surface));
+  color: rgb(var(--ink-soft));
 }
 
 .ccp-driver-popover .ccp-driver-close-action {
   border-radius: 999px;
-  color: rgb(100 116 139);
+  color: rgb(var(--muted));
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
@@ -62,6 +135,6 @@
 }
 
 .ccp-driver-popover .ccp-driver-close-action:hover {
-  background: rgb(241 245 249);
-  color: rgb(15 23 42);
+  background: rgb(var(--surface-2));
+  color: rgb(var(--ink));
 }

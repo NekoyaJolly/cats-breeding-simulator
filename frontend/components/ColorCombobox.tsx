@@ -34,13 +34,13 @@ type Props = {
 const MAX_SUGGESTIONS = 20;
 
 const inputClass =
-  "h-11 w-full rounded-md border border-slate-300 bg-white py-2 text-base leading-6 shadow-sm transition focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 sm:text-sm sm:leading-5";
+  "h-11 w-full rounded-md border border-line bg-surface py-2 text-base leading-6 text-ink placeholder:text-muted shadow-sm transition focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40 sm:text-sm sm:leading-5";
 const floatingLabelBaseClass =
-  "absolute left-3 z-[1] truncate bg-white px-1 transition-all duration-150";
+  "absolute left-3 z-[1] truncate bg-surface px-1 transition-all duration-150";
 const floatingLabelClass =
-  "top-0 -translate-y-1/2 text-[11px] leading-4 text-slate-600";
+  "top-0 -translate-y-1/2 text-[11px] leading-4 text-ink-soft";
 const restingLabelClass =
-  "top-1/2 -translate-y-1/2 text-sm leading-5 text-slate-500";
+  "top-1/2 -translate-y-1/2 text-sm leading-5 text-muted";
 
 // 履歴の文字列を ColorOption へ解決する。一覧に無い自由入力履歴は最小エントリで合成する。
 function resolveRecent(recent: string[], byValue: Map<string, ColorOption>): ColorOption[] {
@@ -156,8 +156,8 @@ export function ColorCombobox({
   const inputPaddingClass = labelAction ? "pl-3 pr-12" : "px-3";
   const listboxClass =
     suggestionLayout === "inline"
-      ? "mt-1 max-h-64 w-full overflow-auto rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg"
-      : "absolute z-40 mt-1 max-h-64 w-full overflow-auto rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg";
+      ? "mt-1 max-h-64 w-full overflow-auto rounded-md border border-line bg-surface py-1 text-sm shadow-lg"
+      : "absolute z-40 mt-1 max-h-64 w-full overflow-auto rounded-md border border-line bg-surface py-1 text-sm shadow-lg";
 
   return (
     <div className="relative" ref={containerRef}>
@@ -202,7 +202,7 @@ export function ColorCombobox({
           }`}
         >
           {label}
-          {required && <span className="text-red-500"> *</span>}
+          {required && <span className="text-danger"> *</span>}
         </label>
         {labelAction && (
           <div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -216,7 +216,7 @@ export function ColorCombobox({
             className={listboxClass}
           >
             {showingRecent && (
-              <li className="px-3 py-1 text-xs font-medium text-slate-400">
+              <li className="px-3 py-1 text-xs font-medium text-muted">
                 {recentLabel}
               </li>
             )}
@@ -229,7 +229,7 @@ export function ColorCombobox({
                   role="option"
                   aria-selected={active}
                   className={`flex cursor-pointer items-center justify-between gap-2 px-3 py-1.5 ${
-                    active ? "bg-slate-100" : "hover:bg-slate-50"
+                    active ? "bg-surface-2" : "hover:bg-surface-2"
                   }`}
                   // input の blur で閉じる前に選択を確定させるため mousedown を使う。
                   onMouseDown={(event) => {
@@ -239,21 +239,21 @@ export function ColorCombobox({
                   onMouseEnter={() => setActiveIndex(index)}
                 >
                   <span className="min-w-0">
-                    <span className="text-slate-800">{color.value}</span>
+                    <span className="text-ink">{color.value}</span>
                     {color.reading_ja && (
-                      <span className="ml-2 text-xs text-slate-400">
+                      <span className="ml-2 text-xs text-muted">
                         {color.reading_ja}
                       </span>
                     )}
                   </span>
                   <span className="flex shrink-0 items-center gap-1">
                     {color.sex_restriction === "female_only" && (
-                      <span className="rounded bg-pink-50 px-1.5 py-0.5 text-[10px] font-medium leading-4 text-pink-600">
+                      <span className="rounded bg-female/10 px-1.5 py-0.5 text-[10px] font-medium leading-4 text-female">
                         {femaleOnlyLabel}
                       </span>
                     )}
                     {color.breed_context && (
-                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] leading-4 text-slate-500">
+                      <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] leading-4 text-muted">
                         {color.breed_context}
                       </span>
                     )}
