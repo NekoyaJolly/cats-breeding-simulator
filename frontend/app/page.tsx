@@ -14,6 +14,7 @@ import { BreedColorsHint } from "@/components/BreedColorsHint";
 import { LitterInference } from "@/components/LitterInference";
 import { ResultView } from "@/components/ResultView";
 import { TargetColorSearch } from "@/components/TargetColorSearch";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { calculate, type CalculateInput } from "@/lib/api";
 import {
   LANGUAGE_OPTIONS,
@@ -145,6 +146,7 @@ export default function HomePage() {
               activeView={activeView}
               onViewChange={setActiveView}
             />
+            <ThemeToggle language={language} />
             <div className="relative" ref={languageMenuRef}>
               <button
                 type="button"

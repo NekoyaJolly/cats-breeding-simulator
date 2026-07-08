@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { FeedbackWidget } from "@/components/FeedbackWidget";
 import { PwaStatus } from "@/components/PwaStatus";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "driver.js/dist/driver.css";
 import "./globals.css";
 
@@ -31,8 +32,12 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="ja">
-      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
+    <html lang="ja" suppressHydrationWarning>
+      <head>
+        {/* FOUC 回避: ペイント前に localStorage の選択を読み .dark を付与する。 */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
+      <body className="min-h-screen bg-bg text-ink antialiased">
         {children}
         <PwaStatus />
         <FeedbackWidget />
