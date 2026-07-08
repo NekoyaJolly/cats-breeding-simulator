@@ -123,19 +123,25 @@ function SectionLabel({
 
 // ♂/♀ の視覚記号 + スクリーンリーダー向けの性別テキスト (記号は aria-hidden なので
 // sr-only テキストで性別を必ず読み上げ可能にする)。
-function SexMark({ sex, language }: { sex: "Male" | "Female"; language: Language }) {
+// 性別の並び順 (Male → Female)。想定外値の除外にも使う。
+const SEX_RANK: Record<string, number> = { Male: 0, Female: 1 };
+
+function SexMark({ sex, language }: { sex: string; language: Language }) {
   const text = UI_TEXT[language];
+  // 想定外の性別文字列では何も描画しない (誤って Female 表示へ倒れるのを防ぐ)。
+  if (sex !== "Male" && sex !== "Female") return null;
+  const isMale = sex === "Male";
   return (
     <>
       <span
         aria-hidden="true"
         className="text-xs font-bold"
-        style={{ color: sex === "Male" ? "var(--r-male)" : "var(--r-female)" }}
+        style={{ color: isMale ? "var(--r-male)" : "var(--r-female)" }}
       >
-        {sex === "Male" ? "♂" : "♀"}
+        {isMale ? "♂" : "♀"}
       </span>
       <span className="sr-only">
-        {sex === "Male" ? text.parentResult.male : text.parentResult.female}
+        {isMale ? text.parentResult.male : text.parentResult.female}
       </span>
     </>
   );
@@ -150,17 +156,19 @@ function ColorChip({
   language,
 }: {
   color: string;
-  sexes: Array<"Male" | "Female">;
+  sexes: string[];
   pct?: number;
   language: Language;
 }) {
+  // Male/Female のみに絞り、Male → Female の順に並べる (想定外値を除外・順序固定)。
+  const marks = sexes.filter((sex) => sex in SEX_RANK).sort((a, b) => SEX_RANK[a] - SEX_RANK[b]);
   return (
     <span
       className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs"
       style={{ background: "var(--r-surface-2)", color: "var(--r-ink)" }}
     >
       <Swatch color={color} size={16} />
-      {sexes.map((sex) => (
+      {marks.map((sex) => (
         <SexMark key={sex} sex={sex} language={language} />
       ))}
       <span className="font-medium">{color}</span>
@@ -185,10 +193,9 @@ function ConfirmedColors({
 }) {
   const text = UI_TEXT[language];
   // -White を合算せず各色をそのままチップ化する (白斑を隠さない)。オス→メス、確率降順。
-  const sexOrder: Record<string, number> = { Male: 0, Female: 1 };
   const sorted = [...rows].sort(
     (a, b) =>
-      (sexOrder[a.sex] ?? 9) - (sexOrder[b.sex] ?? 9) ||
+      (SEX_RANK[a.sex] ?? 9) - (SEX_RANK[b.sex] ?? 9) ||
       b.probability_pct - a.probability_pct,
   );
   return (
@@ -207,7 +214,7 @@ function ConfirmedColors({
           <ColorChip
             key={`${row.sex}-${row.color}`}
             color={row.color}
-            sexes={[row.sex as "Male" | "Female"]}
+            sexes={[row.sex]}
             pct={row.probability_pct}
             language={language}
           />
@@ -496,7 +503,7 @@ function ConditionalColorSection({
                     <ColorChip
                       key={color}
                       color={color}
-                      sexes={[...sexes] as Array<"Male" | "Female">}
+                      sexes={[...sexes]}
                       language={language}
                     />
                   ))}
