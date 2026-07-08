@@ -29,7 +29,6 @@ from cat_breeding_simulator.master_data import (
 )
 from cat_breeding_simulator.color_master import (
     COLOR_MASTER,
-    COLOR_FAMILY_POINT,
     breed_context_matches,
     color_family,
 )
@@ -123,10 +122,11 @@ def _apply_tonkinese_c_class(
 def _carrier_options_for(
     locus: str, recessive_alleles: tuple[str, str], dominant_alleles: tuple[str, str]
 ) -> list[tuple[tuple[str, str], str]]:
-    """carrier_exploration: 片親 (recessive) が劣性を完全発現し、相手 (dominant) が優性発現の場合に、
-    相手に開ける (carrier 遺伝子型, ラベル) のリストを返す。該当しなければ []。
+    """片親 (recessive) が劣性を完全発現し、相手 (dominant) が優性発現の場合に、相手に開ける
+    (carrier 遺伝子型, ラベル) のリストを返す。該当しなければ []。推定色 (conditional_color_groups)
+    の「片親劣性発現 → 相手にキャリアを開ける」シナリオ生成に用いる。
 
-    両親とも優性発現 (= 両方が隠れキャリアかもしれない) のケースは生成しない (条件付き探索の対象外)。
+    両親とも優性発現 (= 両方が隠れキャリアかもしれない) のケースは _dominant_het_options_for が担当する。
     """
 
     if locus == "A":
@@ -210,19 +210,6 @@ class KittenResult:
 
 
 @dataclass(frozen=True, slots=True)
-class CarrierScenario:
-    """carrier_exploration の 1 シナリオ (片親の劣性発現に対し、相手がキャリアの場合の条件付き結果)。"""
-
-    scenario: str                                  # 機械用ID 例: "C_cs_on_dam"
-    label: str                                     # 人間可読の仮説説明
-    assumed_carriers: dict[str, dict[str, str]]    # 例: {"dam": {"C": "C/cs"}}
-    probability_basis: str                         # "conditional_on_other_parent_carrier"
-    prior_probability_applied: bool                # 事前確率を掛けたか (常に False)
-    results: list[KittenResult]                    # この仮説の条件付き結果 (合計100%)
-    new_colors: list[str]                          # baseline (normal) に無く、この仮説で現れる色
-
-
-@dataclass(frozen=True, slots=True)
 class ConditionalColorGroup:
     """「もしこの色が出たら」の 1 色系統グループ (normal モード専用)。
 
@@ -267,8 +254,6 @@ class CalculationReport:
     opened_loci: list[str] | None = None     # X/- 展開 or 明示キャリアで開けた座位
     closed_loci: list[str] | None = None     # キャリア非展開で閉じた座位
     assumptions: list[str] | None = None     # 計算前提の人間可読メモ
-    # carrier_exploration_mode の条件付きシナリオ。normal results とは完全分離する。
-    carrier_exploration_results: list[CarrierScenario] | None = None
     # 入力した親色が子に出現しないときの注釈 (normal モードのみ)。
     parent_color_notes: list[ParentColorNote] | None = None
     # 「もしこの色が出たら」(P2)。既存 results の意味は変えず追加するオプショナルフィールド。
@@ -400,7 +385,7 @@ class CoatColorCalculator:
     ) -> CalculationReport:
         """純粋関数 `_calculate_report_impl` の結果をプロセス内メモ化して返す。
 
-        逆引き (オス×メス総当たり) や carrier_exploration / リター推定が同一の親色組を
+        逆引き (オス×メス総当たり) やリター推定が同一の親色組を
         繰り返し計算するため、(色, 猫種, モード, キャリア) をキーにキャッシュする。
         例外 (BreedingCalculationError) はキャッシュせずそのまま送出する。
         """
@@ -428,7 +413,7 @@ class CoatColorCalculator:
     def _copy_report(report: CalculationReport) -> CalculationReport:
         """キャッシュ実体を保護するため、可変コレクションを浅くコピーした新レポートを返す。
 
-        要素 (KittenResult / CarrierScenario / ParentColorNote) は frozen dataclass のため、
+        要素 (KittenResult / ConditionalColorGroup / ParentColorNote) は frozen dataclass のため、
         リスト/辞書を作り直せば呼び出し側の append/pop/要素差し替えからキャッシュを守れる。
         """
 
@@ -439,11 +424,6 @@ class CoatColorCalculator:
             opened_loci=list(report.opened_loci) if report.opened_loci is not None else None,
             closed_loci=list(report.closed_loci) if report.closed_loci is not None else None,
             assumptions=list(report.assumptions) if report.assumptions is not None else None,
-            carrier_exploration_results=(
-                list(report.carrier_exploration_results)
-                if report.carrier_exploration_results is not None
-                else None
-            ),
             parent_color_notes=(
                 list(report.parent_color_notes) if report.parent_color_notes is not None else None
             ),
@@ -469,9 +449,8 @@ class CoatColorCalculator:
         """結果に加えて未分類率などの内部診断値とモード情報を返す。
 
         計算モード:
-          - normal: 未明示キャリアを閉じる (A/B/C/Wb 非展開、D/I/Mc/Ta のみ X/- 展開)。
+          - normal: 未明示キャリアを閉じる (A/B/C/Wb 非展開、D/I/Mc/Ta のみ X/- 展開)。結果はレポート形式で確定色/周辺確率/推定色を返す。
           - explicit_carrier: 指定された座位のみ開ける (sire_carriers / dam_carriers)。
-          - carrier_exploration: 未実装 (Phase 2)。指定時は明示エラー。
 
         分類不能 (どの正規カラーにも還元できない) 子猫を黙って捨てて 100% に
         再正規化することはしない。未分類は unmatched_probability として保持する。
@@ -486,8 +465,6 @@ class CoatColorCalculator:
         # VALID_BREEDS は /api/v1/breeds と同基準 (CSV 由来のゴミ行 "ｱｷ" 等を除外)。
         if breed and self._normalize_breed_key(breed) not in VALID_BREEDS:
             raise BreedingCalculationError(f"未対応の猫種です: '{breed}'")
-        if mode == "carrier_exploration":
-            return self._calculate_carrier_exploration(sire_color, dam_color, breed)
 
         # White (優性白・下不明) が親に含まれる通常モードは、下の色が不定なため
         # 遺伝子型総当たりでは「White 100%」や誤った色になる。W/w を仮定した専用集計で
@@ -655,36 +632,6 @@ class CoatColorCalculator:
                     assumptions.append(f"{locus}: {parent} に {genotype} を明示指定 (開放)")
 
         return opened, closed, assumptions
-
-    # --- carrier_exploration_mode (Phase 2) ---
-    #
-    # 「片親が劣性形質を完全発現している場合に、相手がそのキャリアだったらどうなるか」のみを
-    # 条件付きシナリオとして提示する。両親とも通常表現型で両方が隠れキャリア、という仮定は
-    # 自動生成しない。事前確率 (実集団のキャリア頻度) は一切掛けない。
-    # normal の確定結果 (results) とは完全に分離する。
-
-    def _calculate_carrier_exploration(
-        self, sire_color: str, dam_color: str, breed: str | None
-    ) -> CalculationReport:
-        baseline = self.calculate_report(sire_color, dam_color, breed, mode="normal")
-        scenarios = self._build_carrier_scenarios(sire_color, dam_color, breed, baseline)
-        assumptions = list(baseline.assumptions or [])
-        assumptions.append(
-            "carrier_exploration: 各シナリオは『片親の劣性発現に対し相手がキャリア』の条件付き結果。"
-            "事前確率 (キャリア頻度) は掛けない。normal results とは分離して提示する。"
-        )
-        return CalculationReport(
-            results=baseline.results,
-            matched_probability=baseline.matched_probability,
-            unmatched_probability=baseline.unmatched_probability,
-            unmatched_genotype_count=baseline.unmatched_genotype_count,
-            unmatched_samples=baseline.unmatched_samples,
-            mode="carrier_exploration",
-            opened_loci=baseline.opened_loci,
-            closed_loci=baseline.closed_loci,
-            assumptions=assumptions,
-            carrier_exploration_results=scenarios,
-        )
 
     # --- White (優性白・下不明) 順方向の専用集計 (§2.1 / §2.2) ---
     #
@@ -1086,7 +1033,7 @@ class CoatColorCalculator:
 
         return factors
 
-    # carrier_exploration の各 locus の既定値 (CSV に欠落していた場合のフォールバック)。
+    # 推定色 (conditional_color_groups) の各 locus の既定値 (CSV に欠落していた場合のフォールバック)。
     _CARRIER_LOCUS_DEFAULTS: dict[str, tuple[str, str]] = {
         "A": ("a", "a"),
         "B": ("B", "B"),
@@ -1095,85 +1042,12 @@ class CoatColorCalculator:
         "I": ("i", "i"),
     }
 
-    def _build_carrier_scenarios(
-        self, sire_color: str, dam_color: str, breed: str | None, baseline: CalculationReport
-    ) -> list[CarrierScenario]:
-        sire_base = self._resolved_base_loci(sire_color, "male", breed)
-        dam_base = self._resolved_base_loci(dam_color, "female", breed)
-        if sire_base is None or dam_base is None:
-            return []
-
-        baseline_colors = {result.color for result in baseline.results}
-        scenarios: list[CarrierScenario] = []
-        for locus in ("A", "B", "C", "D"):
-            default = self._CARRIER_LOCUS_DEFAULTS[locus]
-            sire_alleles = sire_base.get(locus, default)
-            dam_alleles = dam_base.get(locus, default)
-
-            # 父が劣性発現 → 母 (相手) にキャリアを開ける
-            for carrier, carrier_label in _carrier_options_for(locus, sire_alleles, dam_alleles):
-                scenario = self._compute_carrier_scenario(
-                    locus, "dam", carrier, carrier_label,
-                    sire_color, dam_color, breed, baseline_colors, recessive_parent=sire_color,
-                )
-                if scenario is not None:
-                    scenarios.append(scenario)
-
-            # 母が劣性発現 → 父 (相手) にキャリアを開ける
-            for carrier, carrier_label in _carrier_options_for(locus, dam_alleles, sire_alleles):
-                scenario = self._compute_carrier_scenario(
-                    locus, "sire", carrier, carrier_label,
-                    sire_color, dam_color, breed, baseline_colors, recessive_parent=dam_color,
-                )
-                if scenario is not None:
-                    scenarios.append(scenario)
-        return scenarios
-
-    def _compute_carrier_scenario(
-        self,
-        locus: str,
-        open_parent: str,
-        carrier: tuple[str, str],
-        carrier_label: str,
-        sire_color: str,
-        dam_color: str,
-        breed: str | None,
-        baseline_colors: set[str],
-        recessive_parent: str,
-    ) -> CarrierScenario | None:
-        genotype_str = f"{carrier[0]}/{carrier[1]}"
-        sire_carriers = {locus: genotype_str} if open_parent == "sire" else None
-        dam_carriers = {locus: genotype_str} if open_parent == "dam" else None
-        try:
-            report = self.calculate_report(
-                sire_color, dam_color, breed, "explicit_carrier", sire_carriers, dam_carriers
-            )
-        except BreedingCalculationError:
-            return None
-        if not report.results:
-            return None
-
-        new_colors = sorted({result.color for result in report.results} - baseline_colors)
-        opened_color = dam_color if open_parent == "dam" else sire_color
-        label = f"{opened_color} が {carrier_label} と仮定 ({recessive_parent} は {locus} 劣性を発現)"
-        return CarrierScenario(
-            scenario=f"{locus}_{carrier[1]}_on_{open_parent}",
-            label=label,
-            assumed_carriers={open_parent: {locus: genotype_str}},
-            probability_basis="conditional_on_other_parent_carrier",
-            prior_probability_applied=False,
-            results=report.results,
-            new_colors=new_colors,
-        )
-
     # --- 「もしこの色が出たら」(P2 / normal 専用) ---
     #
     # 既存 results (カテゴリA 展開込み) の意味は変えず、以下の 2 つを追加フィールドとして返す。
     #   confirmed_results: 隠れキャリアを仮定しない確定色 (カテゴリA 非展開の親候補で交配)。
     #   conditional_color_groups: 確定色には出ないが隠れキャリアがあれば出る色を色系統でまとめ、
     #     逆推論ラベル (この色が出たら両親が◯◯保因と確定) を付けたもの。
-    # carrier_exploration モードの経路 (_build_carrier_scenarios / _compute_carrier_scenario) には
-    # 一切手を入れず、本経路として分離する。
 
     def _build_confirmed_results(
         self, sire_color: str, dam_color: str, breed: str | None

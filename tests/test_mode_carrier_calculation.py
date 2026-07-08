@@ -378,6 +378,3 @@ def test_conditional_only_normal_mode(calc) -> None:
     )
     assert explicit.confirmed_results is None
     assert explicit.conditional_color_groups is None
-    exploration = calc.calculate_report("Seal Point", "Black", breed=None, mode="carrier_exploration")
-    assert exploration.confirmed_results is None
-    assert exploration.conditional_color_groups is None

@@ -1,7 +1,6 @@
 {
  "Black Smoke|Cream|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -183,7 +182,6 @@
  },
  "Black|Black|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -290,7 +288,6 @@
  },
  "Blue Tabby-White|Shell Cameo|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -670,7 +667,6 @@
  },
  "Blue|Cream Tabby|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -794,7 +790,6 @@
  },
  "Brown Tabby|Brown Tabby|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -938,7 +933,6 @@
  },
  "Cameo Tabby|Blue Patched Tabby-White|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -1520,7 +1514,6 @@
  },
  "Chinchilla Golden|Black|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -1661,7 +1654,6 @@
  },
  "Chinchilla Golden|Cream Tabby-White|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -1915,7 +1907,6 @@
  },
  "Chinchilla Silver|Shaded Silver|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -2122,7 +2113,6 @@
  },
  "Chocolate|Black|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -2251,7 +2241,6 @@
  },
  "Cinnamon|Black|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -2380,7 +2369,6 @@
  },
  "Cream Tabby-White|Dilute Calico|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -2604,7 +2592,6 @@
  },
  "Lilac|Blue Patched Tabby-White|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -2869,7 +2856,6 @@
  },
  "Natural Mink|Natural Mink|Tonkinese|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -3076,7 +3062,6 @@
  },
  "Red Tabby|Blue Chinchilla Golden|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -3231,7 +3216,6 @@
  },
  "Red|Tortoiseshell|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -3388,7 +3372,6 @@
  },
  "Sable|Sable|Burmese|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -3489,7 +3472,6 @@
  },
  "Seal Point|Black|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -3618,7 +3600,6 @@
  },
  "Seal Point|Seal Point|Siamese|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -3719,7 +3700,6 @@
  },
  "Silver Tabby|Black|-|explicit_carrier": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [],
    "confirmed_results": null,
    "diagnostics": {
@@ -3845,7 +3825,6 @@
  },
  "Silver Tabby|Blue Patched Tabby-White|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -4427,7 +4406,6 @@
  },
  "Silver Tabby|Dilute Calico|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [
     {
      "assumed_carriers": {
@@ -5003,7 +4981,6 @@
  },
  "White|Black|-|normal": {
   "body": {
-   "carrier_exploration_results": null,
    "conditional_color_groups": [],
    "confirmed_results": null,
    "diagnostics": {
