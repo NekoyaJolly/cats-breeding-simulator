@@ -213,18 +213,18 @@ export function PwaStatus() {
   }
 
   return (
-    <aside className="fixed inset-x-3 bottom-3 z-[140] mx-auto max-w-md rounded-lg border border-slate-200 bg-white/95 p-3 text-sm shadow-lg backdrop-blur">
+    <aside className="fixed inset-x-3 bottom-3 z-[140] mx-auto max-w-md rounded-lg border border-line bg-surface/95 p-3 text-sm shadow-lg backdrop-blur">
       <div className="flex items-start gap-3">
-        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-700">
+        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-ink-soft">
           <Icon aria-hidden="true" className="h-4 w-4" weight="duotone" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-slate-900">{title}</p>
-          <p className="mt-0.5 text-xs leading-5 text-slate-600">{body}</p>
+          <p className="font-semibold text-ink">{title}</p>
+          <p className="mt-0.5 text-xs leading-5 text-ink-soft">{body}</p>
           {(isUpdate || isInstall) && (
             <button
               type="button"
-              className="mt-2 rounded-md bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-slate-700"
+              className="mt-2 rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-ink shadow-sm hover:bg-accent/90"
               onClick={isUpdate ? handleUpdate : handleInstall}
             >
               {isUpdate ? text.updateAction : text.installAction}
@@ -236,7 +236,7 @@ export function PwaStatus() {
             type="button"
             aria-label={text.close}
             title={text.close}
-            className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            className="rounded-full p-1 text-muted hover:bg-surface-2 hover:text-ink-soft"
             onClick={close}
           >
             <X aria-hidden="true" className="h-4 w-4" />

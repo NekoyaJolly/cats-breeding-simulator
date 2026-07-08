@@ -207,7 +207,7 @@ export function FeedbackWidget() {
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        className="fixed z-[150] flex items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700"
+        className="fixed z-[150] flex items-center justify-center rounded-full bg-accent text-accent-ink shadow-lg hover:bg-accent"
         style={{
           left: position.x,
           top: position.y,
@@ -234,11 +234,11 @@ export function FeedbackWidget() {
             role="dialog"
             aria-modal="true"
             aria-label={text.title}
-            className="w-full max-w-md rounded-lg bg-white p-5 shadow-xl"
+            className="w-full max-w-md rounded-lg bg-surface p-5 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-base font-bold text-slate-900">{text.title}</h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <h2 className="text-base font-bold text-ink">{text.title}</h2>
+            <p className="mt-1 text-sm text-ink-soft">
               {text.description}
               {MAX_LENGTH}
               {text.descriptionSuffix}
@@ -250,18 +250,18 @@ export function FeedbackWidget() {
               rows={4}
               autoFocus
               placeholder={text.placeholder}
-              className="mt-3 w-full resize-none rounded-md border border-slate-300 p-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="mt-3 w-full resize-none rounded-md border border-line p-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40"
             />
-            <div className="mt-1 text-right text-xs text-slate-400">
+            <div className="mt-1 text-right text-xs text-muted">
               {message.length} / {MAX_LENGTH}
             </div>
             {status === "error" && (
-              <p className="mt-1 text-sm text-red-600">
+              <p className="mt-1 text-sm text-danger">
                 {text.error}
               </p>
             )}
             {status === "sent" && (
-              <p className="mt-1 text-sm text-teal-600">
+              <p className="mt-1 text-sm text-accent">
                 {text.sent}
               </p>
             )}
@@ -270,7 +270,7 @@ export function FeedbackWidget() {
                 type="button"
                 onClick={close}
                 disabled={status === "sending"}
-                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                className="rounded-md border border-line px-3 py-1.5 text-sm text-ink-soft hover:bg-surface-2 disabled:opacity-50"
               >
                 {text.cancel}
               </button>
@@ -278,7 +278,7 @@ export function FeedbackWidget() {
                 type="button"
                 onClick={send}
                 disabled={!message.trim() || status === "sending"}
-                className="rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+                className="rounded-md bg-accent px-3 py-1.5 text-sm text-accent-ink hover:bg-accent disabled:opacity-50"
               >
                 {status === "sending" ? text.sending : text.send}
               </button>

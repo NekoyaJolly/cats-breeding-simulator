@@ -281,7 +281,7 @@ export function AppTour({
       aria-label={text.helpButton}
       title={text.helpButton}
       onClick={() => startTour("current")}
-      className="inline-flex h-10 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
+      className="inline-flex h-10 items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-xs font-semibold text-ink-soft shadow-sm transition hover:border-confirmed/30 hover:bg-confirmed-bg hover:text-confirmed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-confirmed"
     >
       <Question size={18} weight="duotone" aria-hidden="true" />
       <span className="hidden sm:inline">{text.helpButton}</span>
