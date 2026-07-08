@@ -166,3 +166,48 @@ describe("ResultView conditional colors", () => {
     ).toBeNull();
   });
 });
+
+// 全分布: 1%未満の色は既定で畳まれ、ボタンで展開すると一覧に現れる。
+describe("ResultView full distribution", () => {
+  it("1%未満の色は集約され、ボタンをクリックすると展開される", async () => {
+    const results: ResultEntry[] = [
+      { sex: "Male", color: "Black", probability_pct: 49 },
+      { sex: "Female", color: "Black", probability_pct: 49 },
+      { sex: "Male", color: "Blue", probability_pct: 1 },
+      { sex: "Female", color: "Blue", probability_pct: 1 },
+      // <1% の微小色 (集約対象)。
+      { sex: "Male", color: "Chocolate", probability_pct: 0.4 },
+      { sex: "Female", color: "Chocolate", probability_pct: 0.4 },
+    ];
+    render(
+      <ResultView data={buildResponse("Black", "Black", results)} language="ja" />,
+    );
+
+    // 「1%未満 · N色」の集約ボタンが (性別ごとに) 出る。
+    const toggles = screen.getAllByRole("button", { name: /1%未満/ });
+    expect(toggles.length).toBeGreaterThan(0);
+    // 既定では <1% の色 (Chocolate) は一覧に出ない。
+    expect(screen.queryByText("Chocolate")).toBeNull();
+
+    // クリックで展開すると現れる。
+    await userEvent.click(toggles[0]);
+    expect(screen.getAllByText("Chocolate").length).toBeGreaterThan(0);
+  });
+
+  it("白斑レベル (-White) は合算されず副次行で表示される", () => {
+    const results: ResultEntry[] = [
+      { sex: "Male", color: "Silver Tabby", probability_pct: 25 },
+      { sex: "Male", color: "Silver Tabby-White", probability_pct: 25 },
+      { sex: "Female", color: "Silver Tabby", probability_pct: 25 },
+      { sex: "Female", color: "Silver Tabby-White", probability_pct: 25 },
+    ];
+    render(
+      <ResultView
+        data={buildResponse("Silver Tabby", "Silver Tabby-White", results)}
+        language="ja"
+      />,
+    );
+    // ベース色 (Silver Tabby) に集約されつつ、-White の内訳が副次行 (└ -White) で残る。
+    expect(screen.getAllByText(/└ -White/).length).toBeGreaterThan(0);
+  });
+});

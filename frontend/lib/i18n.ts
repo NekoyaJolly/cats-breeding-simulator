@@ -166,8 +166,6 @@ export const UI_TEXT = {
       male: "Male",
       totalApprox: "合計 約",
       noPhenotype: "該当する表現型がありません。",
-      showDetails: "詳細を見る",
-      remaining: "残り",
       close: "閉じる",
       geneticsTitle: "遺伝子情報",
       geneticsDescription:
@@ -180,6 +178,8 @@ export const UI_TEXT = {
       none: "なし",
       assumptions: "前提条件:",
       confirmedTitle: "確定カラー",
+      distributionTitle: "全分布（周辺確率）",
+      belowOnePct: "1%未満",
       conditionalTitle: "If This Color Appears",
       conditionalHint:
         "隠れ遺伝子次第で出る色。出たら親の遺伝子型が判明します。",
@@ -444,8 +444,6 @@ export const UI_TEXT = {
       male: "Male",
       totalApprox: "Total approx. ",
       noPhenotype: "No matching phenotype.",
-      showDetails: "Show details",
-      remaining: "more",
       close: "Close",
       geneticsTitle: "Genetic details",
       geneticsDescription:
@@ -458,6 +456,8 @@ export const UI_TEXT = {
       none: "None",
       assumptions: "Assumptions:",
       confirmedTitle: "Confirmed colors",
+      distributionTitle: "Full distribution",
+      belowOnePct: "under 1%",
       conditionalTitle: "If This Color Appears",
       conditionalHint:
         "Colors that appear only with hidden genes. If they show, the parents' genotypes are revealed.",
