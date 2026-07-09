@@ -244,7 +244,8 @@ function SexMark({ sex, language }: { sex: string; language: Language }) {
       <Icon
         aria-hidden="true"
         className="h-3.5 w-3.5 shrink-0"
-        weight="bold"
+        // 全分布ヘッダーの性別アイコンと表現を揃える (duotone)。
+        weight="duotone"
         style={{ color: isMale ? "var(--r-male)" : "var(--r-female)" }}
       />
       <span className="sr-only">
