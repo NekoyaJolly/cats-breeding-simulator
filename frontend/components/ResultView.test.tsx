@@ -123,7 +123,7 @@ describe("ResultView conditional colors", () => {
       />,
     );
 
-    const toggle = screen.getByRole("button", { name: /If This Color/ });
+    const toggle = screen.getByRole("button", { name: /両親キャリア推定/ });
     // デフォルトは展開状態 (確定色と一緒に一覧で見える)。
     expect(toggle).toHaveAttribute("aria-expanded", "true");
     // グルーピングは色系統でなく遺伝子座 (原因キャリア) 単位。原因は逆推論の説明文に出る。
@@ -142,6 +142,21 @@ describe("ResultView conditional colors", () => {
     ).toBeNull();
   });
 
+  it("両親キャリア推定バッジに親ラベルと遺伝子型が表示される", () => {
+    // assumed_carriers = {sire:{D:"D/d"}, dam:{D:"D/d"}} → 同一遺伝子型なので「両親 D/d」に集約。
+    render(
+      <ResultView
+        data={withConditional(buildResponse("Black", "Black", BASE_RESULTS))}
+        language="ja"
+      />,
+    );
+    // 説明文にも同じ文字列が含まれるため、バッジ要素そのものを testid で特定して検証する。
+    const badges = screen.getAllByTestId("carrier-badge");
+    expect(badges).toHaveLength(1);
+    expect(badges[0]).toHaveTextContent("両親");
+    expect(badges[0]).toHaveTextContent("D/d");
+  });
+
   it("conditional_color_groups が空ならセクションを描画しない", () => {
     render(
       <ResultView
@@ -150,7 +165,7 @@ describe("ResultView conditional colors", () => {
       />,
     );
     expect(
-      screen.queryByRole("button", { name: /If This Color/ }),
+      screen.queryByRole("button", { name: /両親キャリア推定/ }),
     ).toBeNull();
   });
 
@@ -162,7 +177,7 @@ describe("ResultView conditional colors", () => {
     };
     render(<ResultView data={explicit} language="ja" />);
     expect(
-      screen.queryByRole("button", { name: /If This Color/ }),
+      screen.queryByRole("button", { name: /両親キャリア推定/ }),
     ).toBeNull();
   });
 });

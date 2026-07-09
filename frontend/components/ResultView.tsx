@@ -415,13 +415,38 @@ function FullDistribution({
 }
 
 // --- 推定色 (conditional_color_groups): 隠れキャリア仮定時のみ出る色。 ---
-type LocusConditionalGroup = {
+// 遺伝子座アイコン (D/A 等) は分かりにくいため、「父 D/d」のようなキャリア推定バッジで表示する。
+type CarrierBadge = { who: string; geno: string };
+type CarrierConditionalGroup = {
   scenario: string;
   reverseLabel: string;
-  loci: string[];
+  badges: CarrierBadge[];
   colors: Map<string, Set<string>>;
   pct: number;
 };
+
+// assumed_carriers から表示用のキャリア推定バッジを作る。父母が同一遺伝子型のときだけ「両親」に
+// 集約し、異なる/片方のみのときは父・母を個別に表示する (キー順・座位数に依存しない)。
+// 1親が複数座位を持つ場合は遺伝子型をまとめて表示する。
+function carrierBadges(
+  assumed: Record<string, Record<string, string>>,
+  language: Language,
+): CarrierBadge[] {
+  const text = UI_TEXT[language];
+  const genoOf = (loci: Record<string, string> | undefined): string =>
+    Object.values(loci ?? {})
+      .filter((value) => value)
+      .join(", ");
+  const sireGeno = genoOf(assumed.sire);
+  const damGeno = genoOf(assumed.dam);
+  if (sireGeno && damGeno && sireGeno === damGeno) {
+    return [{ who: text.parentResult.carrierBoth, geno: sireGeno }];
+  }
+  const badges: CarrierBadge[] = [];
+  if (sireGeno) badges.push({ who: text.parentResult.carrierSire, geno: sireGeno });
+  if (damGeno) badges.push({ who: text.parentResult.carrierDam, geno: damGeno });
+  return badges;
+}
 
 function ConditionalColorSection({
   groups,
@@ -433,24 +458,17 @@ function ConditionalColorSection({
   const text = UI_TEXT[language];
   const [open, setOpen] = useState(true);
 
-  const byScenario = new Map<string, LocusConditionalGroup>();
+  const byScenario = new Map<string, CarrierConditionalGroup>();
   for (const group of groups) {
-    const loci = [
-      ...new Set(
-        Object.values(group.assumed_carriers).flatMap((genotypes) =>
-          Object.keys(genotypes),
-        ),
-      ),
-    ];
     const entry =
       byScenario.get(group.scenario) ??
       ({
         scenario: group.scenario,
         reverseLabel: group.reverse_inference_label,
-        loci,
+        badges: carrierBadges(group.assumed_carriers, language),
         colors: new Map<string, Set<string>>(),
         pct: 0,
-      } satisfies LocusConditionalGroup);
+      } satisfies CarrierConditionalGroup);
     // -White を合算せず、色名そのまま (白斑バリアントを別個に) 保持する。
     for (const color of group.colors) {
       const sexes = entry.colors.get(color) ?? new Set<string>();
@@ -496,24 +514,40 @@ function ConditionalColorSection({
               className="rounded-lg p-2.5"
               style={{ background: "var(--r-surface)", border: "1px solid var(--r-hairline)" }}
             >
+              {/* ヘッダー: キャリア推定バッジ (例「父 D/d」) + 最大確率。 */}
               <div className="flex items-start justify-between gap-2">
-                <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-                  {group.loci.map((locus) => (
-                    <LocusChip key={locus} locus={locus} />
+                <span className="flex flex-wrap items-center gap-1">
+                  {group.badges.map((badge) => (
+                    <span
+                      key={`${badge.who}-${badge.geno}`}
+                      data-testid="carrier-badge"
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-bold"
+                      style={{
+                        color: "var(--r-conditional)",
+                        background: "color-mix(in srgb, var(--r-conditional) 14%, transparent)",
+                        border: "1px solid color-mix(in srgb, var(--r-conditional) 34%, transparent)",
+                      }}
+                    >
+                      <span>{badge.who}</span>
+                      <span className="tabular-nums">{badge.geno}</span>
+                    </span>
                   ))}
-                  {[...group.colors.entries()].map(([color, sexes]) => (
-                    <ColorChip
-                      key={color}
-                      color={color}
-                      sexes={[...sexes]}
-                      language={language}
-                    />
-                  ))}
-                </div>
+                </span>
                 <span className="shrink-0 text-[11px] tabular-nums" style={{ color: "var(--r-conditional)" }}>
                   {text.parentResult.conditionalMaxPct}
                   {formatPctInt(group.pct)}
                 </span>
+              </div>
+              {/* 出得る色柄 (確定色と同じチップ表現)。 */}
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                {[...group.colors.entries()].map(([color, sexes]) => (
+                  <ColorChip
+                    key={color}
+                    color={color}
+                    sexes={[...sexes]}
+                    language={language}
+                  />
+                ))}
               </div>
               <p className="mt-1.5 text-[11px] leading-relaxed" style={{ color: "var(--r-ink-soft)" }}>
                 {group.reverseLabel}
@@ -713,55 +747,35 @@ export function ResultView({
   const otherLoci = Object.keys(LOCUS_GLOSSARY).filter((locus) => !shownLoci.has(locus));
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* レポート本体 (確定色 → 全分布 → 推定色 → 注釈)。暖かいダーク島。 */}
-      <section
-        className="relative rounded-2xl px-4 pb-4 pt-5 shadow-sm"
-        style={{ background: "var(--r-surface)", border: "1px solid var(--r-hairline)" }}
-      >
-        <h2
-          className="absolute -top-0 left-3 z-[1] -translate-y-1/2 rounded px-1.5 text-[11px] font-semibold leading-4"
-          style={{ background: "var(--r-surface)", color: "var(--r-ink)" }}
-        >
-          {text.parentResult.title}
-        </h2>
-        <span
-          className="absolute -top-0 right-3 z-[1] -translate-y-1/2 rounded px-1.5 text-[11px] leading-4"
-          style={{ background: "var(--r-surface)", color: "var(--r-muted)" }}
-        >
-          {text.parentResult.mode}: {data.mode}
-        </span>
+    // 外枠セクション (「予測結果」「モード」フローティングラベル付き) は撤去し、
+    // 各サブセクションを直接並べてネストを浅く・横幅を活かす (モバイルの可読性改善)。
+    <div key={resultsKey} className="flex flex-col gap-2.5">
+      {/* ① 確定色 (normal モードで確定色があるときのみ。White は空なので出さない) */}
+      {hasConfirmed && (
+        <ConfirmedColors rows={data.confirmed_results ?? []} language={language} />
+      )}
 
-        <div key={resultsKey} className="flex flex-col gap-3">
-          {/* ① 確定色 (normal モードで確定色があるときのみ。White は空なので出さない) */}
-          {hasConfirmed && (
-            <ConfirmedColors rows={data.confirmed_results ?? []} language={language} />
-          )}
+      {/* ② 全分布 (周辺確率)。確定色があるときは畳み、無いとき (White 等) は開く。 */}
+      <FullDistribution
+        rows={data.results}
+        whiteSide={whiteSide}
+        language={language}
+        defaultOpen={!hasConfirmed}
+      />
 
-          {/* ② 全分布 (周辺確率)。確定色があるときは畳み、無いとき (White 等) は開く。 */}
-          <FullDistribution
-            rows={data.results}
-            whiteSide={whiteSide}
-            language={language}
-            defaultOpen={!hasConfirmed}
-          />
+      {/* ③ 推定色 (両親キャリア推定) */}
+      {data.mode === "normal" && data.conditional_color_groups.length > 0 && (
+        <ConditionalColorSection groups={data.conditional_color_groups} language={language} />
+      )}
 
-          {/* ③ 推定色 (もしこの色が出たら) */}
-          {data.mode === "normal" && data.conditional_color_groups.length > 0 && (
-            <ConditionalColorSection groups={data.conditional_color_groups} language={language} />
-          )}
-
-          {/* 補助: 親色不在注釈 / 通常モード注記 */}
-          <ParentColorNotes notes={data.parent_color_notes} language={language} />
-          {data.mode === "normal" && <NormalModeNote language={language} />}
-        </div>
-      </section>
+      {/* 補助: 親色不在注釈 / 通常モード注記 */}
+      <ParentColorNotes notes={data.parent_color_notes} language={language} />
+      {data.mode === "normal" && <NormalModeNote language={language} />}
 
       {/* 遺伝子座の診断 (開いた/閉じた座位・未分類率・前提)。 */}
       <section
-        className="rounded-xl p-4 text-sm"
+        className="rounded-xl p-3 text-sm"
         style={{ background: "var(--r-surface)", border: "1px solid var(--r-hairline)" }}
-        data-report-tokens
       >
         <h3 className="font-semibold" style={{ color: "var(--r-ink)" }}>
           {text.parentResult.geneticsTitle}
