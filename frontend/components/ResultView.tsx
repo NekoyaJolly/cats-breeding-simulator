@@ -236,17 +236,18 @@ function SexMark({ sex, language }: { sex: string; language: Language }) {
   // 想定外の性別文字列では何も描画しない (誤って Female 表示へ倒れるのを防ぐ)。
   if (sex !== "Male" && sex !== "Female") return null;
   const isMale = sex === "Male";
+  // ♂/♀ のテキストグリフはフォントのベースライン基準でスウォッチ/テキストより下に
+  // 見えていた。SVG アイコン (viewBox 中央基準) にして確実に行内中央へ揃える。
+  const Icon = isMale ? GenderMale : GenderFemale;
   return (
     <>
-      <span
+      <Icon
         aria-hidden="true"
-        // ♂/♀ グリフはベースライン基準だとスウォッチ/テキストより下に見えるため、
-        // inline-flex + leading-none で行内中央に揃える。
-        className="inline-flex items-center leading-none text-xs font-bold"
+        className="h-3.5 w-3.5 shrink-0"
+        // 全分布ヘッダーの性別アイコンと表現を揃える (duotone)。
+        weight="duotone"
         style={{ color: isMale ? "var(--r-male)" : "var(--r-female)" }}
-      >
-        {isMale ? "♂" : "♀"}
-      </span>
+      />
       <span className="sr-only">
         {isMale ? text.parentResult.male : text.parentResult.female}
       </span>
