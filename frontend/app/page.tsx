@@ -260,8 +260,9 @@ export default function HomePage() {
           )}
 
           {result && (
-            // 結果レポートは横余白を詰めて画面幅を活かす (縦余白は維持)。
-            <div className="mt-6 rounded-lg border border-line bg-surface px-2 py-4 shadow-sm sm:px-5 sm:py-6">
+            // 結果レポートは外枠 (border/bg/shadow/横パディング) を外し、各アコーディオン
+            // カード自体を器にして画面幅いっぱいに使う (冗長な二重フレームの解消)。
+            <div className="mt-6">
               <ResultView data={result} language={language} />
             </div>
           )}
