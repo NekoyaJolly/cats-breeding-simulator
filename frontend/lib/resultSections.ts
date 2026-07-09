@@ -1,12 +1,20 @@
 // 結果レポートのアコーディオン各セクションの「並び順」と「展開状態」を localStorage に永続化する。
 // 既定は全セクション非展開。ユーザーが展開/並び替えした最後の状態を保存し、次回計算結果に反映する。
+//
+// localStorage の値は外部入力相当なので、他の永続化 (localStoreSchema) と同様に
+// parseJsonValue + Zod safeParse で検証してから具体型へ narrow する。
 
-export type SectionId =
-  | "confirmed"
-  | "distribution"
-  | "conditional"
-  | "normalNote"
-  | "genetics";
+import { z } from "zod";
+import { parseJsonValue } from "./localStoreSchema";
+
+export const sectionIdSchema = z.enum([
+  "confirmed",
+  "distribution",
+  "conditional",
+  "normalNote",
+  "genetics",
+]);
+export type SectionId = z.infer<typeof sectionIdSchema>;
 
 // 既定の並び順 (確定色 → 全分布 → 両親キャリア推定 → 通常モード注記 → 遺伝子情報)。
 export const DEFAULT_SECTION_ORDER: readonly SectionId[] = [
@@ -20,29 +28,35 @@ export const DEFAULT_SECTION_ORDER: readonly SectionId[] = [
 const ORDER_KEY = "cbs:resultSectionOrder";
 const OPEN_KEY = "cbs:resultSectionOpen";
 
-const KNOWN: ReadonlySet<string> = new Set(DEFAULT_SECTION_ORDER);
+// 未知IDが混じっても全体を捨てず既知分だけ拾えるよう、要素は緩く string で受けて後段で narrow する
+// (バージョン差でセクションが増減しても壊れないようにするため)。
+const rawOrderSchema = z.array(z.string());
+const rawOpenSchema = z.record(z.boolean());
 
-function isSectionId(value: unknown): value is SectionId {
-  return typeof value === "string" && KNOWN.has(value);
+function readJson<T>(key: string, schema: z.ZodType<T>): T | null {
+  let raw: string | null;
+  try {
+    raw = localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+  if (raw === null) return null;
+  const json = parseJsonValue(raw);
+  if (json === null) return null;
+  const parsed = schema.safeParse(json);
+  return parsed.success ? parsed.data : null;
 }
 
 /** 保存済みの並び順を返す。既知IDのみに正規化し、欠けているIDは既定順で末尾補完する。 */
 export function loadSectionOrder(): SectionId[] {
-  let stored: unknown = null;
-  try {
-    const raw = localStorage.getItem(ORDER_KEY);
-    stored = raw ? JSON.parse(raw) : null;
-  } catch {
-    stored = null;
-  }
+  const stored = readJson(ORDER_KEY, rawOrderSchema) ?? [];
   const seen = new Set<SectionId>();
   const order: SectionId[] = [];
-  if (Array.isArray(stored)) {
-    for (const value of stored) {
-      if (isSectionId(value) && !seen.has(value)) {
-        seen.add(value);
-        order.push(value);
-      }
+  for (const value of stored) {
+    const id = sectionIdSchema.safeParse(value);
+    if (id.success && !seen.has(id.data)) {
+      seen.add(id.data);
+      order.push(id.data);
     }
   }
   // 未知/欠落は既定順で補完 (新セクション追加時も壊れない)。
@@ -62,18 +76,11 @@ export function saveSectionOrder(order: SectionId[]): void {
 
 /** 保存済みの展開状態 (id → open) を返す。未保存は空 = 全非展開。 */
 export function loadSectionOpen(): Partial<Record<SectionId, boolean>> {
-  let stored: unknown = null;
-  try {
-    const raw = localStorage.getItem(OPEN_KEY);
-    stored = raw ? JSON.parse(raw) : null;
-  } catch {
-    stored = null;
-  }
+  const stored = readJson(OPEN_KEY, rawOpenSchema) ?? {};
   const open: Partial<Record<SectionId, boolean>> = {};
-  if (stored && typeof stored === "object") {
-    for (const [key, value] of Object.entries(stored)) {
-      if (isSectionId(key) && typeof value === "boolean") open[key] = value;
-    }
+  for (const [key, value] of Object.entries(stored)) {
+    const id = sectionIdSchema.safeParse(key);
+    if (id.success) open[id.data] = value;
   }
   return open;
 }

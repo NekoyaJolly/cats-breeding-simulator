@@ -10,9 +10,19 @@ beforeEach(() => {
   localStorage.clear();
 });
 
-// セクション見出し (アコーディオン開閉トグル) をクリックして中身を展開する。
+// セクション見出しトグルを取得する。ドラッグハンドルの aria-label も同じセクション名を含むため、
+// aria-expanded を持つ (= 開閉トグルである) ボタンに限定して曖昧さを避ける。
+function sectionToggle(title: RegExp | string): HTMLElement {
+  const toggle = screen
+    .getAllByRole("button", { name: title })
+    .find((button) => button.hasAttribute("aria-expanded"));
+  if (!toggle) throw new Error(`section toggle not found: ${title}`);
+  return toggle;
+}
+
+// セクション見出しトグルをクリックして中身を展開する。
 async function openSection(title: RegExp | string): Promise<void> {
-  await userEvent.click(screen.getByRole("button", { name: title }));
+  await userEvent.click(sectionToggle(title));
 }
 
 // WHITE-4: AOC (Any Other Color) 行のフォーカス/クリックで説明が開き、通常時は説明を出さない。
@@ -136,7 +146,7 @@ describe("ResultView conditional colors", () => {
       />,
     );
 
-    const toggle = screen.getByRole("button", { name: /両親キャリア推定/ });
+    const toggle = sectionToggle(/両親キャリア推定/);
     // 既定は非展開 (統一アコーディオン。展開状態は localStorage 永続)。
     expect(toggle).toHaveAttribute("aria-expanded", "false");
     expect(
@@ -244,33 +254,18 @@ describe("ResultView full distribution", () => {
     };
     // 統一アコーディオン: 確定色の有無に関わらず、既定はすべて非展開。
     const { unmount } = render(<ResultView data={withConfirmed} language="ja" />);
-    expect(screen.getByRole("button", { name: /確定カラー/ })).toHaveAttribute(
-      "aria-expanded",
-      "false",
-    );
-    expect(screen.getByRole("button", { name: /全分布/ })).toHaveAttribute(
-      "aria-expanded",
-      "false",
-    );
+    expect(sectionToggle(/確定カラー/)).toHaveAttribute("aria-expanded", "false");
+    expect(sectionToggle(/全分布/)).toHaveAttribute("aria-expanded", "false");
 
     // ユーザーが全分布を展開すると localStorage に保存される。
     await openSection(/全分布/);
-    expect(screen.getByRole("button", { name: /全分布/ })).toHaveAttribute(
-      "aria-expanded",
-      "true",
-    );
+    expect(sectionToggle(/全分布/)).toHaveAttribute("aria-expanded", "true");
     unmount();
 
     // 次回の計算結果 (再マウント) では、保存された展開状態で復元される。
     render(<ResultView data={withConfirmed} language="ja" />);
-    expect(screen.getByRole("button", { name: /全分布/ })).toHaveAttribute(
-      "aria-expanded",
-      "true",
-    );
-    expect(screen.getByRole("button", { name: /確定カラー/ })).toHaveAttribute(
-      "aria-expanded",
-      "false",
-    );
+    expect(sectionToggle(/全分布/)).toHaveAttribute("aria-expanded", "true");
+    expect(sectionToggle(/確定カラー/)).toHaveAttribute("aria-expanded", "false");
   });
 
   it("確定色は -White を合算せず、ベース色と -White を別チップで表示する", async () => {

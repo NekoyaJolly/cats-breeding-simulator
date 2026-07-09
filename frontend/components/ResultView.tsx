@@ -166,7 +166,7 @@ function AccordionSection({
           type="button"
           {...attributes}
           {...listeners}
-          aria-label={dragLabel}
+          aria-label={`${dragLabel}: ${title}`}
           className="flex h-9 w-7 shrink-0 cursor-grab touch-none items-center justify-center rounded active:cursor-grabbing"
           style={{ color: "var(--r-muted)" }}
         >
