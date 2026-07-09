@@ -739,55 +739,35 @@ export function ResultView({
   const otherLoci = Object.keys(LOCUS_GLOSSARY).filter((locus) => !shownLoci.has(locus));
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* レポート本体 (確定色 → 全分布 → 推定色 → 注釈)。暖かいダーク島。 */}
-      <section
-        className="relative rounded-2xl px-4 pb-4 pt-5 shadow-sm"
-        style={{ background: "var(--r-surface)", border: "1px solid var(--r-hairline)" }}
-      >
-        <h2
-          className="absolute -top-0 left-3 z-[1] -translate-y-1/2 rounded px-1.5 text-[11px] font-semibold leading-4"
-          style={{ background: "var(--r-surface)", color: "var(--r-ink)" }}
-        >
-          {text.parentResult.title}
-        </h2>
-        <span
-          className="absolute -top-0 right-3 z-[1] -translate-y-1/2 rounded px-1.5 text-[11px] leading-4"
-          style={{ background: "var(--r-surface)", color: "var(--r-muted)" }}
-        >
-          {text.parentResult.mode}: {data.mode}
-        </span>
+    // 外枠セクション (「予測結果」「モード」フローティングラベル付き) は撤去し、
+    // 各サブセクションを直接並べてネストを浅く・横幅を活かす (モバイルの可読性改善)。
+    <div key={resultsKey} className="flex flex-col gap-2.5">
+      {/* ① 確定色 (normal モードで確定色があるときのみ。White は空なので出さない) */}
+      {hasConfirmed && (
+        <ConfirmedColors rows={data.confirmed_results ?? []} language={language} />
+      )}
 
-        <div key={resultsKey} className="flex flex-col gap-3">
-          {/* ① 確定色 (normal モードで確定色があるときのみ。White は空なので出さない) */}
-          {hasConfirmed && (
-            <ConfirmedColors rows={data.confirmed_results ?? []} language={language} />
-          )}
+      {/* ② 全分布 (周辺確率)。確定色があるときは畳み、無いとき (White 等) は開く。 */}
+      <FullDistribution
+        rows={data.results}
+        whiteSide={whiteSide}
+        language={language}
+        defaultOpen={!hasConfirmed}
+      />
 
-          {/* ② 全分布 (周辺確率)。確定色があるときは畳み、無いとき (White 等) は開く。 */}
-          <FullDistribution
-            rows={data.results}
-            whiteSide={whiteSide}
-            language={language}
-            defaultOpen={!hasConfirmed}
-          />
+      {/* ③ 推定色 (両親キャリア推定) */}
+      {data.mode === "normal" && data.conditional_color_groups.length > 0 && (
+        <ConditionalColorSection groups={data.conditional_color_groups} language={language} />
+      )}
 
-          {/* ③ 推定色 (もしこの色が出たら) */}
-          {data.mode === "normal" && data.conditional_color_groups.length > 0 && (
-            <ConditionalColorSection groups={data.conditional_color_groups} language={language} />
-          )}
-
-          {/* 補助: 親色不在注釈 / 通常モード注記 */}
-          <ParentColorNotes notes={data.parent_color_notes} language={language} />
-          {data.mode === "normal" && <NormalModeNote language={language} />}
-        </div>
-      </section>
+      {/* 補助: 親色不在注釈 / 通常モード注記 */}
+      <ParentColorNotes notes={data.parent_color_notes} language={language} />
+      {data.mode === "normal" && <NormalModeNote language={language} />}
 
       {/* 遺伝子座の診断 (開いた/閉じた座位・未分類率・前提)。 */}
       <section
-        className="rounded-xl p-4 text-sm"
+        className="rounded-xl p-3 text-sm"
         style={{ background: "var(--r-surface)", border: "1px solid var(--r-hairline)" }}
-        data-report-tokens
       >
         <h3 className="font-semibold" style={{ color: "var(--r-ink)" }}>
           {text.parentResult.geneticsTitle}
