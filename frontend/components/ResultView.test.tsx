@@ -189,6 +189,22 @@ describe("ResultView conditional colors", () => {
     expect(badges[0]).toHaveTextContent("D/d");
   });
 
+  it("確定カラー/全分布/両親キャリア推定 のタイトルに結果件数を出す (遺伝子情報には出さない)", () => {
+    render(
+      <ResultView
+        data={withConditional(buildResponse("Black", "Black", BASE_RESULTS))}
+        language="ja"
+      />,
+    );
+    // 確定=チップ2件 / 全分布=異なる毛色1件 (Black のみ) / 両親キャリア推定=1グループ。
+    // 件数はトグルのアクセシブルネーム ("N件") として露出する。
+    expect(sectionToggle(/確定カラー/)).toHaveAccessibleName(/2件/);
+    expect(sectionToggle(/全分布/)).toHaveAccessibleName(/1件/);
+    expect(sectionToggle(/両親キャリア推定/)).toHaveAccessibleName(/1件/);
+    // 件数を持たないセクションにはバッジを出さない。
+    expect(sectionToggle(/遺伝子情報/)).not.toHaveAccessibleName(/件/);
+  });
+
   it("conditional_color_groups が空ならセクションを描画しない", () => {
     render(
       <ResultView
@@ -214,15 +230,15 @@ describe("ResultView conditional colors", () => {
   });
 });
 
-// 全分布: 1%未満の色は既定で畳まれ、ボタンで展開すると一覧に現れる。
+// 全分布: 1%未満の色も集約せず、全色を直接一覧に出す。
 describe("ResultView full distribution", () => {
-  it("1%未満の色は集約され、ボタンをクリックすると展開される", async () => {
+  it("1%未満の色も集約せず直接一覧に出す (集約ボタンは無い)", async () => {
     const results: ResultEntry[] = [
       { sex: "Male", color: "Black", probability_pct: 49 },
       { sex: "Female", color: "Black", probability_pct: 49 },
       { sex: "Male", color: "Blue", probability_pct: 1 },
       { sex: "Female", color: "Blue", probability_pct: 1 },
-      // <1% の微小色 (集約対象)。
+      // <1% の微小色。集約せずそのまま出す。
       { sex: "Male", color: "Chocolate", probability_pct: 0.4 },
       { sex: "Female", color: "Chocolate", probability_pct: 0.4 },
     ];
@@ -232,15 +248,12 @@ describe("ResultView full distribution", () => {
 
     // 全分布はアコーディオン内。展開してから内訳を検証する。
     await openSection(/全分布/);
-    // 「1%未満 · N色」の集約ボタンが (性別ごとに) 出る。
-    const toggles = screen.getAllByRole("button", { name: /1%未満/ });
-    expect(toggles.length).toBeGreaterThan(0);
-    // 既定では <1% の色 (Chocolate) は一覧に出ない。
-    expect(screen.queryByText("Chocolate")).toBeNull();
-
-    // クリックで展開すると現れる。
-    await userEvent.click(toggles[0]);
+    // 「1%未満 · N色」の集約ボタンは廃止済み。
+    expect(screen.queryByRole("button", { name: /1%未満/ })).toBeNull();
+    // <1% の色 (Chocolate) もトグルなしで直接出る ( ♂♀ で複数)。
     expect(screen.getAllByText("Chocolate").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Black").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Blue").length).toBeGreaterThan(0);
   });
 
   it("全セクションは既定で非展開、展開状態は localStorage に永続化され次回に引き継がれる", async () => {
