@@ -205,6 +205,18 @@ describe("ResultView conditional colors", () => {
     expect(sectionToggle(/遺伝子情報/)).not.toHaveAccessibleName(/件/);
   });
 
+  it("英語の件数ラベルは単複を切り替える (1 item / N items)", () => {
+    render(
+      <ResultView
+        data={withConditional(buildResponse("Black", "Black", BASE_RESULTS))}
+        language="en"
+      />,
+    );
+    // 確定=2 → 複数形、全分布=1 → 単数形。
+    expect(sectionToggle(/Confirmed colors/)).toHaveAccessibleName("Confirmed colors 2 items");
+    expect(sectionToggle(/Full distribution/)).toHaveAccessibleName("Full distribution 1 item");
+  });
+
   it("conditional_color_groups が空ならセクションを描画しない", () => {
     render(
       <ResultView

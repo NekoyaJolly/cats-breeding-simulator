@@ -806,7 +806,7 @@ export function ResultView({
   const distributionCount = groupByBase(data.results).length;
   const conditionalCount = data.conditional_color_groups.length;
   const countLabelOf = (n: number): string =>
-    language === "ja" ? `${n}件` : `${n} items`;
+    language === "ja" ? `${n}件` : `${n} item${n === 1 ? "" : "s"}`;
 
   // 並び順・展開状態は localStorage に永続化 (既定は全非展開)。マウント後に読み込む。
   const [order, setOrder] = useState<SectionId[]>(() => [...DEFAULT_SECTION_ORDER]);
