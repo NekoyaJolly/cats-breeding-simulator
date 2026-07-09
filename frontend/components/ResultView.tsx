@@ -339,7 +339,6 @@ function SexDistribution({
   const text = UI_TEXT[language];
   const groups = groupByBase(rows);
   const total = rows.reduce((sum, row) => sum + row.probability_pct, 0);
-  const max = Math.max(...groups.map((group) => group.total), 1);
   const tint = sex === "Male" ? "var(--r-male)" : "var(--r-female)";
 
   // 1%未満も集約せず全色をそのまま行にする (微小確率でも「出得る色」を隠さない)。
@@ -364,14 +363,21 @@ function SexDistribution({
           {formatPctInt(group.total)}
         </span>
       </div>
+      {/* 確率メーター: 列内の最大値基準ではなく絶対確率 (0〜100%) をトラック上に描く。
+          これで数値とバー長が一致し、〜35% が満杯 (右端) にならない。 */}
       <div
-        className="mt-[3px] h-[3px] rounded"
-        style={{
-          width: `${Math.max(2, (group.total / max) * 100)}%`,
-          background: tint,
-          opacity: 0.8,
-        }}
-      />
+        className="mt-[3px] h-[3px] w-full overflow-hidden rounded"
+        style={{ background: "var(--r-hairline-soft)" }}
+      >
+        <div
+          className="h-full rounded"
+          style={{
+            width: `${Math.min(100, Math.max(2, group.total))}%`,
+            background: tint,
+            opacity: 0.85,
+          }}
+        />
+      </div>
       {/* 白斑レベル (-White / -White Van) の内訳。合算で消えないよう副次行で残す。 */}
       {group.whites.length > 0 && (
         <div className="mt-0.5 flex flex-col gap-0.5 pl-6">
