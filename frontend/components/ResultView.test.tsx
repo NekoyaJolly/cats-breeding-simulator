@@ -142,6 +142,19 @@ describe("ResultView conditional colors", () => {
     ).toBeNull();
   });
 
+  it("両親キャリア推定バッジに親ラベルと遺伝子型が表示される", () => {
+    // assumed_carriers = {sire:{D:"D/d"}, dam:{D:"D/d"}} → 同一遺伝子型なので「両親 D/d」に集約。
+    render(
+      <ResultView
+        data={withConditional(buildResponse("Black", "Black", BASE_RESULTS))}
+        language="ja"
+      />,
+    );
+    // 親ラベルと遺伝子型がバッジとして (説明文とは別の要素で) 出る。
+    expect(screen.getByText("両親")).toBeInTheDocument();
+    expect(screen.getByText("D/d")).toBeInTheDocument();
+  });
+
   it("conditional_color_groups が空ならセクションを描画しない", () => {
     render(
       <ResultView

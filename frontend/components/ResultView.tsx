@@ -416,38 +416,36 @@ function FullDistribution({
 
 // --- 推定色 (conditional_color_groups): 隠れキャリア仮定時のみ出る色。 ---
 // 遺伝子座アイコン (D/A 等) は分かりにくいため、「父 D/d」のようなキャリア推定バッジで表示する。
+type CarrierBadge = { who: string; geno: string };
 type CarrierConditionalGroup = {
   scenario: string;
   reverseLabel: string;
-  who: string; // "sire" / "dam" / "both"
-  geno: string; // 例 "D/d"
+  badges: CarrierBadge[];
   colors: Map<string, Set<string>>;
   pct: number;
 };
 
-// assumed_carriers から「どちらの親が・どの遺伝子型の保因か」を取り出す。
-// キー順に依存しないよう sire/dam の有無を明示チェックし、geno は全値から取り出す。
-function carrierHypothesis(assumed: Record<string, Record<string, string>>): {
-  who: string;
-  geno: string;
-} {
-  const keys = Object.keys(assumed);
-  const hasSire = keys.includes("sire");
-  const hasDam = keys.includes("dam");
-  const who = hasSire && hasDam ? "both" : hasDam ? "dam" : "sire";
-  // 1シナリオは単座位なので全親・全座位の値は同一。最初の非空値を取る (順序非依存)。
-  const geno =
-    Object.values(assumed)
-      .flatMap((loci) => Object.values(loci))
-      .find((value) => value) ?? "";
-  return { who, geno };
-}
-
-function carrierWhoLabel(who: string, language: Language): string {
+// assumed_carriers から表示用のキャリア推定バッジを作る。父母が同一遺伝子型のときだけ「両親」に
+// 集約し、異なる/片方のみのときは父・母を個別に表示する (キー順・座位数に依存しない)。
+// 1親が複数座位を持つ場合は遺伝子型をまとめて表示する。
+function carrierBadges(
+  assumed: Record<string, Record<string, string>>,
+  language: Language,
+): CarrierBadge[] {
   const text = UI_TEXT[language];
-  if (who === "both") return text.parentResult.carrierBoth;
-  if (who === "dam") return text.parentResult.carrierDam;
-  return text.parentResult.carrierSire;
+  const genoOf = (loci: Record<string, string> | undefined): string =>
+    Object.values(loci ?? {})
+      .filter((value) => value)
+      .join(", ");
+  const sireGeno = genoOf(assumed.sire);
+  const damGeno = genoOf(assumed.dam);
+  if (sireGeno && damGeno && sireGeno === damGeno) {
+    return [{ who: text.parentResult.carrierBoth, geno: sireGeno }];
+  }
+  const badges: CarrierBadge[] = [];
+  if (sireGeno) badges.push({ who: text.parentResult.carrierSire, geno: sireGeno });
+  if (damGeno) badges.push({ who: text.parentResult.carrierDam, geno: damGeno });
+  return badges;
 }
 
 function ConditionalColorSection({
@@ -462,14 +460,12 @@ function ConditionalColorSection({
 
   const byScenario = new Map<string, CarrierConditionalGroup>();
   for (const group of groups) {
-    const { who, geno } = carrierHypothesis(group.assumed_carriers);
     const entry =
       byScenario.get(group.scenario) ??
       ({
         scenario: group.scenario,
         reverseLabel: group.reverse_inference_label,
-        who,
-        geno,
+        badges: carrierBadges(group.assumed_carriers, language),
         colors: new Map<string, Set<string>>(),
         pct: 0,
       } satisfies CarrierConditionalGroup);
@@ -519,17 +515,22 @@ function ConditionalColorSection({
               style={{ background: "var(--r-surface)", border: "1px solid var(--r-hairline)" }}
             >
               {/* ヘッダー: キャリア推定バッジ (例「父 D/d」) + 最大確率。 */}
-              <div className="flex items-center justify-between gap-2">
-                <span
-                  className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-bold"
-                  style={{
-                    color: "var(--r-conditional)",
-                    background: "color-mix(in srgb, var(--r-conditional) 14%, transparent)",
-                    border: "1px solid color-mix(in srgb, var(--r-conditional) 34%, transparent)",
-                  }}
-                >
-                  {carrierWhoLabel(group.who, language)}
-                  <span className="tabular-nums">{group.geno}</span>
+              <div className="flex items-start justify-between gap-2">
+                <span className="flex flex-wrap items-center gap-1">
+                  {group.badges.map((badge) => (
+                    <span
+                      key={`${badge.who}-${badge.geno}`}
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-bold"
+                      style={{
+                        color: "var(--r-conditional)",
+                        background: "color-mix(in srgb, var(--r-conditional) 14%, transparent)",
+                        border: "1px solid color-mix(in srgb, var(--r-conditional) 34%, transparent)",
+                      }}
+                    >
+                      <span>{badge.who}</span>
+                      <span className="tabular-nums">{badge.geno}</span>
+                    </span>
+                  ))}
                 </span>
                 <span className="shrink-0 text-[11px] tabular-nums" style={{ color: "var(--r-conditional)" }}>
                   {text.parentResult.conditionalMaxPct}
