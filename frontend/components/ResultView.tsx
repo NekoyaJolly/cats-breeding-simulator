@@ -363,8 +363,10 @@ function SexDistribution({
           {formatPctInt(group.total)}
         </span>
       </div>
-      {/* 確率メーター: 列内の最大値基準ではなく絶対確率 (0〜100%) をトラック上に描く。
-          これで数値とバー長が一致し、〜35% が満杯 (右端) にならない。 */}
+      {/* 確率メーター: 列内の最大値で正規化せず、絶対確率 (0〜100%) スケールでトラック上に
+          描く。バー長がそのまま確率を表すので、〜35% が満杯 (右端) にならない。
+          (数値ラベルは formatPctInt で丸め、バーは未丸めの group.total を使うため厳密一致
+          ではないが、読み取り上のスケールは 0〜100%。) */}
       <div
         className="mt-[3px] h-[3px] w-full overflow-hidden rounded"
         style={{ background: "var(--r-hairline-soft)" }}
