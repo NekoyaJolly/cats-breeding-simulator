@@ -802,8 +802,10 @@ export function ResultView({
   const otherLoci = Object.keys(LOCUS_GLOSSARY).filter((locus) => !shownLoci.has(locus));
 
   // セクションタイトルに出す結果件数。確定=チップ数 / 全分布=異なる毛色数 / 推定=グループ数。
+  // 全分布の件数は「異なるベース色数」なので、groupByBase の割り当て/ソートを介さず
+  // splitWhite + Set で O(n) に数える (件数のためだけに ColorGroup を作らない)。
   const confirmedCount = data.confirmed_results?.length ?? 0;
-  const distributionCount = groupByBase(data.results).length;
+  const distributionCount = new Set(data.results.map((row) => splitWhite(row.color).base)).size;
   const conditionalCount = data.conditional_color_groups.length;
   const countLabelOf = (n: number): string =>
     language === "ja" ? `${n}件` : `${n} item${n === 1 ? "" : "s"}`;
