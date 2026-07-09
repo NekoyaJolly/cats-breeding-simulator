@@ -240,7 +240,9 @@ function SexMark({ sex, language }: { sex: string; language: Language }) {
     <>
       <span
         aria-hidden="true"
-        className="text-xs font-bold"
+        // ♂/♀ グリフはベースライン基準だとスウォッチ/テキストより下に見えるため、
+        // inline-flex + leading-none で行内中央に揃える。
+        className="inline-flex items-center leading-none text-xs font-bold"
         style={{ color: isMale ? "var(--r-male)" : "var(--r-female)" }}
       >
         {isMale ? "♂" : "♀"}
