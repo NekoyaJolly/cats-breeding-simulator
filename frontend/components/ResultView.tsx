@@ -368,10 +368,12 @@ function SexDistribution({
           (数値ラベルは formatPctInt で丸め、バーは未丸めの group.total を使うため厳密一致
           ではないが、読み取り上のスケールは 0〜100%。) */}
       <div
+        data-testid="dist-meter-track"
         className="mt-[3px] h-[3px] w-full overflow-hidden rounded"
         style={{ background: "var(--r-hairline-soft)" }}
       >
         <div
+          data-testid="dist-meter-fill"
           className="h-full rounded"
           style={{
             // 幅は絶対確率そのもの。%下限はスケールを大きく歪めるので使わない。
