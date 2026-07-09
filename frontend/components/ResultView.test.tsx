@@ -290,6 +290,12 @@ describe("ResultView full distribution", () => {
       const region = document.getElementById(controls);
       expect(region).toBeInTheDocument();
       expect(region).toHaveAttribute("role", "region");
+      // region は無名にせず、見出し (aria-labelledby) で名付ける。
+      const labelledby = region?.getAttribute("aria-labelledby");
+      expect(labelledby).toBeTruthy();
+      if (labelledby) {
+        expect(document.getElementById(labelledby)?.textContent).toContain("全分布");
+      }
     }
   });
 

@@ -151,7 +151,9 @@ function AccordionSection({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id });
   // 開閉トグルと展開コンテンツを aria-controls / id で紐付ける (SR での領域追跡)。
+  // region には見出し (titleId) を aria-labelledby で名付け、無名 region を避ける。
   const contentId = `result-section-${id}`;
+  const titleId = `${contentId}-title`;
   const style: CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -188,6 +190,7 @@ function AccordionSection({
             style={{ background: tick }}
           />
           <span
+            id={titleId}
             className="text-[11px] font-bold uppercase tracking-wider"
             style={{ color: tick }}
           >
@@ -202,7 +205,7 @@ function AccordionSection({
         </button>
       </div>
       {open && (
-        <div id={contentId} role="region" className="px-2.5 pb-2.5">
+        <div id={contentId} role="region" aria-labelledby={titleId} className="px-2.5 pb-2.5">
           {children}
         </div>
       )}
