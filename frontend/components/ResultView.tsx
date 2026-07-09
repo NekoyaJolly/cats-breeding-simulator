@@ -48,7 +48,6 @@ import {
 // レポートの配色トークン (--r-*) は globals.css で light/dark 両対応に定義している
 // (ResultView 内では var(--r-*) を直接参照する)。
 
-// 1%未満を集約する閾値。ユーザー指定 (低確率は畳んで一覧性を上げる)。
 // --- 確率整形 ---
 function formatPct(value: number): string {
   return `${value.toFixed(1)}%`;
@@ -318,7 +317,7 @@ function ConfirmedBody({
   );
 }
 
-// --- 全分布 (results): 1性別ぶんの周辺確率。スウォッチ + 確率バー。<1% は集約。 ---
+// --- 全分布 (results): 1性別ぶんの周辺確率。スウォッチ + 確率バー。1%未満も集約しない。 ---
 function SexDistribution({
   title,
   sex,
