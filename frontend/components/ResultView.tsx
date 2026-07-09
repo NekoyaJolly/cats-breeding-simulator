@@ -438,7 +438,9 @@ function DistributionBody({
   const male = rows.filter((row) => row.sex === "Male");
   const female = rows.filter((row) => row.sex === "Female");
   return (
-    <div className="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
+    // HTML レポート同様、オス/メスを常に2カラムで水平に並べる (モバイルでも縦積みにしない)。
+    // モバイルは gap を詰めて各列の横幅を確保する。
+    <div className="grid grid-cols-2 gap-x-3 gap-y-3 sm:gap-x-5">
       <SexDistribution
         title={text.parentResult.male}
         sex="Male"
