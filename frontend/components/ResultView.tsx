@@ -426,14 +426,20 @@ type CarrierConditionalGroup = {
 };
 
 // assumed_carriers から「どちらの親が・どの遺伝子型の保因か」を取り出す。
+// キー順に依存しないよう sire/dam の有無を明示チェックし、geno は全値から取り出す。
 function carrierHypothesis(assumed: Record<string, Record<string, string>>): {
   who: string;
   geno: string;
 } {
-  const parents = Object.keys(assumed);
-  const who = parents.length >= 2 ? "both" : (parents[0] ?? "");
-  const firstLoci = Object.values(assumed)[0] ?? {};
-  const geno = Object.values(firstLoci)[0] ?? "";
+  const keys = Object.keys(assumed);
+  const hasSire = keys.includes("sire");
+  const hasDam = keys.includes("dam");
+  const who = hasSire && hasDam ? "both" : hasDam ? "dam" : "sire";
+  // 1シナリオは単座位なので全親・全座位の値は同一。最初の非空値を取る (順序非依存)。
+  const geno =
+    Object.values(assumed)
+      .flatMap((loci) => Object.values(loci))
+      .find((value) => value) ?? "";
   return { who, geno };
 }
 
