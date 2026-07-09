@@ -374,8 +374,9 @@ function SexDistribution({
         <div
           className="h-full rounded"
           style={{
-            // 幅は絶対確率そのもの (%下限でスケールを歪めない)。極小確率でも見えるよう
-            // 可視性はピクセル最小幅で確保する (%ではなく px なのでスケールは崩れない)。
+            // 幅は絶対確率そのもの。%下限はスケールを大きく歪めるので使わない。
+            // 極小確率でも見えるよう最小幅を px で確保する (この 2px 分だけ極小確率は
+            // 実際より僅かに長く見えるが、可視性優先の意図的なトレードオフ)。
             width: `${Math.min(100, group.total)}%`,
             minWidth: "2px",
             background: tint,
