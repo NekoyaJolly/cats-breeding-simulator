@@ -48,9 +48,6 @@ import {
 // レポートの配色トークン (--r-*) は globals.css で light/dark 両対応に定義している
 // (ResultView 内では var(--r-*) を直接参照する)。
 
-// 1%未満を集約する閾値。ユーザー指定 (低確率は畳んで一覧性を上げる)。
-const LOW_PCT_THRESHOLD = 1;
-
 // --- 確率整形 ---
 function formatPct(value: number): string {
   return `${value.toFixed(1)}%`;
@@ -138,6 +135,8 @@ function AccordionSection({
   open,
   onToggle,
   dragLabel,
+  count,
+  countLabel,
   children,
 }: {
   id: SectionId;
@@ -146,6 +145,8 @@ function AccordionSection({
   open: boolean;
   onToggle: () => void;
   dragLabel: string;
+  count?: number;
+  countLabel?: string;
   children: ReactNode;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
@@ -196,9 +197,19 @@ function AccordionSection({
           >
             {title}
           </span>
+          {/* 結果件数バッジ (トグル手前に右寄せ)。計算直後であることを示し、トグルの意味も立てる。 */}
+          {count != null && (
+            <span
+              className="ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums"
+              style={{ background: "var(--r-surface-2)", color: "var(--r-muted)" }}
+              aria-label={countLabel}
+            >
+              {count}
+            </span>
+          )}
           <CaretRight
             aria-hidden="true"
-            className="ml-auto h-3.5 w-3.5 shrink-0 transition-transform"
+            className={`${count != null ? "ml-1.5" : "ml-auto"} h-3.5 w-3.5 shrink-0 transition-transform`}
             weight="bold"
             style={{ color: "var(--r-muted)", transform: open ? "rotate(90deg)" : "none" }}
           />
@@ -306,7 +317,7 @@ function ConfirmedBody({
   );
 }
 
-// --- 全分布 (results): 1性別ぶんの周辺確率。スウォッチ + 確率バー。<1% は集約。 ---
+// --- 全分布 (results): 1性別ぶんの周辺確率。スウォッチ + 確率バー。1%未満も集約しない。 ---
 function SexDistribution({
   title,
   sex,
@@ -323,21 +334,19 @@ function SexDistribution({
   language: Language;
 }) {
   const text = UI_TEXT[language];
-  const [showLow, setShowLow] = useState(false);
   const groups = groupByBase(rows);
   const total = rows.reduce((sum, row) => sum + row.probability_pct, 0);
   const max = Math.max(...groups.map((group) => group.total), 1);
-  const main = groups.filter((group) => group.total >= LOW_PCT_THRESHOLD);
-  const low = groups.filter((group) => group.total < LOW_PCT_THRESHOLD);
   const tint = sex === "Male" ? "var(--r-male)" : "var(--r-female)";
 
-  const renderRow = (group: ColorGroup, dim: boolean) => (
+  // 1%未満も集約せず全色をそのまま行にする (微小確率でも「出得る色」を隠さない)。
+  const renderRow = (group: ColorGroup) => (
     <li key={group.base} className="py-[3px]">
       <div className="flex items-center gap-2">
         <Swatch color={group.base} size={14} />
         <span
           className="min-w-0 flex-1 truncate text-xs"
-          style={{ color: dim ? "var(--r-muted)" : "var(--r-ink)" }}
+          style={{ color: "var(--r-ink)" }}
           title={group.base}
         >
           {group.base}
@@ -347,21 +356,19 @@ function SexDistribution({
         </span>
         <span
           className="shrink-0 tabular-nums text-[11px]"
-          style={{ color: dim ? "var(--r-muted)" : "var(--r-ink-soft)" }}
+          style={{ color: "var(--r-ink-soft)" }}
         >
           {formatPctInt(group.total)}
         </span>
       </div>
-      {!dim && (
-        <div
-          className="mt-[3px] h-[3px] rounded"
-          style={{
-            width: `${Math.max(2, (group.total / max) * 100)}%`,
-            background: tint,
-            opacity: 0.8,
-          }}
-        />
-      )}
+      <div
+        className="mt-[3px] h-[3px] rounded"
+        style={{
+          width: `${Math.max(2, (group.total / max) * 100)}%`,
+          background: tint,
+          opacity: 0.8,
+        }}
+      />
       {/* 白斑レベル (-White / -White Van) の内訳。合算で消えないよう副次行で残す。 */}
       {group.whites.length > 0 && (
         <div className="mt-0.5 flex flex-col gap-0.5 pl-6">
@@ -401,27 +408,7 @@ function SexDistribution({
           {text.parentResult.noPhenotype}
         </p>
       ) : (
-        <ul>
-          {main.map((group) => renderRow(group, false))}
-          {low.length > 0 && (
-            <li className="pt-0.5">
-              <button
-                type="button"
-                onClick={() => setShowLow((value) => !value)}
-                aria-expanded={showLow}
-                className="text-[11px] font-medium"
-                style={{ color: "var(--r-muted)" }}
-              >
-                {showLow
-                  ? text.parentResult.close
-                  : `${text.parentResult.belowOnePct} · ${low.length}${
-                      language === "ja" ? "色" : ""
-                    }`}
-              </button>
-              {showLow && <ul className="mt-1">{low.map((group) => renderRow(group, true))}</ul>}
-            </li>
-          )}
-        </ul>
+        <ul>{groups.map((group) => renderRow(group))}</ul>
       )}
     </div>
   );
@@ -791,7 +778,14 @@ function GeneticsBody({
   );
 }
 
-type ResultSection = { title: string; tick: string; visible: boolean; content: ReactNode };
+type ResultSection = {
+  title: string;
+  tick: string;
+  visible: boolean;
+  content: ReactNode;
+  // タイトル右 (トグル手前) に出す結果件数。計算直後であることを示す。未指定なら出さない。
+  count?: number;
+};
 
 export function ResultView({
   data,
@@ -806,6 +800,15 @@ export function ResultView({
   const hasConfirmed = Boolean(data.confirmed_results && data.confirmed_results.length > 0);
   const shownLoci = new Set([...diagnostics.opened_loci, ...diagnostics.closed_loci]);
   const otherLoci = Object.keys(LOCUS_GLOSSARY).filter((locus) => !shownLoci.has(locus));
+
+  // セクションタイトルに出す結果件数。確定=チップ数 / 全分布=異なる毛色数 / 推定=グループ数。
+  // 全分布の件数は「異なるベース色数」なので、groupByBase の割り当て/ソートを介さず
+  // splitWhite + Set で O(n) に数える (件数のためだけに ColorGroup を作らない)。
+  const confirmedCount = data.confirmed_results?.length ?? 0;
+  const distributionCount = new Set(data.results.map((row) => splitWhite(row.color).base)).size;
+  const conditionalCount = data.conditional_color_groups.length;
+  const countLabelOf = (n: number): string =>
+    language === "ja" ? `${n}件` : `${n} item${n === 1 ? "" : "s"}`;
 
   // 並び順・展開状態は localStorage に永続化 (既定は全非展開)。マウント後に読み込む。
   const [order, setOrder] = useState<SectionId[]>(() => [...DEFAULT_SECTION_ORDER]);
@@ -847,18 +850,21 @@ export function ResultView({
       title: text.parentResult.confirmedTitle,
       tick: "var(--r-confirmed)",
       visible: hasConfirmed,
+      count: confirmedCount,
       content: <ConfirmedBody rows={data.confirmed_results ?? []} language={language} />,
     },
     distribution: {
       title: text.parentResult.distributionTitle,
       tick: "var(--r-accent)",
       visible: true,
+      count: distributionCount,
       content: <DistributionBody rows={data.results} whiteSide={whiteSide} language={language} />,
     },
     conditional: {
       title: text.parentResult.conditionalTitle,
       tick: "var(--r-conditional)",
       visible: data.mode === "normal" && data.conditional_color_groups.length > 0,
+      count: conditionalCount,
       content: <ConditionalBody groups={data.conditional_color_groups} language={language} />,
     },
     normalNote: {
@@ -898,6 +904,10 @@ export function ResultView({
                 open={Boolean(openMap[id])}
                 onToggle={() => toggle(id)}
                 dragLabel={text.parentResult.sectionReorder}
+                count={sections[id].count}
+                countLabel={
+                  sections[id].count != null ? countLabelOf(sections[id].count ?? 0) : undefined
+                }
               >
                 {sections[id].content}
               </AccordionSection>
