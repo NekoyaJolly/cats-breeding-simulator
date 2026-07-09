@@ -260,7 +260,8 @@ export default function HomePage() {
           )}
 
           {result && (
-            <div className="mt-6 rounded-lg border border-line bg-surface p-4 shadow-sm sm:p-6">
+            // 結果レポートは横余白を詰めて画面幅を活かす (縦余白は維持)。
+            <div className="mt-6 rounded-lg border border-line bg-surface px-2 py-4 shadow-sm sm:px-5 sm:py-6">
               <ResultView data={result} language={language} />
             </div>
           )}
