@@ -13,10 +13,8 @@ import { LocusChip } from "./LocusChip";
 import { LOCUS_GLOSSARY } from "@/lib/lociGlossary";
 import { coatSwatchBackground } from "@/lib/coatColorSwatch";
 
-// レポートの配色トークン (--r-*) は globals.css で light/dark 両対応に定義している。
-// ここでは ♂♀ の識別色 (条件付きバッジ枠線に使う) のみ、テーマ対応トークンを参照する。
-const SEX_MALE_COLOR = "var(--r-male)";
-const SEX_FEMALE_COLOR = "var(--r-female)";
+// レポートの配色トークン (--r-*) は globals.css で light/dark 両対応に定義している
+// (ResultView 内では var(--r-*) を直接参照する)。
 
 // 1%未満を集約する閾値。ユーザー指定 (低確率は畳んで一覧性を上げる)。
 const LOW_PCT_THRESHOLD = 1;
@@ -125,21 +123,65 @@ function SectionLabel({
 
 // ♂/♀ の視覚記号 + スクリーンリーダー向けの性別テキスト (記号は aria-hidden なので
 // sr-only テキストで性別を必ず読み上げ可能にする)。
-function SexMark({ sex, language }: { sex: "Male" | "Female"; language: Language }) {
+// 性別の並び順キー: Male → Female。それ以外 (想定外の文字列) は末尾へ回す。
+function sexRank(sex: string): number {
+  return sex === "Male" ? 0 : sex === "Female" ? 1 : 9;
+}
+
+function SexMark({ sex, language }: { sex: string; language: Language }) {
   const text = UI_TEXT[language];
+  // 想定外の性別文字列では何も描画しない (誤って Female 表示へ倒れるのを防ぐ)。
+  if (sex !== "Male" && sex !== "Female") return null;
+  const isMale = sex === "Male";
   return (
     <>
       <span
         aria-hidden="true"
         className="text-xs font-bold"
-        style={{ color: sex === "Male" ? "var(--r-male)" : "var(--r-female)" }}
+        style={{ color: isMale ? "var(--r-male)" : "var(--r-female)" }}
       >
-        {sex === "Male" ? "♂" : "♀"}
+        {isMale ? "♂" : "♀"}
       </span>
       <span className="sr-only">
-        {sex === "Male" ? text.parentResult.male : text.parentResult.female}
+        {isMale ? text.parentResult.male : text.parentResult.female}
       </span>
     </>
+  );
+}
+
+// 毛色チップ: スウォッチ + ♂♀記号 + 色名 (+ 任意で確率)。確定色/推定色で共通に使う。
+// -White (白斑) はベース色に合算せず、色名とスウォッチの白斑ウェッジでそのまま見せる。
+function ColorChip({
+  color,
+  sexes,
+  pct,
+  language,
+}: {
+  color: string;
+  sexes: string[];
+  pct?: number;
+  language: Language;
+}) {
+  // Male/Female のみに絞り、Male → Female の順に並べる (想定外値を除外・順序固定)。
+  const marks = sexes
+    .filter((sex) => sex === "Male" || sex === "Female")
+    .sort((a, b) => sexRank(a) - sexRank(b));
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs"
+      style={{ background: "var(--r-surface-2)", color: "var(--r-ink)" }}
+    >
+      <Swatch color={color} size={16} />
+      {marks.map((sex) => (
+        <SexMark key={sex} sex={sex} language={language} />
+      ))}
+      <span className="font-medium">{color}</span>
+      {pct != null && (
+        <span style={{ color: "var(--r-muted)" }} className="tabular-nums">
+          {formatPctInt(pct)}
+        </span>
+      )}
+    </span>
   );
 }
 
@@ -154,26 +196,10 @@ function ConfirmedColors({
   language: Language;
 }) {
   const text = UI_TEXT[language];
-  const sexes: Array<"Male" | "Female"> = ["Male", "Female"];
-  const chips: ReactNode[] = [];
-  for (const sex of sexes) {
-    for (const group of groupByBase(rows.filter((row) => row.sex === sex))) {
-      chips.push(
-        <span
-          key={`${sex}-${group.base}`}
-          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs"
-          style={{ background: "var(--r-surface-2)", color: "var(--r-ink)" }}
-        >
-          <Swatch color={group.base} size={16} />
-          <SexMark sex={sex} language={language} />
-          <span className="font-medium">{group.base}</span>
-          <span style={{ color: "var(--r-muted)" }} className="tabular-nums">
-            {formatPctInt(group.total)}
-          </span>
-        </span>,
-      );
-    }
-  }
+  // -White を合算せず各色をそのままチップ化する (白斑を隠さない)。オス→メス、確率降順。
+  const sorted = [...rows].sort(
+    (a, b) => sexRank(a.sex) - sexRank(b.sex) || b.probability_pct - a.probability_pct,
+  );
   return (
     <div
       className="flex flex-col gap-2 rounded-xl p-3"
@@ -185,7 +211,17 @@ function ConfirmedColors({
       <SectionLabel tick="var(--r-confirmed)">
         {text.parentResult.confirmedTitle}
       </SectionLabel>
-      <div className="flex flex-wrap gap-1.5">{chips}</div>
+      <div className="flex flex-wrap gap-1.5">
+        {sorted.map((row) => (
+          <ColorChip
+            key={`${row.sex}-${row.color}`}
+            color={row.color}
+            sexes={[row.sex]}
+            pct={row.probability_pct}
+            language={language}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -315,13 +351,17 @@ function FullDistribution({
   rows,
   whiteSide,
   language,
+  defaultOpen,
 }: {
   rows: ResultEntry[];
   whiteSide: WhiteSide;
   language: Language;
+  defaultOpen: boolean;
 }) {
   const text = UI_TEXT[language];
-  const [open, setOpen] = useState(true);
+  // 確定色があるときは折りたたみ (確定色/推定色をまず見せる)。確定色が無いケース
+  // (優性白など) は肝心の色が隠れないよう既定で開く。
+  const [open, setOpen] = useState(defaultOpen);
   const male = rows.filter((row) => row.sex === "Male");
   const female = rows.filter((row) => row.sex === "Female");
   return (
@@ -383,49 +423,6 @@ type LocusConditionalGroup = {
   pct: number;
 };
 
-function ConditionalColorBadge({ color, sexes }: { color: string; sexes: string[] }) {
-  const hasMale = sexes.includes("Male");
-  const hasFemale = sexes.includes("Female");
-  const borderBackground =
-    hasMale && hasFemale
-      ? `linear-gradient(90deg, ${SEX_MALE_COLOR} 50%, ${SEX_FEMALE_COLOR} 50%)`
-      : hasMale
-        ? SEX_MALE_COLOR
-        : hasFemale
-          ? SEX_FEMALE_COLOR
-          : "rgba(239,231,216,0.18)";
-  const sexLabel =
-    hasMale && hasFemale
-      ? "♂♀ Male & Female"
-      : hasMale
-        ? "♂ Male"
-        : hasFemale
-          ? "♀ Female"
-          : "";
-  const badgeLabel = sexLabel ? `${color} — ${sexLabel}` : color;
-  return (
-    <span
-      className="inline-flex rounded-full p-[2px]"
-      style={{ background: borderBackground }}
-      title={badgeLabel}
-      aria-label={badgeLabel}
-    >
-      <span
-        className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold"
-        style={{
-          color: "rgba(255,255,255,0.97)",
-          background: `linear-gradient(rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.45) 100%), ${coatSwatchBackground(color)}`,
-          textShadow: "0 0 1.5px rgba(0,0,0,0.7)",
-          WebkitFontSmoothing: "antialiased",
-          MozOsxFontSmoothing: "grayscale",
-        }}
-      >
-        {color}
-      </span>
-    </span>
-  );
-}
-
 function ConditionalColorSection({
   groups,
   language,
@@ -454,11 +451,11 @@ function ConditionalColorSection({
         colors: new Map<string, Set<string>>(),
         pct: 0,
       } satisfies LocusConditionalGroup);
+    // -White を合算せず、色名そのまま (白斑バリアントを別個に) 保持する。
     for (const color of group.colors) {
-      const base = splitWhite(color).base;
-      const sexes = entry.colors.get(base) ?? new Set<string>();
+      const sexes = entry.colors.get(color) ?? new Set<string>();
       for (const sex of group.color_sexes?.[color] ?? []) sexes.add(sex);
-      entry.colors.set(base, sexes);
+      entry.colors.set(color, sexes);
     }
     entry.pct += group.conditional_probability_pct;
     byScenario.set(group.scenario, entry);
@@ -505,7 +502,12 @@ function ConditionalColorSection({
                     <LocusChip key={locus} locus={locus} />
                   ))}
                   {[...group.colors.entries()].map(([color, sexes]) => (
-                    <ConditionalColorBadge key={color} color={color} sexes={[...sexes]} />
+                    <ColorChip
+                      key={color}
+                      color={color}
+                      sexes={[...sexes]}
+                      language={language}
+                    />
                   ))}
                 </div>
                 <span className="shrink-0 text-[11px] tabular-nums" style={{ color: "var(--r-conditional)" }}>
@@ -706,6 +708,7 @@ export function ResultView({
   // 入力が変わったら結果カードを remount して展開状態を初期化する。
   const resultsKey = `${parameters.sire_color}|${parameters.dam_color}|${parameters.breed ?? ""}|${parameters.mode}`;
   const whiteSide = whiteSideOf(parameters.sire_color, parameters.dam_color);
+  const hasConfirmed = Boolean(data.confirmed_results && data.confirmed_results.length > 0);
   const shownLoci = new Set([...diagnostics.opened_loci, ...diagnostics.closed_loci]);
   const otherLoci = Object.keys(LOCUS_GLOSSARY).filter((locus) => !shownLoci.has(locus));
 
@@ -731,12 +734,17 @@ export function ResultView({
 
         <div key={resultsKey} className="flex flex-col gap-3">
           {/* ① 確定色 (normal モードで確定色があるときのみ。White は空なので出さない) */}
-          {data.confirmed_results && data.confirmed_results.length > 0 && (
-            <ConfirmedColors rows={data.confirmed_results} language={language} />
+          {hasConfirmed && (
+            <ConfirmedColors rows={data.confirmed_results ?? []} language={language} />
           )}
 
-          {/* ② 全分布 (周辺確率) */}
-          <FullDistribution rows={data.results} whiteSide={whiteSide} language={language} />
+          {/* ② 全分布 (周辺確率)。確定色があるときは畳み、無いとき (White 等) は開く。 */}
+          <FullDistribution
+            rows={data.results}
+            whiteSide={whiteSide}
+            language={language}
+            defaultOpen={!hasConfirmed}
+          />
 
           {/* ③ 推定色 (もしこの色が出たら) */}
           {data.mode === "normal" && data.conditional_color_groups.length > 0 && (

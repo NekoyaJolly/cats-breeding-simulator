@@ -54,4 +54,20 @@ describe("coatSwatchBackground: キャリコ (三毛) の色見本", () => {
     expect(s).toContain(CREAM); // 希釈フェオメラニン
     expect(s).toContain(SILVER_UNDERCOAT_RGB); // smoke 下地
   });
+
+  // -White (白斑) は全面白にせず、ベース色を残して白くさびを重ねる。
+  it("-White はベース色を残して白くさびを重ねる (全面白にしない)", () => {
+    const spotted = coatSwatchBackground("Red-White");
+    expect(spotted).toContain(WHITE); // 白斑くさび
+    expect(spotted).toContain(RED); // ベース色 (赤) が残る
+    expect(spotted).not.toBe(coatSwatchBackground("Red")); // 素の Red と別
+  });
+
+  it("Brown Tabby-White はベースのブラウンタビーを残す", () => {
+    // 従来は "white" を拾って全面白 (真っ白) になっていた回帰防止。
+    const plain = coatSwatchBackground("Brown Tabby");
+    const spotted = coatSwatchBackground("Brown Tabby-White");
+    expect(spotted).toContain(WHITE);
+    expect(spotted).toContain(plain); // 下地はブラウンタビーそのもの
+  });
 });
