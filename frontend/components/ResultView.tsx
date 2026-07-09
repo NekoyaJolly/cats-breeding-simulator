@@ -150,6 +150,8 @@ function AccordionSection({
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id });
+  // 開閉トグルと展開コンテンツを aria-controls / id で紐付ける (SR での領域追跡)。
+  const contentId = `result-section-${id}`;
   const style: CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -177,6 +179,7 @@ function AccordionSection({
           type="button"
           onClick={onToggle}
           aria-expanded={open}
+          aria-controls={open ? contentId : undefined}
           className="flex flex-1 items-center gap-2 py-2 pr-2.5 text-left"
         >
           <span
@@ -198,7 +201,11 @@ function AccordionSection({
           />
         </button>
       </div>
-      {open && <div className="px-2.5 pb-2.5">{children}</div>}
+      {open && (
+        <div id={contentId} role="region" className="px-2.5 pb-2.5">
+          {children}
+        </div>
+      )}
     </section>
   );
 }

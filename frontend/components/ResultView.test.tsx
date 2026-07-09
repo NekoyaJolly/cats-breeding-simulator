@@ -268,6 +268,31 @@ describe("ResultView full distribution", () => {
     expect(sectionToggle(/確定カラー/)).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("展開時にトグルが aria-controls で展開コンテンツ (region) と紐付く", async () => {
+    render(
+      <ResultView
+        data={buildResponse("Black", "Black", [
+          { sex: "Male", color: "Black", probability_pct: 50 },
+          { sex: "Female", color: "Black", probability_pct: 50 },
+        ])}
+        language="ja"
+      />,
+    );
+    const toggle = sectionToggle(/全分布/);
+    // 折りたたみ時はコンテンツが無いので aria-controls も付けない。
+    expect(toggle).not.toHaveAttribute("aria-controls");
+
+    await openSection(/全分布/);
+    // 展開時はトグルが aria-controls で実在する展開コンテンツ (region) を指す。
+    const controls = toggle.getAttribute("aria-controls");
+    expect(controls).toBeTruthy();
+    if (controls) {
+      const region = document.getElementById(controls);
+      expect(region).toBeInTheDocument();
+      expect(region).toHaveAttribute("role", "region");
+    }
+  });
+
   it("確定色は -White を合算せず、ベース色と -White を別チップで表示する", async () => {
     const confirmed: ResultEntry[] = [
       { sex: "Female", color: "Brown Tabby", probability_pct: 25 },
