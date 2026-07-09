@@ -520,6 +520,7 @@ function ConditionalColorSection({
                   {group.badges.map((badge) => (
                     <span
                       key={`${badge.who}-${badge.geno}`}
+                      data-testid="carrier-badge"
                       className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-bold"
                       style={{
                         color: "var(--r-conditional)",

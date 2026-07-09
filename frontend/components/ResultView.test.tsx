@@ -150,9 +150,11 @@ describe("ResultView conditional colors", () => {
         language="ja"
       />,
     );
-    // 親ラベルと遺伝子型がバッジとして (説明文とは別の要素で) 出る。
-    expect(screen.getByText("両親")).toBeInTheDocument();
-    expect(screen.getByText("D/d")).toBeInTheDocument();
+    // 説明文にも同じ文字列が含まれるため、バッジ要素そのものを testid で特定して検証する。
+    const badges = screen.getAllByTestId("carrier-badge");
+    expect(badges).toHaveLength(1);
+    expect(badges[0]).toHaveTextContent("両親");
+    expect(badges[0]).toHaveTextContent("D/d");
   });
 
   it("conditional_color_groups が空ならセクションを描画しない", () => {
