@@ -123,7 +123,7 @@ describe("ResultView conditional colors", () => {
       />,
     );
 
-    const toggle = screen.getByRole("button", { name: /If This Color/ });
+    const toggle = screen.getByRole("button", { name: /両親キャリア推定/ });
     // デフォルトは展開状態 (確定色と一緒に一覧で見える)。
     expect(toggle).toHaveAttribute("aria-expanded", "true");
     // グルーピングは色系統でなく遺伝子座 (原因キャリア) 単位。原因は逆推論の説明文に出る。
@@ -150,7 +150,7 @@ describe("ResultView conditional colors", () => {
       />,
     );
     expect(
-      screen.queryByRole("button", { name: /If This Color/ }),
+      screen.queryByRole("button", { name: /両親キャリア推定/ }),
     ).toBeNull();
   });
 
@@ -162,7 +162,7 @@ describe("ResultView conditional colors", () => {
     };
     render(<ResultView data={explicit} language="ja" />);
     expect(
-      screen.queryByRole("button", { name: /If This Color/ }),
+      screen.queryByRole("button", { name: /両親キャリア推定/ }),
     ).toBeNull();
   });
 });

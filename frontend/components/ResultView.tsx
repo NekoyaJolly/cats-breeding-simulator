@@ -415,13 +415,34 @@ function FullDistribution({
 }
 
 // --- 推定色 (conditional_color_groups): 隠れキャリア仮定時のみ出る色。 ---
-type LocusConditionalGroup = {
+// 遺伝子座アイコン (D/A 等) は分かりにくいため、「父 D/d」のようなキャリア推定バッジで表示する。
+type CarrierConditionalGroup = {
   scenario: string;
   reverseLabel: string;
-  loci: string[];
+  who: string; // "sire" / "dam" / "both"
+  geno: string; // 例 "D/d"
   colors: Map<string, Set<string>>;
   pct: number;
 };
+
+// assumed_carriers から「どちらの親が・どの遺伝子型の保因か」を取り出す。
+function carrierHypothesis(assumed: Record<string, Record<string, string>>): {
+  who: string;
+  geno: string;
+} {
+  const parents = Object.keys(assumed);
+  const who = parents.length >= 2 ? "both" : (parents[0] ?? "");
+  const firstLoci = Object.values(assumed)[0] ?? {};
+  const geno = Object.values(firstLoci)[0] ?? "";
+  return { who, geno };
+}
+
+function carrierWhoLabel(who: string, language: Language): string {
+  const text = UI_TEXT[language];
+  if (who === "both") return text.parentResult.carrierBoth;
+  if (who === "dam") return text.parentResult.carrierDam;
+  return text.parentResult.carrierSire;
+}
 
 function ConditionalColorSection({
   groups,
@@ -433,24 +454,19 @@ function ConditionalColorSection({
   const text = UI_TEXT[language];
   const [open, setOpen] = useState(true);
 
-  const byScenario = new Map<string, LocusConditionalGroup>();
+  const byScenario = new Map<string, CarrierConditionalGroup>();
   for (const group of groups) {
-    const loci = [
-      ...new Set(
-        Object.values(group.assumed_carriers).flatMap((genotypes) =>
-          Object.keys(genotypes),
-        ),
-      ),
-    ];
+    const { who, geno } = carrierHypothesis(group.assumed_carriers);
     const entry =
       byScenario.get(group.scenario) ??
       ({
         scenario: group.scenario,
         reverseLabel: group.reverse_inference_label,
-        loci,
+        who,
+        geno,
         colors: new Map<string, Set<string>>(),
         pct: 0,
-      } satisfies LocusConditionalGroup);
+      } satisfies CarrierConditionalGroup);
     // -White を合算せず、色名そのまま (白斑バリアントを別個に) 保持する。
     for (const color of group.colors) {
       const sexes = entry.colors.get(color) ?? new Set<string>();
@@ -496,24 +512,34 @@ function ConditionalColorSection({
               className="rounded-lg p-2.5"
               style={{ background: "var(--r-surface)", border: "1px solid var(--r-hairline)" }}
             >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-                  {group.loci.map((locus) => (
-                    <LocusChip key={locus} locus={locus} />
-                  ))}
-                  {[...group.colors.entries()].map(([color, sexes]) => (
-                    <ColorChip
-                      key={color}
-                      color={color}
-                      sexes={[...sexes]}
-                      language={language}
-                    />
-                  ))}
-                </div>
+              {/* ヘッダー: キャリア推定バッジ (例「父 D/d」) + 最大確率。 */}
+              <div className="flex items-center justify-between gap-2">
+                <span
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-bold"
+                  style={{
+                    color: "var(--r-conditional)",
+                    background: "color-mix(in srgb, var(--r-conditional) 14%, transparent)",
+                    border: "1px solid color-mix(in srgb, var(--r-conditional) 34%, transparent)",
+                  }}
+                >
+                  {carrierWhoLabel(group.who, language)}
+                  <span className="tabular-nums">{group.geno}</span>
+                </span>
                 <span className="shrink-0 text-[11px] tabular-nums" style={{ color: "var(--r-conditional)" }}>
                   {text.parentResult.conditionalMaxPct}
                   {formatPctInt(group.pct)}
                 </span>
+              </div>
+              {/* 出得る色柄 (確定色と同じチップ表現)。 */}
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                {[...group.colors.entries()].map(([color, sexes]) => (
+                  <ColorChip
+                    key={color}
+                    color={color}
+                    sexes={[...sexes]}
+                    language={language}
+                  />
+                ))}
               </div>
               <p className="mt-1.5 text-[11px] leading-relaxed" style={{ color: "var(--r-ink-soft)" }}>
                 {group.reverseLabel}
