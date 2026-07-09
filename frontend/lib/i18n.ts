@@ -190,6 +190,7 @@ export const UI_TEXT = {
       carrierSire: "父",
       carrierDam: "母",
       carrierBoth: "両親",
+      sectionReorder: "並び替え (ドラッグ)",
       conditionalHint:
         "隠れ遺伝子次第で出る色。出たら親の遺伝子型が判明します。",
       conditionalOpen: "見る",
@@ -477,6 +478,7 @@ export const UI_TEXT = {
       carrierSire: "Sire",
       carrierDam: "Dam",
       carrierBoth: "Both",
+      sectionReorder: "Reorder (drag)",
       conditionalHint:
         "Colors that appear only with hidden genes. If they show, the parents' genotypes are revealed.",
       conditionalOpen: "View",

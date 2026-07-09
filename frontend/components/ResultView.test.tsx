@@ -1,8 +1,29 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ResultView } from "./ResultView";
 import type { CalculationResponse, ResultEntry } from "@/lib/schema";
+
+// 各結果セクションはアコーディオンで、既定は全非展開・状態は localStorage 永続化。
+// テスト間で展開状態が漏れないよう毎回クリアし、「非展開が既定」の前提を固定する。
+beforeEach(() => {
+  localStorage.clear();
+});
+
+// セクション見出しトグルを取得する。ドラッグハンドルの aria-label も同じセクション名を含むため、
+// aria-expanded を持つ (= 開閉トグルである) ボタンに限定して曖昧さを避ける。
+function sectionToggle(title: RegExp | string): HTMLElement {
+  const toggle = screen
+    .getAllByRole("button", { name: title })
+    .find((button) => button.hasAttribute("aria-expanded"));
+  if (!toggle) throw new Error(`section toggle not found: ${title}`);
+  return toggle;
+}
+
+// セクション見出しトグルをクリックして中身を展開する。
+async function openSection(title: RegExp | string): Promise<void> {
+  await userEvent.click(sectionToggle(title));
+}
 
 // WHITE-4: AOC (Any Other Color) 行のフォーカス/クリックで説明が開き、通常時は説明を出さない。
 // AOC は White 親のとき順方向に現れる集約カテゴリ (§2.3)。
@@ -57,6 +78,8 @@ describe("ResultView AOC", () => {
       />,
     );
 
+    // AOC 行は全分布アコーディオン内。まずセクションを展開する。
+    await openSection(/全分布/);
     const button = screen.getByRole("button", { name: "AOC の説明を開く" });
     // デフォルトは閉じている (通常時に説明を押し付けない)。
     expect(button).toHaveAttribute("aria-expanded", "false");
@@ -115,7 +138,7 @@ describe("ResultView conditional colors", () => {
     };
   }
 
-  it("normal モードで条件付きカラーがあるとき、デフォルト展開で中身が一覧でき、畳める", async () => {
+  it("normal モードで条件付きカラーがあるとき、アコーディオンを開くと中身が一覧でき、畳める", async () => {
     render(
       <ResultView
         data={withConditional(buildResponse("Black", "Black", BASE_RESULTS))}
@@ -123,8 +146,15 @@ describe("ResultView conditional colors", () => {
       />,
     );
 
-    const toggle = screen.getByRole("button", { name: /両親キャリア推定/ });
-    // デフォルトは展開状態 (確定色と一緒に一覧で見える)。
+    const toggle = sectionToggle(/両親キャリア推定/);
+    // 既定は非展開 (統一アコーディオン。展開状態は localStorage 永続)。
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(
+      screen.queryByText(/この色が出たら両親が D\/d 保因と確定します/),
+    ).toBeNull();
+
+    // 開くと中身が読める。
+    await userEvent.click(toggle);
     expect(toggle).toHaveAttribute("aria-expanded", "true");
     // グルーピングは色系統でなく遺伝子座 (原因キャリア) 単位。原因は逆推論の説明文に出る。
     expect(
@@ -142,7 +172,7 @@ describe("ResultView conditional colors", () => {
     ).toBeNull();
   });
 
-  it("両親キャリア推定バッジに親ラベルと遺伝子型が表示される", () => {
+  it("両親キャリア推定バッジに親ラベルと遺伝子型が表示される", async () => {
     // assumed_carriers = {sire:{D:"D/d"}, dam:{D:"D/d"}} → 同一遺伝子型なので「両親 D/d」に集約。
     render(
       <ResultView
@@ -150,6 +180,8 @@ describe("ResultView conditional colors", () => {
         language="ja"
       />,
     );
+    // バッジは両親キャリア推定アコーディオン内。展開してから検証する。
+    await openSection(/両親キャリア推定/);
     // 説明文にも同じ文字列が含まれるため、バッジ要素そのものを testid で特定して検証する。
     const badges = screen.getAllByTestId("carrier-badge");
     expect(badges).toHaveLength(1);
@@ -198,6 +230,8 @@ describe("ResultView full distribution", () => {
       <ResultView data={buildResponse("Black", "Black", results)} language="ja" />,
     );
 
+    // 全分布はアコーディオン内。展開してから内訳を検証する。
+    await openSection(/全分布/);
     // 「1%未満 · N色」の集約ボタンが (性別ごとに) 出る。
     const toggles = screen.getAllByRole("button", { name: /1%未満/ });
     expect(toggles.length).toBeGreaterThan(0);
@@ -209,7 +243,7 @@ describe("ResultView full distribution", () => {
     expect(screen.getAllByText("Chocolate").length).toBeGreaterThan(0);
   });
 
-  it("確定色があるとき全分布は既定で折りたたみ、無いとき (優性白など) は開く", () => {
+  it("全セクションは既定で非展開、展開状態は localStorage に永続化され次回に引き継がれる", async () => {
     const confirmed: ResultEntry[] = [
       { sex: "Male", color: "Black", probability_pct: 50 },
       { sex: "Female", color: "Black", probability_pct: 50 },
@@ -218,26 +252,54 @@ describe("ResultView full distribution", () => {
       ...buildResponse("Black", "Black", confirmed),
       confirmed_results: confirmed,
     };
+    // 統一アコーディオン: 確定色の有無に関わらず、既定はすべて非展開。
     const { unmount } = render(<ResultView data={withConfirmed} language="ja" />);
-    expect(screen.getByRole("button", { name: /全分布/ })).toHaveAttribute(
-      "aria-expanded",
-      "false",
-    );
+    expect(sectionToggle(/確定カラー/)).toHaveAttribute("aria-expanded", "false");
+    expect(sectionToggle(/全分布/)).toHaveAttribute("aria-expanded", "false");
+
+    // ユーザーが全分布を展開すると localStorage に保存される。
+    await openSection(/全分布/);
+    expect(sectionToggle(/全分布/)).toHaveAttribute("aria-expanded", "true");
     unmount();
 
-    // 確定色が無い (優性白) ケースは肝心の色が隠れないよう既定で開く。
-    const noConfirmed = buildResponse("White", "Black", [
-      { sex: "Male", color: "White", probability_pct: 50 },
-      { sex: "Female", color: "AOC", probability_pct: 50 },
-    ]);
-    render(<ResultView data={noConfirmed} language="ja" />);
-    expect(screen.getByRole("button", { name: /全分布/ })).toHaveAttribute(
-      "aria-expanded",
-      "true",
-    );
+    // 次回の計算結果 (再マウント) では、保存された展開状態で復元される。
+    render(<ResultView data={withConfirmed} language="ja" />);
+    expect(sectionToggle(/全分布/)).toHaveAttribute("aria-expanded", "true");
+    expect(sectionToggle(/確定カラー/)).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("確定色は -White を合算せず、ベース色と -White を別チップで表示する", () => {
+  it("展開時にトグルが aria-controls で展開コンテンツ (region) と紐付く", async () => {
+    render(
+      <ResultView
+        data={buildResponse("Black", "Black", [
+          { sex: "Male", color: "Black", probability_pct: 50 },
+          { sex: "Female", color: "Black", probability_pct: 50 },
+        ])}
+        language="ja"
+      />,
+    );
+    const toggle = sectionToggle(/全分布/);
+    // 折りたたみ時はコンテンツが無いので aria-controls も付けない。
+    expect(toggle).not.toHaveAttribute("aria-controls");
+
+    await openSection(/全分布/);
+    // 展開時はトグルが aria-controls で実在する展開コンテンツ (region) を指す。
+    const controls = toggle.getAttribute("aria-controls");
+    expect(controls).toBeTruthy();
+    if (controls) {
+      const region = document.getElementById(controls);
+      expect(region).toBeInTheDocument();
+      expect(region).toHaveAttribute("role", "region");
+      // region は無名にせず、見出し (aria-labelledby) で名付ける。
+      const labelledby = region?.getAttribute("aria-labelledby");
+      expect(labelledby).toBeTruthy();
+      if (labelledby) {
+        expect(document.getElementById(labelledby)?.textContent).toContain("全分布");
+      }
+    }
+  });
+
+  it("確定色は -White を合算せず、ベース色と -White を別チップで表示する", async () => {
     const confirmed: ResultEntry[] = [
       { sex: "Female", color: "Brown Tabby", probability_pct: 25 },
       { sex: "Female", color: "Brown Tabby-White", probability_pct: 25 },
@@ -249,12 +311,14 @@ describe("ResultView full distribution", () => {
       confirmed_results: confirmed,
     };
     render(<ResultView data={data} language="ja" />);
+    // 確定カラーはアコーディオン内。展開してからチップを検証する。
+    await openSection(/確定カラー/);
     // ベース色と -White が (合算されず) 別々のチップとして両方出る。
     expect(screen.getAllByText("Brown Tabby").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Brown Tabby-White").length).toBeGreaterThan(0);
   });
 
-  it("白斑レベル (-White) は合算されず副次行で表示される", () => {
+  it("白斑レベル (-White) は合算されず副次行で表示される", async () => {
     const results: ResultEntry[] = [
       { sex: "Male", color: "Silver Tabby", probability_pct: 25 },
       { sex: "Male", color: "Silver Tabby-White", probability_pct: 25 },
@@ -267,6 +331,8 @@ describe("ResultView full distribution", () => {
         language="ja"
       />,
     );
+    // 全分布はアコーディオン内。展開してから副次行を検証する。
+    await openSection(/全分布/);
     // ベース色 (Silver Tabby) に集約されつつ、-White の内訳が副次行 (└ -White) で残る。
     expect(screen.getAllByText(/└ -White/).length).toBeGreaterThan(0);
   });

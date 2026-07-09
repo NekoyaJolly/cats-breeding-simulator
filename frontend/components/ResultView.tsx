@@ -1,7 +1,31 @@
 "use client";
 
-import { GenderFemale, GenderMale } from "@phosphor-icons/react";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { CaretRight, DotsSixVertical, GenderFemale, GenderMale } from "@phosphor-icons/react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type {
   CalculationResponse,
   ConditionalColorGroup,
@@ -12,6 +36,14 @@ import { UI_TEXT, type Language } from "@/lib/i18n";
 import { LocusChip } from "./LocusChip";
 import { LOCUS_GLOSSARY } from "@/lib/lociGlossary";
 import { coatSwatchBackground } from "@/lib/coatColorSwatch";
+import {
+  DEFAULT_SECTION_ORDER,
+  loadSectionOpen,
+  loadSectionOrder,
+  saveSectionOpen,
+  saveSectionOrder,
+  type SectionId,
+} from "@/lib/resultSections";
 
 // レポートの配色トークン (--r-*) は globals.css で light/dark 両対応に定義している
 // (ResultView 内では var(--r-*) を直接参照する)。
@@ -97,27 +129,87 @@ function Swatch({ color, size = 16 }: { color: string; size?: number }) {
   );
 }
 
-// セクション見出し (色付きの丸 + ラベル + 補足)。
-// <button> や <span> の子として置くため、ブロック要素 (<p>) ではなくインラインの <span> を返す。
-function SectionLabel({
+// 統一アコーディオンセクション。全結果セクション共通のヘッダー (ドラッグハンドル + 色付き
+// ティック + タイトル + シェブロン) を提供する。@dnd-kit で並び替え可能。
+function AccordionSection({
+  id,
+  title,
   tick,
+  open,
+  onToggle,
+  dragLabel,
   children,
 }: {
+  id: SectionId;
+  title: string;
   tick: string;
+  open: boolean;
+  onToggle: () => void;
+  dragLabel: string;
   children: ReactNode;
 }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id });
+  // 開閉トグルと展開コンテンツを aria-controls / id で紐付ける (SR での領域追跡)。
+  // region には見出し (titleId) を aria-labelledby で名付け、無名 region を避ける。
+  const contentId = `result-section-${id}`;
+  const titleId = `${contentId}-title`;
+  const style: CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    background: "var(--r-surface)",
+    border: "1px solid var(--r-hairline)",
+    opacity: isDragging ? 0.6 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
   return (
-    <span
-      className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider"
-      style={{ color: tick }}
-    >
-      <span
-        aria-hidden="true"
-        className="h-2 w-2 shrink-0 rounded-[2px]"
-        style={{ background: tick }}
-      />
-      {children}
-    </span>
+    <section ref={setNodeRef} style={style} className="rounded-xl">
+      <div className="flex items-center gap-1">
+        {/* ドラッグハンドル (並び替え)。touch-none でモバイルのスクロール干渉を防ぐ。 */}
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          aria-label={`${dragLabel}: ${title}`}
+          className="flex h-9 w-7 shrink-0 cursor-grab touch-none items-center justify-center rounded active:cursor-grabbing"
+          style={{ color: "var(--r-muted)" }}
+        >
+          <DotsSixVertical aria-hidden="true" className="h-4 w-4" weight="bold" />
+        </button>
+        {/* タイトル (クリックで展開/折りたたみ)。 */}
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={open}
+          aria-controls={open ? contentId : undefined}
+          className="flex flex-1 items-center gap-2 py-2 pr-2.5 text-left"
+        >
+          <span
+            aria-hidden="true"
+            className="h-2 w-2 shrink-0 rounded-[2px]"
+            style={{ background: tick }}
+          />
+          <span
+            id={titleId}
+            className="text-[11px] font-bold uppercase tracking-wider"
+            style={{ color: tick }}
+          >
+            {title}
+          </span>
+          <CaretRight
+            aria-hidden="true"
+            className="ml-auto h-3.5 w-3.5 shrink-0 transition-transform"
+            weight="bold"
+            style={{ color: "var(--r-muted)", transform: open ? "rotate(90deg)" : "none" }}
+          />
+        </button>
+      </div>
+      {open && (
+        <div id={contentId} role="region" aria-labelledby={titleId} className="px-2.5 pb-2.5">
+          {children}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -185,43 +277,31 @@ function ColorChip({
   );
 }
 
-// --- 確定色 (confirmed_results): 保因に依らず必ず出る色。チップで一覧する。 ---
+// --- 確定色 (confirmed_results): 保因に依らず必ず出る色。チップで一覧する (body のみ)。 ---
 // AOC は優性白由来で confirmed_results には入らない (White は確定色が空) ため、AocInfo は
-// 全分布側のみに置く (確定色に置くとボタンが重複する)。
-function ConfirmedColors({
+// 全分布側のみに置く。
+function ConfirmedBody({
   rows,
   language,
 }: {
   rows: ResultEntry[];
   language: Language;
 }) {
-  const text = UI_TEXT[language];
   // -White を合算せず各色をそのままチップ化する (白斑を隠さない)。オス→メス、確率降順。
   const sorted = [...rows].sort(
     (a, b) => sexRank(a.sex) - sexRank(b.sex) || b.probability_pct - a.probability_pct,
   );
   return (
-    <div
-      className="flex flex-col gap-2 rounded-xl p-3"
-      style={{
-        background: "var(--r-confirmed-bg)",
-        border: "1px solid color-mix(in srgb, var(--r-confirmed) 26%, transparent)",
-      }}
-    >
-      <SectionLabel tick="var(--r-confirmed)">
-        {text.parentResult.confirmedTitle}
-      </SectionLabel>
-      <div className="flex flex-wrap gap-1.5">
-        {sorted.map((row) => (
-          <ColorChip
-            key={`${row.sex}-${row.color}`}
-            color={row.color}
-            sexes={[row.sex]}
-            pct={row.probability_pct}
-            language={language}
-          />
-        ))}
-      </div>
+    <div className="flex flex-wrap gap-1.5">
+      {sorted.map((row) => (
+        <ColorChip
+          key={`${row.sex}-${row.color}`}
+          color={row.color}
+          sexes={[row.sex]}
+          pct={row.probability_pct}
+          language={language}
+        />
+      ))}
     </div>
   );
 }
@@ -347,69 +427,43 @@ function SexDistribution({
   );
 }
 
-function FullDistribution({
+// 全分布 (results) の body。オス/メスの周辺確率を横並び (body のみ、トグル/枠は Accordion 側)。
+function DistributionBody({
   rows,
   whiteSide,
   language,
-  defaultOpen,
 }: {
   rows: ResultEntry[];
   whiteSide: WhiteSide;
   language: Language;
-  defaultOpen: boolean;
 }) {
   const text = UI_TEXT[language];
-  // 確定色があるときは折りたたみ (確定色/推定色をまず見せる)。確定色が無いケース
-  // (優性白など) は肝心の色が隠れないよう既定で開く。
-  const [open, setOpen] = useState(defaultOpen);
   const male = rows.filter((row) => row.sex === "Male");
   const female = rows.filter((row) => row.sex === "Female");
   return (
-    <div
-      className="rounded-xl p-3"
-      style={{ background: "var(--r-inset)", border: "1px solid var(--r-hairline)" }}
-    >
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        aria-expanded={open}
-        className="flex w-full items-center gap-2 text-left"
-      >
-        <SectionLabel tick="var(--r-accent)">
-          {text.parentResult.distributionTitle}
-        </SectionLabel>
-        <span
-          aria-hidden="true"
-          className="ml-auto text-[10px] transition-transform"
-          style={{ color: "var(--r-muted)", transform: open ? "rotate(90deg)" : "none" }}
-        >
-          ▶
-        </span>
-      </button>
-      {open && (
-        <div className="mt-3 grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
-          <SexDistribution
-            title={text.parentResult.male}
-            sex="Male"
-            icon={
-              <GenderMale aria-hidden="true" className="h-3.5 w-3.5" style={{ color: "var(--r-male)" }} weight="duotone" />
-            }
-            rows={male}
-            whiteSide={whiteSide}
-            language={language}
-          />
-          <SexDistribution
-            title={text.parentResult.female}
-            sex="Female"
-            icon={
-              <GenderFemale aria-hidden="true" className="h-3.5 w-3.5" style={{ color: "var(--r-female)" }} weight="duotone" />
-            }
-            rows={female}
-            whiteSide={whiteSide}
-            language={language}
-          />
-        </div>
-      )}
+    // HTML レポート同様、オス/メスを常に2カラムで水平に並べる (モバイルでも縦積みにしない)。
+    // モバイルは gap を詰めて各列の横幅を確保する。
+    <div className="grid grid-cols-2 gap-x-3 gap-y-3 sm:gap-x-5">
+      <SexDistribution
+        title={text.parentResult.male}
+        sex="Male"
+        icon={
+          <GenderMale aria-hidden="true" className="h-3.5 w-3.5" style={{ color: "var(--r-male)" }} weight="duotone" />
+        }
+        rows={male}
+        whiteSide={whiteSide}
+        language={language}
+      />
+      <SexDistribution
+        title={text.parentResult.female}
+        sex="Female"
+        icon={
+          <GenderFemale aria-hidden="true" className="h-3.5 w-3.5" style={{ color: "var(--r-female)" }} weight="duotone" />
+        }
+        rows={female}
+        whiteSide={whiteSide}
+        language={language}
+      />
     </div>
   );
 }
@@ -448,7 +502,8 @@ function carrierBadges(
   return badges;
 }
 
-function ConditionalColorSection({
+// 両親キャリア推定 (conditional_color_groups) の body。scenario ごとのカードを並べる (body のみ)。
+function ConditionalBody({
   groups,
   language,
 }: {
@@ -456,8 +511,6 @@ function ConditionalColorSection({
   language: Language;
 }) {
   const text = UI_TEXT[language];
-  const [open, setOpen] = useState(true);
-
   const byScenario = new Map<string, CarrierConditionalGroup>();
   for (const group of groups) {
     const entry =
@@ -481,82 +534,52 @@ function ConditionalColorSection({
   const locusGroups = [...byScenario.values()].sort((a, b) => b.pct - a.pct);
 
   return (
-    <section
-      className="rounded-xl"
-      style={{
-        background: "var(--r-conditional-bg)",
-        border: "1px solid color-mix(in srgb, var(--r-conditional) 26%, transparent)",
-      }}
-    >
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        className="flex w-full items-start justify-between gap-2 px-3 py-3 text-left"
-        aria-expanded={open}
-      >
-        <span className="min-w-0">
-          <SectionLabel tick="var(--r-conditional)">
-            {text.parentResult.conditionalTitle}
-          </SectionLabel>
-          <span className="mt-1 block text-[11px]" style={{ color: "var(--r-muted)" }}>
-            {text.parentResult.conditionalHint}
-          </span>
-        </span>
-        <span className="shrink-0 text-[11px] font-medium" style={{ color: "var(--r-conditional)" }}>
-          {open ? text.parentResult.close : text.parentResult.conditionalOpen}
-        </span>
-      </button>
-      {open && (
-        <div className="space-y-2 px-3 pb-3">
-          {locusGroups.map((group) => (
-            <div
-              key={group.scenario}
-              className="rounded-lg p-2.5"
-              style={{ background: "var(--r-surface)", border: "1px solid var(--r-hairline)" }}
-            >
-              {/* ヘッダー: キャリア推定バッジ (例「父 D/d」) + 最大確率。 */}
-              <div className="flex items-start justify-between gap-2">
-                <span className="flex flex-wrap items-center gap-1">
-                  {group.badges.map((badge) => (
-                    <span
-                      key={`${badge.who}-${badge.geno}`}
-                      data-testid="carrier-badge"
-                      className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-bold"
-                      style={{
-                        color: "var(--r-conditional)",
-                        background: "color-mix(in srgb, var(--r-conditional) 14%, transparent)",
-                        border: "1px solid color-mix(in srgb, var(--r-conditional) 34%, transparent)",
-                      }}
-                    >
-                      <span>{badge.who}</span>
-                      <span className="tabular-nums">{badge.geno}</span>
-                    </span>
-                  ))}
+    <div className="flex flex-col gap-2">
+      <p className="text-[11px]" style={{ color: "var(--r-muted)" }}>
+        {text.parentResult.conditionalHint}
+      </p>
+      {locusGroups.map((group) => (
+        <div
+          key={group.scenario}
+          className="rounded-lg p-2.5"
+          style={{ background: "var(--r-inset)", border: "1px solid var(--r-hairline)" }}
+        >
+          {/* ヘッダー: キャリア推定バッジ (例「父 D/d」) + 最大確率。 */}
+          <div className="flex items-start justify-between gap-2">
+            <span className="flex flex-wrap items-center gap-1">
+              {group.badges.map((badge) => (
+                <span
+                  key={`${badge.who}-${badge.geno}`}
+                  data-testid="carrier-badge"
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-bold"
+                  style={{
+                    color: "var(--r-conditional)",
+                    background: "color-mix(in srgb, var(--r-conditional) 14%, transparent)",
+                    border: "1px solid color-mix(in srgb, var(--r-conditional) 34%, transparent)",
+                  }}
+                >
+                  <span>{badge.who}</span>
+                  <span className="tabular-nums">{badge.geno}</span>
                 </span>
-                <span className="shrink-0 text-[11px] tabular-nums" style={{ color: "var(--r-conditional)" }}>
-                  {text.parentResult.conditionalMaxPct}
-                  {formatPctInt(group.pct)}
-                </span>
-              </div>
-              {/* 出得る色柄 (確定色と同じチップ表現)。 */}
-              <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                {[...group.colors.entries()].map(([color, sexes]) => (
-                  <ColorChip
-                    key={color}
-                    color={color}
-                    sexes={[...sexes]}
-                    language={language}
-                  />
-                ))}
-              </div>
-              <p className="mt-1.5 text-[11px] leading-relaxed" style={{ color: "var(--r-ink-soft)" }}>
-                {group.reverseLabel}
-              </p>
-            </div>
-          ))}
+              ))}
+            </span>
+            <span className="shrink-0 text-[11px] tabular-nums" style={{ color: "var(--r-conditional)" }}>
+              {text.parentResult.conditionalMaxPct}
+              {formatPctInt(group.pct)}
+            </span>
+          </div>
+          {/* 出得る色柄 (確定色と同じチップ表現)。 */}
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {[...group.colors.entries()].map(([color, sexes]) => (
+              <ColorChip key={color} color={color} sexes={[...sexes]} language={language} />
+            ))}
+          </div>
+          <p className="mt-1.5 text-[11px] leading-relaxed" style={{ color: "var(--r-ink-soft)" }}>
+            {group.reverseLabel}
+          </p>
         </div>
-      )}
-    </section>
+      ))}
+    </div>
   );
 }
 
@@ -698,37 +721,77 @@ function ParentColorNotes({
   );
 }
 
-// 通常モードの計算範囲を平易に説明する畳める注記。
-function NormalModeNote({ language }: { language: Language }) {
+// 通常モードの計算範囲を平易に説明する body。
+function NormalNoteBody({ language }: { language: Language }) {
   const text = UI_TEXT[language];
-  const [open, setOpen] = useState(false);
   return (
-    <div
-      className="rounded-lg p-3 text-xs"
-      style={{ background: "var(--r-surface-2)", color: "var(--r-ink-soft)" }}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <p className="min-w-0">
-          <span className="font-medium" style={{ color: "var(--r-ink)" }}>
-            {text.parentResult.normalScopeTitle}
-          </span>
-          {" — "}
-          {text.parentResult.normalScopeSummary}
-        </p>
-        <button
-          type="button"
-          onClick={() => setOpen((value) => !value)}
-          className="shrink-0 rounded px-2 py-0.5 text-[11px] font-medium"
-          style={{ color: "var(--r-muted)" }}
-          aria-expanded={open}
-        >
-          {open ? text.parentResult.close : text.parentResult.normalScopeMore}
-        </button>
-      </div>
-      {open && <p className="mt-2 leading-relaxed">{text.parentResult.normalScopeDetails}</p>}
+    <div className="text-xs leading-relaxed" style={{ color: "var(--r-ink-soft)" }}>
+      <p>{text.parentResult.normalScopeSummary}</p>
+      <p className="mt-2">{text.parentResult.normalScopeDetails}</p>
     </div>
   );
 }
+
+// 遺伝子座の診断 body (開いた/閉じた座位・未分類率・前提)。
+function GeneticsBody({
+  diagnostics,
+  otherLoci,
+  language,
+}: {
+  diagnostics: CalculationResponse["diagnostics"];
+  otherLoci: string[];
+  language: Language;
+}) {
+  const text = UI_TEXT[language];
+  return (
+    <div className="text-sm">
+      <p className="text-xs" style={{ color: "var(--r-muted)" }}>
+        {text.parentResult.geneticsDescription}
+      </p>
+      <dl className="mt-2 grid grid-cols-1 gap-y-1 sm:grid-cols-2">
+        <dt style={{ color: "var(--r-muted)" }}>{text.parentResult.openedLoci}</dt>
+        <dd className="flex flex-wrap items-center gap-1">
+          {diagnostics.opened_loci.length > 0
+            ? diagnostics.opened_loci.map((locus) => <LocusChip key={locus} locus={locus} />)
+            : text.parentResult.none}
+        </dd>
+        <dt style={{ color: "var(--r-muted)" }}>{text.parentResult.closedLoci}</dt>
+        <dd className="flex flex-wrap items-center gap-1">
+          {diagnostics.closed_loci.length > 0
+            ? diagnostics.closed_loci.map((locus) => <LocusChip key={locus} locus={locus} />)
+            : text.parentResult.none}
+        </dd>
+        {otherLoci.length > 0 && (
+          <>
+            <dt style={{ color: "var(--r-muted)" }}>{text.parentResult.otherLoci}</dt>
+            <dd className="flex flex-wrap items-center gap-1">
+              {otherLoci.map((locus) => (
+                <LocusChip key={locus} locus={locus} />
+              ))}
+            </dd>
+          </>
+        )}
+        <dt style={{ color: "var(--r-muted)" }}>{text.parentResult.unmatchedProbability}</dt>
+        <dd className="tabular-nums" style={{ color: "var(--r-ink-soft)" }}>
+          {formatPct(diagnostics.unmatched_probability)} ({diagnostics.unmatched_genotype_count}{" "}
+          {text.parentResult.genotypeCount})
+        </dd>
+      </dl>
+      {diagnostics.assumptions.length > 0 && (
+        <div className="mt-2">
+          <p style={{ color: "var(--r-muted)" }}>{text.parentResult.assumptions}</p>
+          <ul className="ml-4 list-disc" style={{ color: "var(--r-ink-soft)" }}>
+            {diagnostics.assumptions.map((assumption, index) => (
+              <li key={index}>{assumption}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+type ResultSection = { title: string; tick: string; visible: boolean; content: ReactNode };
 
 export function ResultView({
   data,
@@ -739,90 +802,109 @@ export function ResultView({
 }) {
   const text = UI_TEXT[language];
   const { diagnostics, parameters } = data;
-  // 入力が変わったら結果カードを remount して展開状態を初期化する。
-  const resultsKey = `${parameters.sire_color}|${parameters.dam_color}|${parameters.breed ?? ""}|${parameters.mode}`;
   const whiteSide = whiteSideOf(parameters.sire_color, parameters.dam_color);
   const hasConfirmed = Boolean(data.confirmed_results && data.confirmed_results.length > 0);
   const shownLoci = new Set([...diagnostics.opened_loci, ...diagnostics.closed_loci]);
   const otherLoci = Object.keys(LOCUS_GLOSSARY).filter((locus) => !shownLoci.has(locus));
 
+  // 並び順・展開状態は localStorage に永続化 (既定は全非展開)。マウント後に読み込む。
+  const [order, setOrder] = useState<SectionId[]>(() => [...DEFAULT_SECTION_ORDER]);
+  const [openMap, setOpenMap] = useState<Partial<Record<SectionId, boolean>>>({});
+  useEffect(() => {
+    setOrder(loadSectionOrder());
+    setOpenMap(loadSectionOpen());
+  }, []);
+
+  const toggle = useCallback((id: SectionId) => {
+    setOpenMap((prev) => {
+      const next = { ...prev, [id]: !prev[id] };
+      saveSectionOpen(next);
+      return next;
+    });
+  }, []);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setOrder((prev) => {
+      const from = prev.indexOf(active.id as SectionId);
+      const to = prev.indexOf(over.id as SectionId);
+      if (from < 0 || to < 0) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      saveSectionOrder(next);
+      return next;
+    });
+  }, []);
+
+  const sections: Record<SectionId, ResultSection> = {
+    confirmed: {
+      title: text.parentResult.confirmedTitle,
+      tick: "var(--r-confirmed)",
+      visible: hasConfirmed,
+      content: <ConfirmedBody rows={data.confirmed_results ?? []} language={language} />,
+    },
+    distribution: {
+      title: text.parentResult.distributionTitle,
+      tick: "var(--r-accent)",
+      visible: true,
+      content: <DistributionBody rows={data.results} whiteSide={whiteSide} language={language} />,
+    },
+    conditional: {
+      title: text.parentResult.conditionalTitle,
+      tick: "var(--r-conditional)",
+      visible: data.mode === "normal" && data.conditional_color_groups.length > 0,
+      content: <ConditionalBody groups={data.conditional_color_groups} language={language} />,
+    },
+    normalNote: {
+      title: text.parentResult.normalScopeTitle,
+      tick: "var(--r-muted)",
+      visible: data.mode === "normal",
+      content: <NormalNoteBody language={language} />,
+    },
+    genetics: {
+      title: text.parentResult.geneticsTitle,
+      tick: "var(--r-accent)",
+      visible: true,
+      content: <GeneticsBody diagnostics={diagnostics} otherLoci={otherLoci} language={language} />,
+    },
+  };
+  const visibleOrder = order.filter((id) => sections[id].visible);
+
   return (
-    // 外枠セクション (「予測結果」「モード」フローティングラベル付き) は撤去し、
-    // 各サブセクションを直接並べてネストを浅く・横幅を活かす (モバイルの可読性改善)。
-    <div key={resultsKey} className="flex flex-col gap-2.5">
-      {/* ① 確定色 (normal モードで確定色があるときのみ。White は空なので出さない) */}
-      {hasConfirmed && (
-        <ConfirmedColors rows={data.confirmed_results ?? []} language={language} />
-      )}
-
-      {/* ② 全分布 (周辺確率)。確定色があるときは畳み、無いとき (White 等) は開く。 */}
-      <FullDistribution
-        rows={data.results}
-        whiteSide={whiteSide}
-        language={language}
-        defaultOpen={!hasConfirmed}
-      />
-
-      {/* ③ 推定色 (両親キャリア推定) */}
-      {data.mode === "normal" && data.conditional_color_groups.length > 0 && (
-        <ConditionalColorSection groups={data.conditional_color_groups} language={language} />
-      )}
-
-      {/* 補助: 親色不在注釈 / 通常モード注記 */}
+    <div className="flex flex-col gap-2">
+      {/* 親色不在注釈は文脈依存の警告なのでアコーディオン対象外の固定表示。 */}
       <ParentColorNotes notes={data.parent_color_notes} language={language} />
-      {data.mode === "normal" && <NormalModeNote language={language} />}
-
-      {/* 遺伝子座の診断 (開いた/閉じた座位・未分類率・前提)。 */}
-      <section
-        className="rounded-xl p-3 text-sm"
-        style={{ background: "var(--r-surface)", border: "1px solid var(--r-hairline)" }}
+      {/* id を固定して @dnd-kit の a11y 記述要素 ID を SSR/CSR で一致させる (ハイドレーション警告回避)。 */}
+      <DndContext
+        id="result-sections"
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
       >
-        <h3 className="font-semibold" style={{ color: "var(--r-ink)" }}>
-          {text.parentResult.geneticsTitle}
-        </h3>
-        <p className="mt-0.5 text-xs" style={{ color: "var(--r-muted)" }}>
-          {text.parentResult.geneticsDescription}
-        </p>
-        <dl className="mt-2 grid grid-cols-1 gap-y-1 sm:grid-cols-2">
-          <dt style={{ color: "var(--r-muted)" }}>{text.parentResult.openedLoci}</dt>
-          <dd className="flex flex-wrap items-center gap-1">
-            {diagnostics.opened_loci.length > 0
-              ? diagnostics.opened_loci.map((locus) => <LocusChip key={locus} locus={locus} />)
-              : text.parentResult.none}
-          </dd>
-          <dt style={{ color: "var(--r-muted)" }}>{text.parentResult.closedLoci}</dt>
-          <dd className="flex flex-wrap items-center gap-1">
-            {diagnostics.closed_loci.length > 0
-              ? diagnostics.closed_loci.map((locus) => <LocusChip key={locus} locus={locus} />)
-              : text.parentResult.none}
-          </dd>
-          {otherLoci.length > 0 && (
-            <>
-              <dt style={{ color: "var(--r-muted)" }}>{text.parentResult.otherLoci}</dt>
-              <dd className="flex flex-wrap items-center gap-1">
-                {otherLoci.map((locus) => (
-                  <LocusChip key={locus} locus={locus} />
-                ))}
-              </dd>
-            </>
-          )}
-          <dt style={{ color: "var(--r-muted)" }}>{text.parentResult.unmatchedProbability}</dt>
-          <dd className="tabular-nums" style={{ color: "var(--r-ink-soft)" }}>
-            {formatPct(diagnostics.unmatched_probability)} ({diagnostics.unmatched_genotype_count}{" "}
-            {text.parentResult.genotypeCount})
-          </dd>
-        </dl>
-        {diagnostics.assumptions.length > 0 && (
-          <div className="mt-2">
-            <p style={{ color: "var(--r-muted)" }}>{text.parentResult.assumptions}</p>
-            <ul className="ml-4 list-disc" style={{ color: "var(--r-ink-soft)" }}>
-              {diagnostics.assumptions.map((assumption, index) => (
-                <li key={index}>{assumption}</li>
-              ))}
-            </ul>
+        <SortableContext items={visibleOrder} strategy={verticalListSortingStrategy}>
+          <div className="flex flex-col gap-2">
+            {visibleOrder.map((id) => (
+              <AccordionSection
+                key={id}
+                id={id}
+                title={sections[id].title}
+                tick={sections[id].tick}
+                open={Boolean(openMap[id])}
+                onToggle={() => toggle(id)}
+                dragLabel={text.parentResult.sectionReorder}
+              >
+                {sections[id].content}
+              </AccordionSection>
+            ))}
           </div>
-        )}
-      </section>
+        </SortableContext>
+      </DndContext>
     </div>
   );
 }
