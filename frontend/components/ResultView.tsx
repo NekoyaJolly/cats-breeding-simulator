@@ -392,9 +392,9 @@ function SexDistribution({
         role="meter"
         aria-valuemin={0}
         aria-valuemax={100}
-        // valuenow は 0〜100 にクランプ (端数/誤差対策)。valuetext で表示と同じ文字列
-        // (<1% 等) を読み上げ、丸めた数値との齟齬を防ぐ。
-        aria-valuenow={Math.min(100, Math.max(0, Math.round(group.total)))}
+        // valuenow は丸めず 0〜100 にクランプした実数 (0.6→1 等の丸め乖離を避ける)。
+        // 読み上げは valuetext に委ね、表示と同じ文字列 (<1% 等) を返す。
+        aria-valuenow={Math.min(100, Math.max(0, group.total))}
         aria-valuetext={formatPctInt(group.total)}
         aria-label={`${title} ${group.base}`}
         className="mt-[3px] h-[3px] w-full overflow-hidden rounded"

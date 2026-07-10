@@ -140,7 +140,7 @@
 }
 
 /* 結果レポートの表示アニメーション。計算結果が出たときの軽いフェード＋せり上がり、
-   および計算中スケルトンのシマー。いずれも prefers-reduced-motion では無効化する。 */
+   および計算中スケルトンの不透明度パルス。いずれも prefers-reduced-motion では無効化する。 */
 @keyframes result-in {
   from {
     opacity: 0;
