@@ -341,12 +341,14 @@ function SexDistribution({
   const total = rows.reduce((sum, row) => sum + row.probability_pct, 0);
   const tint = sex === "Male" ? "var(--r-male)" : "var(--r-female)";
   // この性別で最も出やすい色を強調する。確率最大値と一致する行 (同率トップは全て、
-  // 単色ならその1色) を最有力として扱う。
+  // 単色ならその1色) を最有力として扱う。probability_pct は float の合算なので、
+  // 厳密比較ではなく許容誤差で「実質同率」も最有力に含める。
   const maxTotal = groups.reduce((acc, group) => Math.max(acc, group.total), 0);
+  const TOP_EPSILON = 1e-6;
 
   // 1%未満も集約せず全色をそのまま行にする (微小確率でも「出得る色」を隠さない)。
   const renderRow = (group: ColorGroup) => {
-    const isTop = maxTotal > 0 && group.total === maxTotal;
+    const isTop = maxTotal > 0 && maxTotal - group.total < TOP_EPSILON;
     return (
     <li key={group.base} className="py-[3px]">
       <div className="flex items-center gap-2">
