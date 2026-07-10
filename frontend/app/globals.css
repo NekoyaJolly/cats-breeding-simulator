@@ -138,3 +138,41 @@
   background: rgb(var(--surface-2));
   color: rgb(var(--ink));
 }
+
+/* 結果レポートの表示アニメーション。計算結果が出たときの軽いフェード＋せり上がり、
+   および計算中スケルトンのシマー。いずれも prefers-reduced-motion では無効化する。 */
+@keyframes result-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-result-in {
+  animation: result-in 0.28s ease-out both;
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.animate-skeleton {
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-result-in,
+  .animate-skeleton {
+    animation: none;
+  }
+}

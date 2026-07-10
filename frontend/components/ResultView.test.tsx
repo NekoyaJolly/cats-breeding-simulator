@@ -388,4 +388,27 @@ describe("ResultView full distribution", () => {
     // 列内最大値で正規化していないので、最大色でも 100% にはならない。
     expect(widths).not.toContain("100%");
   });
+
+  it("各性別の最有力色に『最有力』ラベルを付け、メーターに aria (role=meter/valuenow) を持たせる", async () => {
+    const results: ResultEntry[] = [
+      { sex: "Male", color: "Black", probability_pct: 40 },
+      { sex: "Male", color: "Blue", probability_pct: 10 },
+      { sex: "Female", color: "Black", probability_pct: 40 },
+      { sex: "Female", color: "Blue", probability_pct: 10 },
+    ];
+    render(
+      <ResultView data={buildResponse("Black", "Black", results)} language="ja" />,
+    );
+    await openSection(/全分布/);
+
+    // 最有力ラベルはオス/メスそれぞれの最上位色 (Black) に付くので 2 つ。
+    expect(screen.getAllByText("最有力")).toHaveLength(2);
+
+    // メーターは role="meter" + aria-valuenow (丸めた確率)。
+    const nows = screen
+      .getAllByRole("meter")
+      .map((meter) => meter.getAttribute("aria-valuenow"));
+    expect(nows).toContain("40");
+    expect(nows).toContain("10");
+  });
 });

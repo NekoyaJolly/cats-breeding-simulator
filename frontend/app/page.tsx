@@ -13,6 +13,7 @@ import { BreedingForm } from "@/components/BreedingForm";
 import { BreedColorsHint } from "@/components/BreedColorsHint";
 import { LitterInference } from "@/components/LitterInference";
 import { ResultView } from "@/components/ResultView";
+import { ResultSkeleton } from "@/components/ResultSkeleton";
 import { TargetColorSearch } from "@/components/TargetColorSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { calculate, type CalculateInput } from "@/lib/api";
@@ -249,7 +250,8 @@ export default function HomePage() {
             />
           </div>
 
-          {error && (
+          {/* 計算中はエラー/結果を隠してスケルトンを出す (結果が来るまでの明確なフィードバック)。 */}
+          {!loading && error && (
             <div className="mt-6 rounded-md border border-danger/30 bg-danger-bg p-4 text-sm text-danger">
               {error}
               {/* 猫種の認定カラーに無い旨のエラーなら、使える毛色をコピペ可能に案内する。 */}
@@ -259,10 +261,13 @@ export default function HomePage() {
             </div>
           )}
 
-          {result && (
+          {loading && <ResultSkeleton language={language} />}
+
+          {!loading && result && (
             // 結果レポートは外枠 (border/bg/shadow/横パディング) を外し、各アコーディオン
             // カード自体を器にして画面幅いっぱいに使う (冗長な二重フレームの解消)。
-            <div className="mt-6">
+            // 表示時に軽くフェードイン (prefers-reduced-motion では無効)。
+            <div className="mt-6 animate-result-in">
               <ResultView data={result} language={language} />
             </div>
           )}

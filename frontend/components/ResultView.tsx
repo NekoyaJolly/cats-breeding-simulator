@@ -1,6 +1,6 @@
 "use client";
 
-import { CaretRight, DotsSixVertical, GenderFemale, GenderMale } from "@phosphor-icons/react";
+import { CaretRight, DotsSixVertical, GenderFemale, GenderMale, Star } from "@phosphor-icons/react";
 import {
   useCallback,
   useEffect,
@@ -340,14 +340,18 @@ function SexDistribution({
   const groups = groupByBase(rows);
   const total = rows.reduce((sum, row) => sum + row.probability_pct, 0);
   const tint = sex === "Male" ? "var(--r-male)" : "var(--r-female)";
+  // この性別で最も出やすい色 (groups は確率降順)。複数色あるときだけ最有力として強調する。
+  const topBase = groups.length > 1 ? groups[0].base : null;
 
   // 1%未満も集約せず全色をそのまま行にする (微小確率でも「出得る色」を隠さない)。
-  const renderRow = (group: ColorGroup) => (
+  const renderRow = (group: ColorGroup) => {
+    const isTop = group.base === topBase;
+    return (
     <li key={group.base} className="py-[3px]">
       <div className="flex items-center gap-2">
         <Swatch color={group.base} size={14} />
         <span
-          className="min-w-0 flex-1 truncate text-xs"
+          className={`min-w-0 flex-1 truncate text-xs ${isTop ? "font-semibold" : ""}`}
           style={{ color: "var(--r-ink)" }}
           title={group.base}
         >
@@ -357,11 +361,24 @@ function SexDistribution({
           )}
         </span>
         <span
-          className="shrink-0 tabular-nums text-[11px]"
-          style={{ color: "var(--r-ink-soft)" }}
+          className={`shrink-0 tabular-nums text-[11px] ${isTop ? "font-semibold" : ""}`}
+          style={{ color: isTop ? "var(--r-ink)" : "var(--r-ink-soft)" }}
         >
           {formatPctInt(group.total)}
         </span>
+        {/* この性別の最有力色に小さな星マーカー。名前を圧迫しないよう % の後ろに置く。
+            記号は装飾なので aria-hidden、意味は sr-only テキストで補う。 */}
+        {isTop && (
+          <>
+            <Star
+              aria-hidden="true"
+              weight="fill"
+              className="h-3 w-3 shrink-0"
+              style={{ color: tint }}
+            />
+            <span className="sr-only">{text.parentResult.mostLikely}</span>
+          </>
+        )}
       </div>
       {/* 確率メーター: 列内の最大値で正規化せず、絶対確率 (0〜100%) スケールでトラック上に
           描く。バー長がそのまま確率を表すので、〜35% が満杯 (右端) にならない。
@@ -369,6 +386,11 @@ function SexDistribution({
           ではないが、読み取り上のスケールは 0〜100%。) */}
       <div
         data-testid="dist-meter-track"
+        role="meter"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(group.total)}
+        aria-label={`${title} ${group.base}`}
         className="mt-[3px] h-[3px] w-full overflow-hidden rounded"
         style={{ background: "var(--r-hairline-soft)" }}
       >
@@ -382,7 +404,8 @@ function SexDistribution({
             width: `${Math.min(100, group.total)}%`,
             minWidth: "2px",
             background: tint,
-            opacity: 0.85,
+            // 最有力色はフィルを不透明にして視覚的に立たせる。
+            opacity: isTop ? 1 : 0.85,
           }}
         />
       </div>
@@ -402,7 +425,8 @@ function SexDistribution({
         </div>
       )}
     </li>
-  );
+    );
+  };
 
   return (
     <div>
