@@ -388,4 +388,43 @@ describe("ResultView full distribution", () => {
     // 列内最大値で正規化していないので、最大色でも 100% にはならない。
     expect(widths).not.toContain("100%");
   });
+
+  it("各性別の最有力色に『最有力』ラベルを付け、メーターに aria (role=meter/valuenow) を持たせる", async () => {
+    const results: ResultEntry[] = [
+      { sex: "Male", color: "Black", probability_pct: 40 },
+      { sex: "Male", color: "Blue", probability_pct: 10 },
+      { sex: "Female", color: "Black", probability_pct: 40 },
+      { sex: "Female", color: "Blue", probability_pct: 10 },
+    ];
+    render(
+      <ResultView data={buildResponse("Black", "Black", results)} language="ja" />,
+    );
+    await openSection(/全分布/);
+
+    // 最有力ラベルはオス/メスそれぞれの最上位色 (Black) に付くので 2 つ。
+    expect(screen.getAllByText("最有力")).toHaveLength(2);
+
+    // メーターは role="meter" + aria-valuenow (丸めず 0〜100 クランプした実数)。
+    const nows = screen
+      .getAllByRole("meter")
+      .map((meter) => meter.getAttribute("aria-valuenow"));
+    expect(nows).toContain("40");
+    expect(nows).toContain("10");
+  });
+
+  it("同率トップは全て、単色でもその色を最有力として強調する", async () => {
+    const results: ResultEntry[] = [
+      // オスは Black/Blue が同率 25% (両方最有力)。
+      { sex: "Male", color: "Black", probability_pct: 25 },
+      { sex: "Male", color: "Blue", probability_pct: 25 },
+      // メスは Black 50% のみ (単色でも最有力)。
+      { sex: "Female", color: "Black", probability_pct: 50 },
+    ];
+    render(
+      <ResultView data={buildResponse("Black", "Black", results)} language="ja" />,
+    );
+    await openSection(/全分布/);
+    // オス同率2 + メス単色1 = 3。
+    expect(screen.getAllByText("最有力")).toHaveLength(3);
+  });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { CaretRight, DotsSixVertical, GenderFemale, GenderMale } from "@phosphor-icons/react";
+import { CaretRight, DotsSixVertical, GenderFemale, GenderMale, Star } from "@phosphor-icons/react";
 import {
   useCallback,
   useEffect,
@@ -340,14 +340,21 @@ function SexDistribution({
   const groups = groupByBase(rows);
   const total = rows.reduce((sum, row) => sum + row.probability_pct, 0);
   const tint = sex === "Male" ? "var(--r-male)" : "var(--r-female)";
+  // この性別で最も出やすい色を強調する。確率最大値と一致する行 (同率トップは全て、
+  // 単色ならその1色) を最有力として扱う。probability_pct は float の合算なので、
+  // 厳密比較ではなく許容誤差で「実質同率」も最有力に含める。
+  const maxTotal = groups.reduce((acc, group) => Math.max(acc, group.total), 0);
+  const TOP_EPSILON = 1e-6;
 
   // 1%未満も集約せず全色をそのまま行にする (微小確率でも「出得る色」を隠さない)。
-  const renderRow = (group: ColorGroup) => (
+  const renderRow = (group: ColorGroup) => {
+    const isTop = maxTotal > 0 && maxTotal - group.total < TOP_EPSILON;
+    return (
     <li key={group.base} className="py-[3px]">
       <div className="flex items-center gap-2">
         <Swatch color={group.base} size={14} />
         <span
-          className="min-w-0 flex-1 truncate text-xs"
+          className={`min-w-0 flex-1 truncate text-xs ${isTop ? "font-semibold" : ""}`}
           style={{ color: "var(--r-ink)" }}
           title={group.base}
         >
@@ -357,11 +364,24 @@ function SexDistribution({
           )}
         </span>
         <span
-          className="shrink-0 tabular-nums text-[11px]"
-          style={{ color: "var(--r-ink-soft)" }}
+          className={`shrink-0 tabular-nums text-[11px] ${isTop ? "font-semibold" : ""}`}
+          style={{ color: isTop ? "var(--r-ink)" : "var(--r-ink-soft)" }}
         >
           {formatPctInt(group.total)}
         </span>
+        {/* この性別の最有力色に小さな星マーカー。名前を圧迫しないよう % の後ろに置く。
+            記号は装飾なので aria-hidden、意味は sr-only テキストで補う。 */}
+        {isTop && (
+          <>
+            <Star
+              aria-hidden="true"
+              weight="fill"
+              className="h-3 w-3 shrink-0"
+              style={{ color: tint }}
+            />
+            <span className="sr-only">{text.parentResult.mostLikely}</span>
+          </>
+        )}
       </div>
       {/* 確率メーター: 列内の最大値で正規化せず、絶対確率 (0〜100%) スケールでトラック上に
           描く。バー長がそのまま確率を表すので、〜35% が満杯 (右端) にならない。
@@ -369,6 +389,14 @@ function SexDistribution({
           ではないが、読み取り上のスケールは 0〜100%。) */}
       <div
         data-testid="dist-meter-track"
+        role="meter"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        // valuenow は丸めず 0〜100 にクランプした実数 (0.6→1 等の丸め乖離を避ける)。
+        // 読み上げは valuetext に委ね、表示と同じ文字列 (<1% 等) を返す。
+        aria-valuenow={Math.min(100, Math.max(0, group.total))}
+        aria-valuetext={formatPctInt(group.total)}
+        aria-label={`${title} ${group.base}`}
         className="mt-[3px] h-[3px] w-full overflow-hidden rounded"
         style={{ background: "var(--r-hairline-soft)" }}
       >
@@ -379,10 +407,12 @@ function SexDistribution({
             // 幅は絶対確率そのもの。%下限はスケールを大きく歪めるので使わない。
             // 極小確率でも見えるよう最小幅を px で確保する (この 2px 分だけ極小確率は
             // 実際より僅かに長く見えるが、可視性優先の意図的なトレードオフ)。
-            width: `${Math.min(100, group.total)}%`,
+            // 想定外の負値でも width が負にならないよう 0〜100 にクランプする。
+            width: `${Math.max(0, Math.min(100, group.total))}%`,
             minWidth: "2px",
             background: tint,
-            opacity: 0.85,
+            // 最有力色はフィルを不透明にして視覚的に立たせる。
+            opacity: isTop ? 1 : 0.85,
           }}
         />
       </div>
@@ -402,7 +432,8 @@ function SexDistribution({
         </div>
       )}
     </li>
-  );
+    );
+  };
 
   return (
     <div>
