@@ -339,7 +339,6 @@ function SexDistribution({
   const text = UI_TEXT[language];
   const groups = groupByBase(rows);
   const total = rows.reduce((sum, row) => sum + row.probability_pct, 0);
-  const max = Math.max(...groups.map((group) => group.total), 1);
   const tint = sex === "Male" ? "var(--r-male)" : "var(--r-female)";
 
   // 1%未満も集約せず全色をそのまま行にする (微小確率でも「出得る色」を隠さない)。
@@ -364,14 +363,29 @@ function SexDistribution({
           {formatPctInt(group.total)}
         </span>
       </div>
+      {/* 確率メーター: 列内の最大値で正規化せず、絶対確率 (0〜100%) スケールでトラック上に
+          描く。バー長がそのまま確率を表すので、〜35% が満杯 (右端) にならない。
+          (数値ラベルは formatPctInt で丸め、バーは未丸めの group.total を使うため厳密一致
+          ではないが、読み取り上のスケールは 0〜100%。) */}
       <div
-        className="mt-[3px] h-[3px] rounded"
-        style={{
-          width: `${Math.max(2, (group.total / max) * 100)}%`,
-          background: tint,
-          opacity: 0.8,
-        }}
-      />
+        data-testid="dist-meter-track"
+        className="mt-[3px] h-[3px] w-full overflow-hidden rounded"
+        style={{ background: "var(--r-hairline-soft)" }}
+      >
+        <div
+          data-testid="dist-meter-fill"
+          className="h-full rounded"
+          style={{
+            // 幅は絶対確率そのもの。%下限はスケールを大きく歪めるので使わない。
+            // 極小確率でも見えるよう最小幅を px で確保する (この 2px 分だけ極小確率は
+            // 実際より僅かに長く見えるが、可視性優先の意図的なトレードオフ)。
+            width: `${Math.min(100, group.total)}%`,
+            minWidth: "2px",
+            background: tint,
+            opacity: 0.85,
+          }}
+        />
+      </div>
       {/* 白斑レベル (-White / -White Van) の内訳。合算で消えないよう副次行で残す。 */}
       {group.whites.length > 0 && (
         <div className="mt-0.5 flex flex-col gap-0.5 pl-6">

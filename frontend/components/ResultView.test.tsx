@@ -361,4 +361,31 @@ describe("ResultView full distribution", () => {
     // ベース色 (Silver Tabby) に集約されつつ、-White の内訳が副次行 (└ -White) で残る。
     expect(screen.getAllByText(/└ -White/).length).toBeGreaterThan(0);
   });
+
+  it("確率メーターのバー幅は絶対確率 (列内最大値で正規化しない) でトラック上に描く", async () => {
+    const results: ResultEntry[] = [
+      // 列内最大値正規化なら Black(40%) が 100%、Blue(10%) が 25% になるはず。
+      // 絶対確率なら Black=40%、Blue=10% でトラック上に描かれる。
+      { sex: "Male", color: "Black", probability_pct: 40 },
+      { sex: "Male", color: "Blue", probability_pct: 10 },
+      { sex: "Female", color: "Black", probability_pct: 40 },
+      { sex: "Female", color: "Blue", probability_pct: 10 },
+    ];
+    render(
+      <ResultView data={buildResponse("Black", "Black", results)} language="ja" />,
+    );
+    await openSection(/全分布/);
+
+    // トラック(背景)が各行に描かれている。
+    expect(screen.getAllByTestId("dist-meter-track").length).toBeGreaterThan(0);
+
+    const widths = screen
+      .getAllByTestId("dist-meter-fill")
+      .map((fill) => fill.style.width);
+    // 絶対確率がそのままバー幅になる。
+    expect(widths).toContain("40%");
+    expect(widths).toContain("10%");
+    // 列内最大値で正規化していないので、最大色でも 100% にはならない。
+    expect(widths).not.toContain("100%");
+  });
 });
