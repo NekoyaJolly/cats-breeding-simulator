@@ -404,7 +404,7 @@ describe("ResultView full distribution", () => {
     // 最有力ラベルはオス/メスそれぞれの最上位色 (Black) に付くので 2 つ。
     expect(screen.getAllByText("最有力")).toHaveLength(2);
 
-    // メーターは role="meter" + aria-valuenow (丸めた確率)。
+    // メーターは role="meter" + aria-valuenow (丸めず 0〜100 クランプした実数)。
     const nows = screen
       .getAllByRole("meter")
       .map((meter) => meter.getAttribute("aria-valuenow"));
