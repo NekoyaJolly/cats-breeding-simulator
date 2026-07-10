@@ -193,7 +193,6 @@ export const UI_TEXT = {
       sectionReorder: "並び替え (ドラッグ)",
       mostLikely: "最有力",
       resultLoading: "計算中…",
-      probabilityMeter: "確率",
       conditionalHint:
         "隠れ遺伝子次第で出る色。出たら親の遺伝子型が判明します。",
       conditionalOpen: "見る",
@@ -484,7 +483,6 @@ export const UI_TEXT = {
       sectionReorder: "Reorder (drag)",
       mostLikely: "Most likely",
       resultLoading: "Calculating…",
-      probabilityMeter: "probability",
       conditionalHint:
         "Colors that appear only with hidden genes. If they show, the parents' genotypes are revealed.",
       conditionalOpen: "View",

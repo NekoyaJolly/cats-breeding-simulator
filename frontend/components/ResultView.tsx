@@ -340,12 +340,13 @@ function SexDistribution({
   const groups = groupByBase(rows);
   const total = rows.reduce((sum, row) => sum + row.probability_pct, 0);
   const tint = sex === "Male" ? "var(--r-male)" : "var(--r-female)";
-  // この性別で最も出やすい色 (groups は確率降順)。複数色あるときだけ最有力として強調する。
-  const topBase = groups.length > 1 ? groups[0].base : null;
+  // この性別で最も出やすい色を強調する。確率最大値と一致する行 (同率トップは全て、
+  // 単色ならその1色) を最有力として扱う。
+  const maxTotal = groups.reduce((acc, group) => Math.max(acc, group.total), 0);
 
   // 1%未満も集約せず全色をそのまま行にする (微小確率でも「出得る色」を隠さない)。
   const renderRow = (group: ColorGroup) => {
-    const isTop = group.base === topBase;
+    const isTop = maxTotal > 0 && group.total === maxTotal;
     return (
     <li key={group.base} className="py-[3px]">
       <div className="flex items-center gap-2">
@@ -389,7 +390,10 @@ function SexDistribution({
         role="meter"
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-valuenow={Math.round(group.total)}
+        // valuenow は 0〜100 にクランプ (端数/誤差対策)。valuetext で表示と同じ文字列
+        // (<1% 等) を読み上げ、丸めた数値との齟齬を防ぐ。
+        aria-valuenow={Math.min(100, Math.max(0, Math.round(group.total)))}
+        aria-valuetext={formatPctInt(group.total)}
         aria-label={`${title} ${group.base}`}
         className="mt-[3px] h-[3px] w-full overflow-hidden rounded"
         style={{ background: "var(--r-hairline-soft)" }}
